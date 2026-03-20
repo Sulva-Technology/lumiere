@@ -1,0 +1,46 @@
+import type { Metadata } from 'next';
+import { Inter, Cormorant_Garamond } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '@/components/theme-provider';
+import { AmbientBackground } from '@/components/ambient-background';
+import { NavBar } from '@/components/navbar';
+import { CartProvider } from '@/components/cart-context';
+import { CartDrawer } from '@/components/cart-drawer';
+import { Footer } from '@/components/footer';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-cormorant',
+});
+
+export const metadata: Metadata = {
+  title: 'Lumière | Luxury Hair & Styling',
+  description: 'Premium hair extensions, natural care, and elite stylist booking.',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cormorant.variable}`}>
+      <body className="relative min-h-screen flex flex-col overflow-x-hidden selection:bg-[#D4A847]/30">
+        <ThemeProvider>
+          <CartProvider>
+            <div className="noise-overlay" />
+            <AmbientBackground />
+            <NavBar />
+            <CartDrawer />
+            <main className="flex-1 pt-24 pb-16">
+              {children}
+            </main>
+            <Footer />
+          </CartProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
