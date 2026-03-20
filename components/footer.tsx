@@ -58,10 +58,15 @@ export function Footer() {
           <div>
             <h4 className="font-serif text-lg text-[var(--text-primary)] mb-6">Customer Care</h4>
             <ul className="space-y-3">
-              {['FAQ', 'Shipping & Returns', 'Track Order', 'Contact Us'].map(link => (
-                <li key={link}>
-                  <Link href="#" className="text-sm text-[var(--text-secondary)] hover:text-[#8B6914] dark:hover:text-[#D4A847] transition-colors">
-                    {link}
+              {[
+                { label: 'FAQ', href: '/faq' },
+                { label: 'Shipping & Returns', href: '/shipping-returns' },
+                { label: 'Track Order', href: '/track-order' },
+                { label: 'Contact Us', href: '/contact' },
+              ].map(link => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-sm text-[var(--text-secondary)] hover:text-[#8B6914] dark:hover:text-[#D4A847] transition-colors">
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -92,8 +97,8 @@ export function Footer() {
             © {new Date().getFullYear()} Lumière. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="#" className="text-sm text-[var(--text-secondary)] hover:text-[#8B6914] dark:hover:text-[#D4A847] transition-colors">Privacy Policy</Link>
-            <Link href="#" className="text-sm text-[var(--text-secondary)] hover:text-[#8B6914] dark:hover:text-[#D4A847] transition-colors">Terms of Service</Link>
+            <Link href="/privacy-policy" className="text-sm text-[var(--text-secondary)] hover:text-[#8B6914] dark:hover:text-[#D4A847] transition-colors">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="text-sm text-[var(--text-secondary)] hover:text-[#8B6914] dark:hover:text-[#D4A847] transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

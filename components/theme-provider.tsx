@@ -10,42 +10,49 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const THEME_STORAGE_KEY = 'theme';
+
+function applyTheme(theme: Theme) {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+  document.documentElement.style.colorScheme = theme;
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+    if (storedTheme) return storedTheme;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-    // Check local storage or system preference
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    if (storedTheme) {
-      setTheme(storedTheme);
-      if (storedTheme === 'dark') document.documentElement.classList.add('dark');
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
-      document.documentElement.classList.add('dark');
-    }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+    const initialTheme = storedTheme ?? (mediaQuery.matches ? 'dark' : 'light');
+
+    applyTheme(initialTheme);
+
+    const handleSystemThemeChange = (event: MediaQueryListEvent) => {
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+      if (!savedTheme) {
+        const nextTheme = event.matches ? 'dark' : 'light';
+        setTheme(nextTheme);
+        applyTheme(nextTheme);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, []);
 
   const toggleTheme = () => {
     setTheme((prev) => {
       const newTheme = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', newTheme);
-      if (newTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      applyTheme(newTheme);
       return newTheme;
     });
   };
-
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return <div className="min-h-screen opacity-0" />;
-  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

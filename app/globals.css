@@ -26,6 +26,11 @@
     --text-primary: #1A1008;
     --text-secondary: rgba(44, 34, 24, 0.85);
     --text-accent: #8B6914;
+    --surface-primary: rgba(255, 252, 246, 0.84);
+    --surface-elevated: rgba(255, 248, 236, 0.92);
+    --border-soft: rgba(170, 130, 55, 0.14);
+    --input-bg: rgba(255, 255, 255, 0.7);
+    --shadow-soft: 0 18px 50px rgba(166, 126, 44, 0.12);
     
     /* Light Mode Glass */
     --glass-heavy-bg: rgba(240, 210, 140, 0.22);
@@ -47,6 +52,11 @@
     --text-primary: #FFFFFF;
     --text-secondary: rgba(255, 255, 255, 0.8);
     --text-accent: #F0D080;
+    --surface-primary: rgba(24, 16, 8, 0.84);
+    --surface-elevated: rgba(34, 24, 12, 0.92);
+    --border-soft: rgba(240, 208, 128, 0.14);
+    --input-bg: rgba(14, 10, 5, 0.48);
+    --shadow-soft: 0 24px 64px rgba(0, 0, 0, 0.34);
     
     /* Dark Mode Glass */
     --glass-heavy-bg: rgba(212, 168, 71, 0.14);
@@ -66,6 +76,47 @@
     background: linear-gradient(to bottom right, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
     color: var(--text-primary);
     min-height: 100vh;
+  }
+
+  ::selection {
+    background: rgba(212, 168, 71, 0.28);
+    color: var(--text-primary);
+  }
+
+  a,
+  button,
+  input,
+  textarea,
+  select {
+    transition:
+      color 180ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  input,
+  textarea,
+  select {
+    color: var(--text-primary);
+    border: 1px solid var(--border-soft);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: color-mix(in srgb, var(--text-secondary) 88%, transparent);
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: rgba(212, 168, 71, 0.56);
+    box-shadow:
+      0 0 0 4px rgba(212, 168, 71, 0.16),
+      var(--shadow-soft);
   }
 }
 
@@ -94,6 +145,12 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     @apply rounded-xl transition-all duration-500;
+  }
+
+  .surface-panel {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-soft);
   }
 
   .text-gradient-gold {
