@@ -6,7 +6,7 @@ export default function ContactPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <Glass level="heavy" className="p-8">
           <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-accent)]">Contact</p>
-          <h1 className="mt-4 font-serif text-4xl text-[#1A1008] dark:text-white">We’re Here to Help</h1>
+          <h1 className="headline-strong mt-4 font-serif text-4xl">We&apos;re Here to Help</h1>
           <div className="mt-6 space-y-4 text-[var(--text-secondary)]">
             <p>Support: support@lumiere.com</p>
             <p>Bookings: bookings@lumiere.com</p>
@@ -16,7 +16,7 @@ export default function ContactPage() {
         </Glass>
 
         <Glass level="medium" className="p-8">
-          <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Send a Message</h2>
+          <h2 className="headline-strong font-serif text-2xl">Send a Message</h2>
           <form className="mt-6 space-y-4">
             <input placeholder="Full name" className="w-full rounded-full bg-[var(--input-bg)] px-5 py-3 outline-none" />
             <input placeholder="Email address" type="email" className="w-full rounded-full bg-[var(--input-bg)] px-5 py-3 outline-none" />
