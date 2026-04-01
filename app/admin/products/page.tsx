@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { ImagePlus, LoaderCircle, Plus, Trash2, Upload } from 'lucide-react';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency } from '@/lib/format';
 import type { Category, ProductDetail } from '@/lib/types';
@@ -50,6 +51,10 @@ function toSlug(value: string) {
     .replace(/^-+|-+$/g, '');
 }
 
+function isPreviewableImageUrl(value: string) {
+  return /^https?:\/\//i.test(value);
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<ProductDetail[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -57,6 +62,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -140,6 +146,30 @@ export default function AdminProductsPage() {
     }
   }
 
+  async function handleImageUpload(file: File) {
+    setUploadingImage(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/admin/uploads/product-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to upload image.');
+
+      setForm((current) => ({ ...current, defaultImageUrl: json.url }));
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Unable to upload image.');
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   return (
     <div className="space-y-6 pb-10">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -171,7 +201,7 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <form className="mt-6 space-y-3" onSubmit={handleCreateProduct}>
+          <form className="mt-6 space-y-4" onSubmit={handleCreateProduct}>
             <input
               value={form.name}
               onChange={(event) => {
@@ -211,12 +241,55 @@ export default function AdminProductsPage() {
                 </option>
               ))}
             </select>
-            <input
-              value={form.defaultImageUrl}
-              onChange={(event) => setForm((current) => ({ ...current, defaultImageUrl: event.target.value }))}
-              placeholder="Image URL"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30"
-            />
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-white">Product image</p>
+                  <p className="mt-1 text-xs text-white/45">Upload from your device or paste a hosted image URL.</p>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#F0D080]">
+                  <ImagePlus size={18} />
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[120px_minmax(0,1fr)]">
+                <div className="relative h-[120px] overflow-hidden rounded-2xl border border-dashed border-white/10 bg-[#140d05]">
+                  {isPreviewableImageUrl(form.defaultImageUrl) ? (
+                    <Image src={form.defaultImageUrl} alt="Product preview" fill className="object-cover" unoptimized />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-center text-xs text-white/35">
+                      Image preview
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10">
+                    {uploadingImage ? <LoaderCircle size={16} className="animate-spin" /> : <Upload size={16} />}
+                    {uploadingImage ? 'Uploading image...' : 'Upload from device'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          void handleImageUpload(file);
+                        }
+                        event.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
+
+                  <input
+                    value={form.defaultImageUrl}
+                    onChange={(event) => setForm((current) => ({ ...current, defaultImageUrl: event.target.value }))}
+                    placeholder="https://..."
+                    className="w-full rounded-2xl border border-white/10 bg-[#140d05] px-4 py-3 text-white outline-none placeholder:text-white/30"
+                  />
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <input
                 value={form.variantTitle}
@@ -303,7 +376,7 @@ export default function AdminProductsPage() {
             </div>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploadingImage}
               className="w-full rounded-2xl bg-[#D4A847] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {saving ? 'Saving product...' : 'Create Product'}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdminApiUser } from '@/lib/auth';
 import { createAdminProduct, getAdminCategories, getAdminProducts } from '@/lib/data/admin';
 import { adminProductCreateSchema } from '@/lib/schemas';
+import { getErrorMessage } from '@/lib/validation';
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     const [products, categories] = await Promise.all([getAdminProducts(), getAdminCategories()]);
     return NextResponse.json({ products, categories });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load products.' }, { status: 401 });
+    return NextResponse.json({ error: getErrorMessage(error, 'Unable to load products.') }, { status: 401 });
   }
 }
 
@@ -37,6 +38,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create product.' }, { status: 400 });
+    return NextResponse.json({ error: getErrorMessage(error, 'Unable to create product.') }, { status: 400 });
   }
 }
