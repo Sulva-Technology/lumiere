@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, Category, DashboardMetrics, ProductDetail } from '@/lib/types';
 
 function money(value: number | string | null | undefined) {
@@ -357,6 +358,14 @@ export async function updateStoreSettings(input: {
 
 export async function updateOrderStatus(orderId: string, input: { paymentStatus?: string; fulfillmentStatus?: string }) {
   const supabase = createSupabaseAdminClient();
+  const { data: existingOrder, error: existingOrderError } = await supabase
+    .from('orders')
+    .select('id, order_number, email, fulfillment_status, customers(full_name)')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (existingOrderError) throw existingOrderError;
+
   const { data, error } = await supabase
     .from('orders')
     .update({
@@ -368,6 +377,29 @@ export async function updateOrderStatus(orderId: string, input: { paymentStatus?
     .single();
 
   if (error) throw error;
+
+  const didFulfillmentChange =
+    existingOrder &&
+    input.fulfillmentStatus &&
+    existingOrder.fulfillment_status !== input.fulfillmentStatus &&
+    data.fulfillment_status === input.fulfillmentStatus;
+
+  if (didFulfillmentChange) {
+    try {
+      const settings = await getStoreSettings();
+      await sendOrderStatusUpdateEmail({
+        storeName: settings?.store_name?.trim() || "Dee's luxury",
+        supportEmail: settings?.support_email?.trim() || 'support@deesluxury.com',
+        customerName: relationFirst(existingOrder.customers)?.full_name ?? 'there',
+        customerEmail: data.email,
+        orderNumber: data.order_number,
+        fulfillmentStatus: data.fulfillment_status,
+      });
+    } catch (notificationError) {
+      console.error('Order status email failed', notificationError);
+    }
+  }
+
   return data;
 }
 

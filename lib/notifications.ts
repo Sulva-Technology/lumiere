@@ -39,6 +39,15 @@ type BookingEmailPayload = {
   notes?: string | null;
 };
 
+type OrderStatusEmailPayload = {
+  storeName: string;
+  supportEmail: string;
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  fulfillmentStatus: string;
+};
+
 const resendApiKey = getOptionalEnv('RESEND_API_KEY');
 const resendFromEmail = getOptionalEnv('RESEND_FROM_EMAIL', 'orders@deesluxury.com');
 
@@ -184,4 +193,35 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       replyTo: payload.email,
     });
   }
+}
+
+export async function sendOrderStatusUpdateEmail(payload: OrderStatusEmailPayload) {
+  const statusLabel =
+    payload.fulfillmentStatus === 'processing'
+      ? 'is now being prepared'
+      : payload.fulfillmentStatus === 'shipped'
+        ? 'has been shipped'
+        : payload.fulfillmentStatus === 'delivered'
+          ? 'has been delivered'
+          : 'has been updated';
+
+  const customerHtml = `
+    <div style="background:#120b05;padding:32px;font-family:Georgia,serif;color:#f8f1dd;">
+      <h1 style="margin:0 0 12px;font-size:32px;color:#f0d080;">${payload.storeName}</h1>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#dbc8a6;">Your order status has changed.</p>
+      <div style="padding:20px;border:1px solid #6d4a13;border-radius:20px;background:#1a1108;">
+        <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${payload.customerName},</p>
+        <p style="margin:0 0 12px;font-family:Arial,sans-serif;color:#dbc8a6;">Order <strong>${payload.orderNumber}</strong> ${statusLabel}.</p>
+        <p style="margin:0;font-family:Arial,sans-serif;color:#f0d080;text-transform:uppercase;letter-spacing:0.14em;">${payload.fulfillmentStatus}</p>
+      </div>
+      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#c7b38c;">Questions? Reply to this email or contact ${payload.supportEmail}.</p>
+    </div>
+  `;
+
+  await sendMail({
+    to: payload.customerEmail,
+    subject: `${payload.storeName} order update ${payload.orderNumber}`,
+    html: customerHtml,
+    replyTo: payload.supportEmail,
+  });
 }
