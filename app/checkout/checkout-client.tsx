@@ -168,13 +168,25 @@ export function CheckoutClient() {
 
             {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-[#8B6914] py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
-            >
-              {loading ? 'Redirecting to secure checkout...' : `Continue to secure checkout - ${formatCurrency(total)}`}
-            </button>
+            <div className="space-y-3 pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center rounded-full bg-black py-4 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {loading ? 'Opening Apple Pay...' : `Continue with Apple Pay - ${formatCurrency(total)}`}
+              </button>
+              <p className="text-center text-xs text-[var(--text-secondary)]">
+                Apple Pay completes in Stripe Checkout on supported Apple devices and browsers.
+              </p>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-full bg-[#8B6914] py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
+              >
+                {loading ? 'Redirecting to secure checkout...' : `Continue to secure checkout - ${formatCurrency(total)}`}
+              </button>
+            </div>
           </form>
         </Glass>
 
