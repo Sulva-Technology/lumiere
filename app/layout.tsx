@@ -4,10 +4,8 @@ import Script from 'next/script';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AmbientBackground } from '@/components/ambient-background';
-import { NavBar } from '@/components/navbar';
 import { CartProvider } from '@/components/cart-context';
-import { CartDrawer } from '@/components/cart-drawer';
-import { Footer } from '@/components/footer';
+import { AppShell } from '@/components/app-shell';
 import { getPublicStoreSettings } from '@/lib/data/public';
 
 const inter = Inter({
@@ -55,10 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <CartProvider>
             <div className="noise-overlay" />
             <AmbientBackground />
-            <NavBar brandName={store.storeName} />
-            <CartDrawer />
-            <main className="flex-1 pt-24 pb-16">{children}</main>
-            <Footer brandName={store.storeName} />
+            <AppShell brandName={store.storeName}>{children}</AppShell>
           </CartProvider>
         </ThemeProvider>
       </body>

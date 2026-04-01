@@ -11,6 +11,7 @@ import type {
   StylistSummary,
   ValidatedCartLine,
 } from '@/lib/types';
+import { sendBookingConfirmationEmails } from '@/lib/notifications';
 
 function normalizeMoney(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -84,6 +85,7 @@ export async function getProducts(category?: string): Promise<ProductListItem[]>
       categoryId: product.category_id,
       categoryName: relationFirst(product.product_categories)?.name ?? null,
       featured: product.featured,
+      active: product.active,
       rating: normalizeMoney(product.rating),
       reviewCount: product.review_count,
       defaultImage: product.default_image_url,
@@ -136,6 +138,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
     categoryId: data.category_id,
     categoryName: relationFirst(data.product_categories)?.name ?? null,
     featured: data.featured,
+    active: data.active,
     rating: normalizeMoney(data.rating),
     reviewCount: data.review_count,
     defaultImage: data.default_image_url,
@@ -355,6 +358,25 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
     .eq('id', input.availabilityId);
 
   if (updateAvailabilityError) throw updateAvailabilityError;
+
+  try {
+    const store = await getPublicStoreSettings();
+    await sendBookingConfirmationEmails({
+      storeName: store.storeName,
+      supportEmail: store.supportEmail,
+      bookingContactEmail: store.bookingContactEmail,
+      fullName: input.fullName,
+      email: input.email,
+      bookingReference: booking.booking_reference,
+      serviceName: relationFirst(booking.booking_services)?.name ?? 'Selected service',
+      stylistName: relationFirst(booking.stylists)?.name ?? 'Assigned stylist',
+      startsAt: booking.starts_at,
+      phone: input.phone,
+      notes: input.notes ?? null,
+    });
+  } catch (notificationError) {
+    console.error('Booking confirmation email failed', notificationError);
+  }
 
   return {
     id: booking.id,

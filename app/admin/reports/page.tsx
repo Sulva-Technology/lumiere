@@ -37,12 +37,12 @@ export default function AdminReportsPage() {
       <Glass level="medium" className="p-6">
         <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Revenue Snapshot</h2>
         <p className="mt-6 font-serif text-5xl text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(metrics.totalRevenue)}</p>
-        <p className="mt-3 text-[var(--text-secondary)]">Paid orders only, synced from Stripe webhook completions.</p>
+        <p className="mt-3 text-[var(--text-secondary)]">Paid orders only, updated automatically after successful payment confirmation.</p>
       </Glass>
       <Glass level="medium" className="p-6">
         <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Order Volume</h2>
         <p className="mt-6 font-serif text-5xl text-[#8B6914] dark:text-[#F0D080]">{metrics.totalOrders}</p>
-        <p className="mt-3 text-[var(--text-secondary)]">Total orders stored in Supabase.</p>
+        <p className="mt-3 text-[var(--text-secondary)]">Total orders captured across the storefront.</p>
       </Glass>
       <Glass level="medium" className="p-6">
         <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Booking Load</h2>

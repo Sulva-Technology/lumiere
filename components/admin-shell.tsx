@@ -10,15 +10,14 @@ import {
   Package,
   Users,
   Settings,
-  Bell,
   Menu,
   ChevronLeft,
   BarChart,
   CalendarCheck,
   X,
   LogOut,
+  Store,
 } from 'lucide-react';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
@@ -53,7 +52,7 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
   }
 
   return (
-    <div className="relative z-50 flex min-h-screen bg-[#F0EAE0] transition-colors duration-500 dark:bg-[#0F0A05]">
+    <div className="relative z-50 flex min-h-screen bg-[#140d05] text-white transition-colors duration-500 dark:bg-[#0F0A05]">
       {isMobileSidebarOpen && (
         <button
           aria-label="Close sidebar overlay"
@@ -64,22 +63,22 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
 
       <aside
         className={cn(
-          'fixed bottom-0 left-0 top-0 z-50 flex w-[280px] flex-col border-r border-[#c8a03c]/20 bg-[#F0EAE0] transition-transform duration-300 dark:border-[#d4a847]/15 dark:bg-[#0F0A05]',
+          'fixed bottom-0 left-0 top-0 z-50 flex w-[280px] flex-col border-r border-[#6d4a13]/35 bg-[#120b05]/95 transition-transform duration-300 dark:border-[#d4a847]/15 dark:bg-[#0F0A05]',
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           isCollapsed ? 'md:w-[80px]' : 'md:w-[280px]'
         )}
       >
-        <div className="flex h-20 items-center justify-between border-b border-[#c8a03c]/20 px-4 sm:px-6 dark:border-[#d4a847]/15">
+        <div className="flex h-20 items-center justify-between border-b border-[#6d4a13]/35 px-4 sm:px-6 dark:border-[#d4a847]/15">
           {(!isCollapsed || isMobileSidebarOpen) && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-serif text-2xl uppercase tracking-widest text-[#1A1008] dark:text-[#F0D080]">
-              {brandName}
-            </motion.span>
+             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-serif text-[1.85rem] uppercase tracking-[0.18em] text-[#F0D080]">
+               {brandName}
+             </motion.span>
           )}
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="rounded-full bg-white/40 p-2 text-[#8B6914] transition-colors hover:bg-white/60 md:hidden dark:bg-black/40 dark:text-[#D4A847] dark:hover:bg-black/60"
+               className="rounded-full bg-[#241608] p-2 text-[#D4A847] transition-colors hover:bg-[#33200d] md:hidden"
               aria-label="Close sidebar"
             >
               <X size={20} />
@@ -87,7 +86,7 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
 
             <button
               onClick={() => setIsCollapsed((prev) => !prev)}
-              className="hidden rounded-full bg-white/40 p-2 text-[#8B6914] transition-colors hover:bg-white/60 md:inline-flex dark:bg-black/40 dark:text-[#D4A847] dark:hover:bg-black/60"
+               className="hidden rounded-full bg-[#241608] p-2 text-[#D4A847] transition-colors hover:bg-[#33200d] md:inline-flex"
               aria-label="Collapse sidebar"
             >
               {isCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
@@ -110,13 +109,13 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
                 )}
                 <div
                   className={cn(
-                    'flex items-center gap-4 rounded-xl px-4 py-3 transition-colors',
-                    isActive
-                      ? 'bg-[rgba(240,210,140,0.2)] text-[#8B6914] dark:bg-[rgba(212,168,71,0.1)] dark:text-[#F0D080]'
-                      : 'text-[#1A1008]/75 hover:bg-black/5 hover:text-[#8B6914] dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-[#F0D080]'
+                  'flex items-center gap-4 rounded-2xl px-4 py-3.5 transition-colors',
+                  isActive
+                      ? 'bg-[rgba(212,168,71,0.16)] text-[#F0D080]'
+                      : 'text-white/70 hover:bg-white/5 hover:text-[#F0D080]'
                   )}
                 >
-                  <Icon size={20} className={isActive ? 'text-[#8B6914] dark:text-[#D4A847]' : ''} />
+                   <Icon size={20} className={isActive ? 'text-[#D4A847]' : ''} />
                   {(!isCollapsed || isMobileSidebarOpen) && <span className="font-medium">{link.name}</span>}
                 </div>
               </Link>
@@ -124,26 +123,20 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
           })}
         </div>
 
-        <div className="border-t border-[#c8a03c]/20 p-4 dark:border-[#d4a847]/15">
+        <div className="border-t border-[#6d4a13]/35 p-4 dark:border-[#d4a847]/15">
           <div
             className={cn(
-              'flex items-center gap-3 rounded-xl border border-[#c8a03c]/20 bg-[rgba(240,210,140,0.14)] p-2 dark:border-[#d4a847]/20 dark:bg-[rgba(212,168,71,0.08)]',
+              'flex items-center gap-3 rounded-2xl border border-[#6d4a13]/40 bg-[#1a1108] p-3',
               isCollapsed && !isMobileSidebarOpen ? 'justify-center' : ''
             )}
           >
-            <div className="relative h-10 w-10 overflow-hidden rounded-full">
-              <Image
-                src="https://images.unsplash.com/photo-1531123897727-8f129e1bf98c?auto=format&fit=crop&q=80&w=100&h=100"
-                alt="Admin"
-                fill
-                className="object-cover"
-                referrerPolicy="no-referrer"
-              />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.18)] text-[#F0D080]">
+              <Store size={18} />
             </div>
             {(!isCollapsed || isMobileSidebarOpen) && (
               <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium text-[#1A1008] dark:text-white">Admin User</p>
-                <p className="truncate text-xs text-[var(--text-secondary)]">{adminEmail}</p>
+                <p className="truncate text-sm font-medium text-white">Authorized Admin</p>
+                <p className="truncate text-xs text-white/55">{adminEmail}</p>
               </div>
             )}
           </div>
@@ -151,29 +144,25 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
       </aside>
 
       <div className={cn('ml-0 flex flex-1 flex-col transition-[margin] duration-300', isCollapsed ? 'md:ml-[80px]' : 'md:ml-[280px]')}>
-        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[#c8a03c]/15 bg-[rgba(240,210,140,0.12)] px-4 backdrop-blur-[14px] sm:px-6 md:px-8 dark:border-[#d4a847]/10 dark:bg-[rgba(212,168,71,0.06)]">
+        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[#6d4a13]/30 bg-[rgba(20,13,5,0.88)] px-4 backdrop-blur-[18px] sm:px-6 md:px-8">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="rounded-full bg-[rgba(240,210,140,0.2)] p-2 transition-colors hover:bg-[rgba(240,210,140,0.35)] md:hidden dark:bg-[rgba(212,168,71,0.1)] dark:hover:bg-[rgba(212,168,71,0.2)]"
+              className="rounded-full bg-[rgba(212,168,71,0.14)] p-2 transition-colors hover:bg-[rgba(212,168,71,0.24)] md:hidden"
               aria-label="Open sidebar"
             >
-              <Menu size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
+              <Menu size={20} className="text-[#D4A847]" />
             </button>
-            <h1 className="font-serif text-xl text-[#1A1008] dark:text-[#F0D080] sm:text-2xl">{activeLink.name}</h1>
+            <h1 className="font-serif text-xl text-[#F0D080] sm:text-2xl">{activeLink.name}</h1>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
-            <button className="relative rounded-full bg-[rgba(240,210,140,0.2)] p-2 transition-colors hover:bg-[rgba(240,210,140,0.4)] dark:bg-[rgba(212,168,71,0.1)] dark:hover:bg-[rgba(212,168,71,0.2)]">
-              <Bell size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#8B6914] dark:bg-[#D4A847]" />
-            </button>
-            <Link href="/" className="hidden text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#F0D080] sm:inline">
+            <Link href="/" className="hidden text-sm font-medium text-white/70 transition-colors hover:text-[#F0D080] sm:inline">
               View Storefront
             </Link>
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center gap-2 rounded-full bg-[rgba(240,210,140,0.2)] px-4 py-2 text-sm font-medium text-[#8B6914] transition-colors hover:bg-[rgba(240,210,140,0.35)] dark:bg-[rgba(212,168,71,0.1)] dark:text-[#F0D080] dark:hover:bg-[rgba(212,168,71,0.2)]"
+              className="inline-flex items-center gap-2 rounded-full bg-[rgba(212,168,71,0.14)] px-4 py-2 text-sm font-medium text-[#F0D080] transition-colors hover:bg-[rgba(212,168,71,0.24)]"
             >
               <LogOut size={16} />
               <span className="hidden sm:inline">Sign Out</span>
@@ -181,7 +170,7 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 md:p-8">{children}</main>
+        <main className="flex-1 overflow-x-hidden px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">{children}</main>
       </div>
     </div>
   );

@@ -40,6 +40,29 @@ export const adminProductUpdateSchema = z.object({
   active: z.boolean(),
 });
 
+export const adminProductCreateSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+  slug: z
+    .string()
+    .trim()
+    .min(2)
+    .max(180)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers, and hyphens only.'),
+  description: z.string().trim().max(4000).optional().or(z.literal('')),
+  categoryId: z.string().uuid().optional().or(z.literal('')),
+  featured: z.boolean().optional().default(false),
+  active: z.boolean().optional().default(true),
+  defaultImageUrl: z.string().trim().url().optional().or(z.literal('')),
+  variantTitle: z.string().trim().min(1).max(160),
+  sku: z.string().trim().min(2).max(120),
+  price: z.coerce.number().min(0),
+  compareAtPrice: z.union([z.coerce.number().min(0), z.null()]).optional(),
+  stockQuantity: z.coerce.number().int().min(0),
+  shade: z.string().trim().max(120).optional().or(z.literal('')),
+  length: z.string().trim().max(120).optional().or(z.literal('')),
+  size: z.string().trim().max(120).optional().or(z.literal('')),
+});
+
 export const adminOrderStatusSchema = z.object({
   paymentStatus: z.enum(['pending', 'paid', 'failed', 'cancelled']).optional(),
   fulfillmentStatus: z.enum(['unfulfilled', 'processing', 'shipped', 'delivered']).optional(),

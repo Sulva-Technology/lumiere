@@ -13,7 +13,7 @@ export default async function FaqPage() {
         {
           title: 'Orders',
           body: [
-            'Orders are confirmed after Stripe payment succeeds and our system records the order in Supabase.',
+            'Orders are confirmed after Stripe payment succeeds and your order is recorded successfully.',
             'You will receive email confirmation once the order is placed and another update when fulfillment begins.',
           ],
         },

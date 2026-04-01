@@ -15,6 +15,7 @@ export interface ProductListItem {
   categoryId: string | null;
   categoryName: string | null;
   featured: boolean;
+  active: boolean;
   rating: number;
   reviewCount: number;
   defaultImage: string | null;
@@ -195,4 +196,3 @@ export interface AuthenticatedAdminUser {
   email: string;
   role: 'admin' | 'manager' | 'staff';
 }
-

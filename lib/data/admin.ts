@@ -178,6 +178,7 @@ export async function getAdminProducts(): Promise<ProductDetail[]> {
       categoryId: product.category_id,
       categoryName: relationFirst(product.product_categories)?.name ?? null,
       featured: product.featured,
+      active: product.active,
       rating: money(product.rating),
       reviewCount: product.review_count,
       defaultImage: product.default_image_url,
@@ -215,6 +216,83 @@ export async function getAdminCategories(): Promise<Category[]> {
   const { data, error } = await supabase.from('product_categories').select('id, name, slug, description').order('name');
   if (error) throw error;
   return data ?? [];
+}
+
+export async function createAdminProduct(input: {
+  name: string;
+  slug: string;
+  description?: string | null;
+  categoryId?: string | null;
+  featured?: boolean;
+  active?: boolean;
+  defaultImageUrl?: string | null;
+  variantTitle: string;
+  sku: string;
+  price: number;
+  compareAtPrice?: number | null;
+  stockQuantity: number;
+  shade?: string | null;
+  length?: string | null;
+  size?: string | null;
+}) {
+  const supabase = createSupabaseAdminClient();
+
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .insert({
+      slug: input.slug,
+      name: input.name,
+      description: input.description?.trim() || null,
+      category_id: input.categoryId || null,
+      featured: input.featured ?? false,
+      active: input.active ?? true,
+      default_image_url: input.defaultImageUrl?.trim() || null,
+    })
+    .select('id')
+    .single();
+
+  if (productError) throw productError;
+
+  const { error: variantError } = await supabase.from('product_variants').insert({
+    product_id: product.id,
+    sku: input.sku,
+    title: input.variantTitle,
+    shade: input.shade?.trim() || null,
+    length: input.length?.trim() || null,
+    size: input.size?.trim() || null,
+    price: input.price,
+    compare_at_price: input.compareAtPrice ?? null,
+    stock_quantity: input.stockQuantity,
+    active: input.active ?? true,
+  });
+
+  if (variantError) {
+    await supabase.from('products').delete().eq('id', product.id);
+    throw variantError;
+  }
+
+  if (input.defaultImageUrl?.trim()) {
+    const { error: imageError } = await supabase.from('product_images').insert({
+      product_id: product.id,
+      url: input.defaultImageUrl.trim(),
+      alt: input.name,
+      sort_order: 0,
+    });
+
+    if (imageError) {
+      await supabase.from('products').delete().eq('id', product.id);
+      throw imageError;
+    }
+  }
+
+  const products = await getAdminProducts();
+  return products.find((item) => item.id === product.id) ?? null;
+}
+
+export async function deleteAdminProduct(productId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from('products').delete().eq('id', productId);
+  if (error) throw error;
 }
 
 export async function getStoreSettings() {

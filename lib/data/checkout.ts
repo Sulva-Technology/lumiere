@@ -1,7 +1,8 @@
 ﻿import { headers } from 'next/headers';
 import { getStripe } from '@/lib/stripe';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { validateCartLines } from '@/lib/data/public';
+import { getPublicStoreSettings, validateCartLines } from '@/lib/data/public';
+import { sendOrderConfirmationEmails } from '@/lib/notifications';
 import type { CheckoutSummary, CreateCheckoutSessionInput, CreateCheckoutSessionResult } from '@/lib/types';
 
 function cents(amount: number) {
@@ -170,7 +171,7 @@ export async function finalizePaidOrder(checkoutSessionId: string, paymentIntent
   const supabase = createSupabaseAdminClient();
   const { data: order, error } = await supabase
     .from('orders')
-    .select('id, payment_status, order_items(variant_id, quantity)')
+    .select('id, payment_status, order_number, email, subtotal, shipping_total, total, customers(full_name), order_items(product_name, variant_title, variant_id, quantity, line_total)')
     .eq('stripe_checkout_session_id', checkoutSessionId)
     .maybeSingle();
 
@@ -200,6 +201,28 @@ export async function finalizePaidOrder(checkoutSessionId: string, paymentIntent
         stock_quantity: Math.max(0, variant.stock_quantity - item.quantity),
       })
       .eq('id', item.variant_id);
+  }
+
+  try {
+    const store = await getPublicStoreSettings();
+    await sendOrderConfirmationEmails({
+      storeName: store.storeName,
+      supportEmail: store.supportEmail,
+      customerName: order.customers?.[0]?.full_name ?? 'there',
+      customerEmail: order.email,
+      orderNumber: order.order_number,
+      subtotal: Number(order.subtotal),
+      shipping: Number(order.shipping_total),
+      total: Number(order.total),
+      items: (order.order_items ?? []).map((item) => ({
+        productName: item.product_name,
+        variantTitle: item.variant_title,
+        quantity: item.quantity,
+        lineTotal: Number(item.line_total),
+      })),
+    });
+  } catch (notificationError) {
+    console.error('Order confirmation email failed', notificationError);
   }
 }
 

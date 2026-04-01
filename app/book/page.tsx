@@ -99,7 +99,7 @@ export default function BookingPage() {
       <section className="mb-10 text-center">
         <h1 className="font-serif text-4xl md:text-6xl">Book Your Luxury Hair Experience</h1>
         <p className="mx-auto mt-4 max-w-3xl text-lg text-[var(--text-secondary)]">
-          Live stylist data and real availability now power bookings. Choose a stylist, reserve a slot, and your appointment is saved directly to Supabase.
+          Live stylist schedules and real availability power bookings. Choose a stylist, reserve a slot, and your appointment is saved instantly.
         </p>
       </section>
 

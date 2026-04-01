@@ -17,8 +17,8 @@ export default function PrivacyPolicyPage() {
         {
           title: 'Operational Systems',
           body: [
-            'Product, booking, customer, and order records are stored in Supabase as the application system of record.',
-            'Administrative access is restricted to authenticated staff users.',
+            'Product, booking, customer, and order records are stored securely to operate the storefront and support services.',
+            'Administrative access is restricted to authorized staff accounts.',
           ],
         },
         {

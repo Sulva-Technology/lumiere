@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
     <div className="mx-auto flex min-h-[70vh] max-w-xl items-center px-4 py-12">
       <Glass level="heavy" className="w-full p-10">
         <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Admin Sign In</h1>
-        <p className="mt-3 text-[var(--text-secondary)]">Use a Supabase staff account that also exists in the `staff_users` table.</p>
+        <p className="mt-3 text-[var(--text-secondary)]">Sign in with your authorized admin account to access the dashboard.</p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="Email" className="w-full rounded-full bg-white/30 px-5 py-3 outline-none dark:bg-black/30" />
