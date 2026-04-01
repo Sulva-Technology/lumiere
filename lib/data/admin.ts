@@ -239,6 +239,9 @@ export async function updateStoreSettings(input: {
 }) {
   const supabase = createSupabaseAdminClient();
   const current = await getStoreSettings();
+  const supportPhone = input.supportPhone?.trim() ? input.supportPhone.trim() : null;
+  const bookingContactEmail = input.bookingContactEmail?.trim() ? input.bookingContactEmail.trim() : null;
+  const announcementBar = input.announcementBar?.trim() ? input.announcementBar.trim() : null;
 
   if (!current) {
     const { data, error } = await supabase
@@ -246,9 +249,9 @@ export async function updateStoreSettings(input: {
       .insert({
         store_name: input.storeName,
         support_email: input.supportEmail,
-        support_phone: input.supportPhone ?? null,
-        booking_contact_email: input.bookingContactEmail ?? null,
-        announcement_bar: input.announcementBar ?? null,
+        support_phone: supportPhone,
+        booking_contact_email: bookingContactEmail,
+        announcement_bar: announcementBar,
       })
       .select()
       .single();
@@ -262,9 +265,9 @@ export async function updateStoreSettings(input: {
     .update({
       store_name: input.storeName,
       support_email: input.supportEmail,
-      support_phone: input.supportPhone ?? null,
-      booking_contact_email: input.bookingContactEmail ?? null,
-      announcement_bar: input.announcementBar ?? null,
+      support_phone: supportPhone,
+      booking_contact_email: bookingContactEmail,
+      announcement_bar: announcementBar,
     })
     .eq('id', current.id)
     .select()

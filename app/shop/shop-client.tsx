@@ -42,9 +42,10 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
     <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
       <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="font-serif text-4xl md:text-5xl">The Collection</h1>
+          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Hair + Makeup</p>
+          <h1 className="mt-3 font-serif text-4xl md:text-5xl">The Beauty Edit</h1>
           <p className="mt-4 max-w-2xl text-[var(--text-secondary)]">
-            Live catalog data now powers the collection, including real pricing and inventory-aware product pages.
+            Explore hair, makeup, and beauty essentials with live catalog data, real pricing, and inventory-aware product pages.
           </p>
           <div className="mt-6 flex gap-4 overflow-x-auto pb-2">
             <button
@@ -80,6 +81,11 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
         <Glass level="heavy" className="p-8 text-center">
           <p className="font-serif text-2xl text-[#1A1008] dark:text-white">Collection unavailable</p>
           <p className="mt-2 text-[var(--text-secondary)]">{error}</p>
+        </Glass>
+      ) : products.length === 0 ? (
+        <Glass level="heavy" className="p-8 text-center">
+          <p className="font-serif text-2xl text-[#1A1008] dark:text-white">No products in this category yet</p>
+          <p className="mt-2 text-[var(--text-secondary)]">Try another category or come back as new beauty drops go live.</p>
         </Glass>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

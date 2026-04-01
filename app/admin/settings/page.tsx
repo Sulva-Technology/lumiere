@@ -22,7 +22,15 @@ export default function AdminSettingsPage() {
         const response = await fetch('/api/admin/settings');
         const json = await response.json();
         if (!response.ok) throw new Error(json.error ?? 'Unable to load settings.');
-        setSettings(json.settings);
+        setSettings(
+          json.settings ?? {
+            store_name: 'Lumiere',
+            support_email: '',
+            support_phone: '',
+            booking_contact_email: '',
+            announcement_bar: '',
+          }
+        );
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.');
       }
@@ -59,8 +67,12 @@ export default function AdminSettingsPage() {
     }
   }
 
-  if (!settings) {
+  if (!settings && !error) {
     return <div className="h-72 animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" />;
+  }
+
+  if (!settings) {
+    return <Glass level="heavy" className="p-8 text-center text-[var(--text-secondary)]">{error ?? 'Unable to load settings.'}</Glass>;
   }
 
   return (

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -16,9 +16,11 @@ import {
   BarChart,
   CalendarCheck,
   X,
+  LogOut,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 const ADMIN_LINKS = [
   { name: 'Overview', href: '/admin', icon: LayoutDashboard },
@@ -31,6 +33,7 @@ const ADMIN_LINKS = [
 ];
 
 export function AdminShell({ children, adminEmail }: { children: React.ReactNode; adminEmail: string }) {
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -41,6 +44,13 @@ export function AdminShell({ children, adminEmail }: { children: React.ReactNode
 
   const activeLink =
     ADMIN_LINKS.find((link) => (link.href === '/admin' ? pathname === '/admin' : pathname?.startsWith(link.href))) ?? ADMIN_LINKS[0];
+
+  async function handleSignOut() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    router.push('/admin/login');
+    router.refresh();
+  }
 
   return (
     <div className="relative z-50 flex min-h-screen bg-[#F0EAE0] transition-colors duration-500 dark:bg-[#0F0A05]">
@@ -161,6 +171,13 @@ export function AdminShell({ children, adminEmail }: { children: React.ReactNode
             <Link href="/" className="hidden text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#F0D080] sm:inline">
               View Storefront
             </Link>
+            <button
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-2 rounded-full bg-[rgba(240,210,140,0.2)] px-4 py-2 text-sm font-medium text-[#8B6914] transition-colors hover:bg-[rgba(240,210,140,0.35)] dark:bg-[rgba(212,168,71,0.1)] dark:text-[#F0D080] dark:hover:bg-[rgba(212,168,71,0.2)]"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
           </div>
         </header>
 

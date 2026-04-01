@@ -1,10 +1,13 @@
 insert into public.product_categories (name, slug, description)
 values
-  ('Wigs & Extensions', 'wigs-extensions', 'Premium raw hair bundles, closures, and frontals.'),
-  ('Natural Care', 'natural-care', 'Hydration, styling, and repair essentials.'),
-  ('Tools', 'tools', 'Professional styling tools and accessories.'),
-  ('Color', 'color', 'Glosses, toners, and treatment color products.')
-on conflict (slug) do nothing;
+  ('Hair Extensions', 'wigs-extensions', 'Premium raw hair bundles, closures, wigs, and extension essentials.'),
+  ('Hair Care', 'natural-care', 'Hydration, styling, and repair essentials for healthy hair.'),
+  ('Beauty Tools', 'beauty-tools', 'Professional styling tools, brushes, and vanity accessories.'),
+  ('Makeup Essentials', 'makeup-essentials', 'Complexion, lip, and glow staples for polished everyday beauty.')
+on conflict (slug) do update
+set
+  name = excluded.name,
+  description = excluded.description;
 
 insert into public.products (slug, name, description, category_id, featured, active, rating, review_count, default_image_url, details, care_instructions, shipping_notes)
 select
@@ -22,19 +25,47 @@ select
   array['Free shipping on orders over $400', 'Returns within 14 days on unaltered bundles']
 from public.product_categories c
 where c.slug = 'wigs-extensions'
-on conflict (slug) do nothing;
+on conflict (slug) do update
+set
+  name = excluded.name,
+  description = excluded.description,
+  category_id = excluded.category_id,
+  featured = excluded.featured,
+  active = excluded.active,
+  rating = excluded.rating,
+  review_count = excluded.review_count,
+  default_image_url = excluded.default_image_url,
+  details = excluded.details,
+  care_instructions = excluded.care_instructions,
+  shipping_notes = excluded.shipping_notes;
 
 insert into public.product_variants (product_id, sku, title, shade, length, price, compare_at_price, stock_quantity, active)
 select p.id, 'LUM-RCW-18-NB', '18in / Natural Black', 'Natural Black', '18"', 145, 165, 18, true
 from public.products p
 where p.slug = 'raw-cambodian-wavy-bundle'
-on conflict (sku) do nothing;
+on conflict (sku) do update
+set
+  title = excluded.title,
+  shade = excluded.shade,
+  length = excluded.length,
+  price = excluded.price,
+  compare_at_price = excluded.compare_at_price,
+  stock_quantity = excluded.stock_quantity,
+  active = excluded.active;
 
 insert into public.product_variants (product_id, sku, title, shade, length, price, compare_at_price, stock_quantity, active)
 select p.id, 'LUM-RCW-22-NB', '22in / Natural Black', 'Natural Black', '22"', 185, 210, 10, true
 from public.products p
 where p.slug = 'raw-cambodian-wavy-bundle'
-on conflict (sku) do nothing;
+on conflict (sku) do update
+set
+  title = excluded.title,
+  shade = excluded.shade,
+  length = excluded.length,
+  price = excluded.price,
+  compare_at_price = excluded.compare_at_price,
+  stock_quantity = excluded.stock_quantity,
+  active = excluded.active;
 
 insert into public.product_images (product_id, url, alt, sort_order)
 select p.id, 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=800&h=1000', 'Raw Cambodian Wavy Bundle', 0
@@ -42,17 +73,153 @@ from public.products p
 where p.slug = 'raw-cambodian-wavy-bundle'
 on conflict do nothing;
 
-insert into public.products (slug, name, description, category_id, featured, active, rating, review_count, default_image_url)
-select 'silk-press-heat-protectant', 'Silk Press Heat Protectant', 'Weightless thermal protection that shields strands and boosts shine.', c.id, false, true, 4.8, 76, 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&q=80&w=800&h=1000'
+insert into public.products (slug, name, description, category_id, featured, active, rating, review_count, default_image_url, details, care_instructions, shipping_notes)
+select
+  'silk-press-heat-protectant',
+  'Silk Press Heat Protectant',
+  'Weightless thermal protection that shields strands and boosts shine.',
+  c.id,
+  false,
+  true,
+  4.8,
+  76,
+  'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&q=80&w=800&h=1000',
+  array['Heat protection up to 450°F', 'Adds shine without heaviness', 'Works well for silk presses and blowouts'],
+  array['Apply lightly to damp or dry hair', 'Focus on mid-lengths and ends', 'Layer before heat styling'],
+  array['Ships in 1-2 business days', 'Final sale if opened']
 from public.product_categories c
 where c.slug = 'natural-care'
-on conflict (slug) do nothing;
+on conflict (slug) do update
+set
+  name = excluded.name,
+  description = excluded.description,
+  category_id = excluded.category_id,
+  featured = excluded.featured,
+  active = excluded.active,
+  rating = excluded.rating,
+  review_count = excluded.review_count,
+  default_image_url = excluded.default_image_url,
+  details = excluded.details,
+  care_instructions = excluded.care_instructions,
+  shipping_notes = excluded.shipping_notes;
 
 insert into public.product_variants (product_id, sku, title, size, price, stock_quantity, active)
 select p.id, 'LUM-SHP-8OZ', '8 oz', '8 oz', 38, 42, true
 from public.products p
 where p.slug = 'silk-press-heat-protectant'
-on conflict (sku) do nothing;
+on conflict (sku) do update
+set
+  title = excluded.title,
+  size = excluded.size,
+  price = excluded.price,
+  stock_quantity = excluded.stock_quantity,
+  active = excluded.active;
+
+insert into public.products (slug, name, description, category_id, featured, active, rating, review_count, default_image_url, details, care_instructions, shipping_notes)
+select
+  'radiant-skin-foundation',
+  'Radiant Skin Foundation',
+  'A breathable complexion formula that smooths, brightens, and wears beautifully from day to night.',
+  c.id,
+  true,
+  true,
+  4.9,
+  91,
+  'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80&w=800&h=1000',
+  array['Natural radiant finish', 'Medium, buildable coverage', 'Comfortable long-wear formula'],
+  array['Apply with brush, sponge, or fingertips', 'Build coverage in thin layers', 'Pair with primer for extended wear'],
+  array['Ships in 1-2 business days', 'Shade-matched products are exchange eligible within 14 days']
+from public.product_categories c
+where c.slug = 'makeup-essentials'
+on conflict (slug) do update
+set
+  name = excluded.name,
+  description = excluded.description,
+  category_id = excluded.category_id,
+  featured = excluded.featured,
+  active = excluded.active,
+  rating = excluded.rating,
+  review_count = excluded.review_count,
+  default_image_url = excluded.default_image_url,
+  details = excluded.details,
+  care_instructions = excluded.care_instructions,
+  shipping_notes = excluded.shipping_notes;
+
+insert into public.product_variants (product_id, sku, title, shade, size, price, compare_at_price, stock_quantity, active)
+select p.id, 'LUM-RSF-120', 'Shade 120 / 30 ml', '120', '30 ml', 46, 52, 24, true
+from public.products p
+where p.slug = 'radiant-skin-foundation'
+on conflict (sku) do update
+set
+  title = excluded.title,
+  shade = excluded.shade,
+  size = excluded.size,
+  price = excluded.price,
+  compare_at_price = excluded.compare_at_price,
+  stock_quantity = excluded.stock_quantity,
+  active = excluded.active;
+
+insert into public.product_variants (product_id, sku, title, shade, size, price, compare_at_price, stock_quantity, active)
+select p.id, 'LUM-RSF-340', 'Shade 340 / 30 ml', '340', '30 ml', 46, 52, 19, true
+from public.products p
+where p.slug = 'radiant-skin-foundation'
+on conflict (sku) do update
+set
+  title = excluded.title,
+  shade = excluded.shade,
+  size = excluded.size,
+  price = excluded.price,
+  compare_at_price = excluded.compare_at_price,
+  stock_quantity = excluded.stock_quantity,
+  active = excluded.active;
+
+insert into public.product_images (product_id, url, alt, sort_order)
+select p.id, 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80&w=800&h=1000', 'Radiant Skin Foundation', 0
+from public.products p
+where p.slug = 'radiant-skin-foundation'
+on conflict do nothing;
+
+insert into public.products (slug, name, description, category_id, featured, active, rating, review_count, default_image_url, details, care_instructions, shipping_notes)
+select
+  'signature-brush-set',
+  'Signature Brush Set',
+  'A curated face-and-eye brush kit designed for seamless blending, buffing, and soft definition.',
+  c.id,
+  false,
+  true,
+  4.7,
+  54,
+  'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=800&h=1000',
+  array['Includes 6 everyday brushes', 'Soft synthetic bristles', 'Travel-ready brush roll included'],
+  array['Wash weekly with gentle brush soap', 'Lay flat to dry', 'Store in a dry kit or vanity case'],
+  array['Ships in 1-2 business days', 'Returns accepted within 14 days if unused']
+from public.product_categories c
+where c.slug = 'beauty-tools'
+on conflict (slug) do update
+set
+  name = excluded.name,
+  description = excluded.description,
+  category_id = excluded.category_id,
+  featured = excluded.featured,
+  active = excluded.active,
+  rating = excluded.rating,
+  review_count = excluded.review_count,
+  default_image_url = excluded.default_image_url,
+  details = excluded.details,
+  care_instructions = excluded.care_instructions,
+  shipping_notes = excluded.shipping_notes;
+
+insert into public.product_variants (product_id, sku, title, size, price, stock_quantity, active)
+select p.id, 'LUM-SBS-SET', '6-piece set', '6-piece set', 58, 27, true
+from public.products p
+where p.slug = 'signature-brush-set'
+on conflict (sku) do update
+set
+  title = excluded.title,
+  size = excluded.size,
+  price = excluded.price,
+  stock_quantity = excluded.stock_quantity,
+  active = excluded.active;
 
 insert into public.booking_services (slug, name, description, duration_minutes, price, active)
 values
@@ -83,6 +250,14 @@ cross join (
 where s.available = true
 on conflict do nothing;
 
+update public.store_settings
+set
+  store_name = 'Lumiere Beauty',
+  support_email = 'support@lumiere.com',
+  support_phone = '+1 (555) 123-4567',
+  booking_contact_email = 'bookings@lumiere.com',
+  announcement_bar = 'Shop premium hair, makeup, and beauty essentials with complimentary shipping on orders over $400.';
+
 insert into public.store_settings (store_name, support_email, support_phone, booking_contact_email, announcement_bar)
-values ('Lumiere', 'support@lumiere.com', '+1 (555) 123-4567', 'bookings@lumiere.com', 'Complimentary shipping on orders over $400.')
-on conflict do nothing;
+select 'Lumiere Beauty', 'support@lumiere.com', '+1 (555) 123-4567', 'bookings@lumiere.com', 'Shop premium hair, makeup, and beauty essentials with complimentary shipping on orders over $400.'
+where not exists (select 1 from public.store_settings);

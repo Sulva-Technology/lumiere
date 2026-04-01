@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiUser } from '@/lib/auth';
 import { getStoreSettings, updateStoreSettings } from '@/lib/data/admin';
+import { storeSettingsSchema } from '@/lib/schemas';
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     await requireAdminApiUser();
-    const body = await request.json();
+    const body = storeSettingsSchema.parse(await request.json());
     const settings = await updateStoreSettings(body);
     return NextResponse.json({ settings });
   } catch (error) {

@@ -7,18 +7,26 @@ import type { DashboardMetrics } from '@/lib/types';
 
 export default function AdminReportsPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const response = await fetch('/api/admin/dashboard');
-      const json = await response.json();
-      if (response.ok) {
+      try {
+        const response = await fetch('/api/admin/dashboard');
+        const json = await response.json();
+        if (!response.ok) throw new Error(json.error ?? 'Unable to load reports.');
         setMetrics(json.metrics);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load reports.');
       }
     }
 
     void load();
   }, []);
+
+  if (error) {
+    return <Glass level="heavy" className="p-8 text-center text-[var(--text-secondary)]">{error}</Glass>;
+  }
 
   if (!metrics) {
     return <div className="h-72 animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" />;

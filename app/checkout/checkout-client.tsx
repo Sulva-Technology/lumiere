@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Glass } from '@/components/ui/glass';
@@ -22,16 +22,44 @@ export function CheckoutClient() {
   const [country, setCountry] = useState('US');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cancelSyncing, setCancelSyncing] = useState(false);
+  const successHandledRef = useRef(false);
+  const cancelHandledRef = useRef(false);
 
   const shipping = useMemo(() => (subtotal >= 400 ? 0 : 25), [subtotal]);
   const total = subtotal + shipping;
   const success = searchParams.get('success') === '1';
+  const canceled = searchParams.get('canceled') === '1';
+  const orderId = searchParams.get('order');
 
   useEffect(() => {
-    if (success) {
+    if (success && !successHandledRef.current) {
+      successHandledRef.current = true;
       clearCart();
     }
   }, [clearCart, success]);
+
+  useEffect(() => {
+    async function syncCancelledCheckout() {
+      if (!canceled || !orderId || cancelHandledRef.current) return;
+      cancelHandledRef.current = true;
+      setCancelSyncing(true);
+
+      try {
+        await fetch('/api/checkout/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ orderId }),
+        });
+      } finally {
+        setCancelSyncing(false);
+      }
+    }
+
+    void syncCancelledCheckout();
+  }, [canceled, orderId]);
 
   async function handleCheckout(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,7 +108,7 @@ export function CheckoutClient() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
           <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Order confirmed</h1>
-          <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We’ve recorded your order and will begin fulfillment shortly.</p>
+          <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We&apos;ve recorded your order and will begin fulfillment shortly.</p>
           <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
             Continue Shopping
           </Link>
@@ -89,12 +117,36 @@ export function CheckoutClient() {
     );
   }
 
+  if (items.length === 0) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <Glass level="heavy" className="p-10 text-center">
+          <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">{canceled ? 'Checkout paused' : 'Your bag is empty'}</h1>
+          <p className="mt-4 text-[var(--text-secondary)]">
+            {canceled
+              ? 'Your payment was not completed. Add items back to your bag whenever you are ready to try again.'
+              : 'Add a few beauty essentials to your cart before heading to checkout.'}
+          </p>
+          <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
+            Return to Shop
+          </Link>
+        </Glass>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      {canceled && (
+        <Glass level="medium" className="mb-6 p-4 text-sm text-[var(--text-secondary)]">
+          Your payment was canceled, and your items are still here for you. {cancelSyncing ? 'Updating order status...' : 'You can review your details and try again when ready.'}
+        </Glass>
+      )}
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_0.42fr]">
         <Glass level="heavy" className="p-6 sm:p-8">
           <h1 className="font-serif text-3xl text-[#1A1008] dark:text-white">Checkout</h1>
-          <p className="mt-2 text-[var(--text-secondary)]">Real Stripe Checkout starts from this form, and the server recalculates every line before payment.</p>
+          <p className="mt-2 text-[var(--text-secondary)]">Secure Stripe checkout starts here, and every line is revalidated on the server before payment.</p>
 
           <form className="mt-8 space-y-4" onSubmit={handleCheckout}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -118,7 +170,7 @@ export function CheckoutClient() {
 
             <button
               type="submit"
-              disabled={loading || items.length === 0}
+              disabled={loading}
               className="w-full rounded-full bg-[#8B6914] py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
             >
               {loading ? 'Redirecting to Stripe...' : `Continue to Stripe - ${formatCurrency(total)}`}

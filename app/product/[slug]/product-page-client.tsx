@@ -54,6 +54,8 @@ export function ProductPageClient({ slug }: { slug: string }) {
     );
   }
 
+  const canAddToCart = selectedVariant.stockQuantity > 0;
+
   return (
     <div className="mx-auto max-w-7xl px-4 pb-32 pt-8 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
@@ -88,7 +90,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
             <p className="mt-4 text-lg text-[var(--text-secondary)]">{product.description}</p>
 
             <div className="mt-8 space-y-3">
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--text-secondary)]">Choose a variant</p>
+              <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--text-secondary)]">Choose an option</p>
               <div className="flex flex-wrap gap-3">
                 {product.variants.map((variant) => (
                   <button
@@ -118,35 +120,30 @@ export function ProductPageClient({ slug }: { slug: string }) {
                   imageUrl: product.defaultImage,
                 })
               }
-              className="mt-8 w-full rounded-full bg-[#8B6914] py-4 text-lg font-medium text-white shadow-lg transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
+              disabled={!canAddToCart}
+              className="mt-8 w-full rounded-full bg-[#8B6914] py-4 text-lg font-medium text-white shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
             >
-              Add to Cart
+              {canAddToCart ? 'Add to Cart' : 'Sold Out'}
             </button>
           </Glass>
 
           <div className="space-y-4">
             <Glass level="medium" className="p-6">
-              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Product Details</h2>
+              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Details & Benefits</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
-                {product.details.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
+                {product.details.length > 0 ? product.details.map((detail) => <li key={detail}>{detail}</li>) : <li>More product details coming soon.</li>}
               </ul>
             </Glass>
             <Glass level="medium" className="p-6">
-              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Care</h2>
+              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Usage & Care</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
-                {product.careInstructions.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
+                {product.careInstructions.length > 0 ? product.careInstructions.map((detail) => <li key={detail}>{detail}</li>) : <li>Usage guidance will be shared with your order.</li>}
               </ul>
             </Glass>
             <Glass level="medium" className="p-6">
               <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Shipping & Returns</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
-                {product.shippingNotes.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
+                {product.shippingNotes.length > 0 ? product.shippingNotes.map((detail) => <li key={detail}>{detail}</li>) : <li>Shipping and return details will be confirmed at checkout.</li>}
               </ul>
             </Glass>
           </div>

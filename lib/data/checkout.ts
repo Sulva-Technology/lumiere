@@ -32,6 +32,7 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
   const stripe = getStripe();
   const hdrs = await headers();
   const origin = process.env.NEXT_PUBLIC_SITE_URL || hdrs.get('origin') || 'http://localhost:3000';
+  let orderId: string | null = null;
 
   const { data: customer } = await supabase
     .from('customers')
@@ -82,6 +83,7 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
     .single();
 
   if (orderError) throw orderError;
+  orderId = order.id;
 
   const lineItems = summary.lines.map((line) => ({
     order_id: order.id,
@@ -98,63 +100,71 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
   const { error: orderItemsError } = await supabase.from('order_items').insert(lineItems);
   if (orderItemsError) throw orderItemsError;
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    customer_email: input.email,
-    success_url: `${origin}/checkout?success=1&order=${order.id}`,
-    cancel_url: `${origin}/checkout?canceled=1&order=${order.id}`,
-    payment_method_types: ['card'],
-    shipping_address_collection: {
-      allowed_countries: [input.shippingAddress.country.toUpperCase() as 'US'],
-    },
-    line_items: [
-      ...summary.lines.map((line) => ({
-        quantity: line.quantity,
-        price_data: {
-          currency: 'usd',
-          unit_amount: cents(line.unitAmount),
-          product_data: {
-            name: `${line.productName} - ${line.variantTitle}`,
-            images: line.imageUrl ? [line.imageUrl] : [],
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer_email: input.email,
+      success_url: `${origin}/checkout?success=1&order=${order.id}`,
+      cancel_url: `${origin}/checkout?canceled=1&order=${order.id}`,
+      payment_method_types: ['card'],
+      shipping_address_collection: {
+        allowed_countries: [input.shippingAddress.country.toUpperCase() as 'US'],
+      },
+      line_items: [
+        ...summary.lines.map((line) => ({
+          quantity: line.quantity,
+          price_data: {
+            currency: 'usd',
+            unit_amount: cents(line.unitAmount),
+            product_data: {
+              name: `${line.productName} - ${line.variantTitle}`,
+              images: line.imageUrl ? [line.imageUrl] : [],
+            },
           },
-        },
-      })),
-      ...(summary.shipping > 0
-        ? [
-            {
-              quantity: 1,
-              price_data: {
-                currency: 'usd',
-                unit_amount: cents(summary.shipping),
-                product_data: {
-                  name: 'Shipping',
+        })),
+        ...(summary.shipping > 0
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: 'usd',
+                  unit_amount: cents(summary.shipping),
+                  product_data: {
+                    name: 'Shipping',
+                  },
                 },
               },
-            },
-          ]
-        : []),
-    ],
-    metadata: {
+            ]
+          : []),
+      ],
+      metadata: {
+        orderId: order.id,
+        orderNumber,
+      },
+    });
+
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ stripe_checkout_session_id: session.id })
+      .eq('id', order.id);
+
+    if (updateError) throw updateError;
+
+    if (!session.url) {
+      throw new Error('Stripe Checkout session did not return a redirect URL.');
+    }
+
+    return {
+      checkoutUrl: session.url,
       orderId: order.id,
-      orderNumber,
-    },
-  });
+    };
+  } catch (error) {
+    if (orderId) {
+      await supabase.from('orders').update({ payment_status: 'failed' }).eq('id', orderId);
+    }
 
-  const { error: updateError } = await supabase
-    .from('orders')
-    .update({ stripe_checkout_session_id: session.id })
-    .eq('id', order.id);
-
-  if (updateError) throw updateError;
-
-  if (!session.url) {
-    throw new Error('Stripe Checkout session did not return a redirect URL.');
+    throw error;
   }
-
-  return {
-    checkoutUrl: session.url,
-    orderId: order.id,
-  };
 }
 
 export async function finalizePaidOrder(checkoutSessionId: string, paymentIntentId?: string | null) {
@@ -194,3 +204,18 @@ export async function finalizePaidOrder(checkoutSessionId: string, paymentIntent
   }
 }
 
+export async function markOrderCheckoutCancelled(orderId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: order, error } = await supabase.from('orders').select('id, payment_status').eq('id', orderId).maybeSingle();
+
+  if (error) throw error;
+  if (!order || order.payment_status === 'paid') return;
+
+  const { error: updateError } = await supabase
+    .from('orders')
+    .update({ payment_status: 'cancelled' })
+    .eq('id', orderId)
+    .neq('payment_status', 'paid');
+
+  if (updateError) throw updateError;
+}

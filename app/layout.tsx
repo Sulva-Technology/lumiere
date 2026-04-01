@@ -21,8 +21,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: 'Lumière | Luxury Hair & Styling',
-  description: 'Premium hair extensions, natural care, and elite stylist booking.',
+  title: 'LumiÃ¨re | Beauty Shop',
+  description: 'A curated beauty storefront for premium hair and makeup collections.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -50,9 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AmbientBackground />
             <NavBar />
             <CartDrawer />
-            <main className="flex-1 pt-24 pb-16">
-              {children}
-            </main>
+            <main className="flex-1 pt-24 pb-16">{children}</main>
             <Footer />
           </CartProvider>
         </ThemeProvider>

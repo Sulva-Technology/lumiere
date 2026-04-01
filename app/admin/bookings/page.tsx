@@ -55,26 +55,34 @@ export default function AdminBookingsPage() {
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking) => (
-              <tr key={booking.id} className="border-b border-black/5 text-sm dark:border-white/5">
-                <td className="py-4 font-medium text-[#1A1008] dark:text-white">{booking.bookingReference}</td>
-                <td className="py-4">{booking.clientName}</td>
-                <td className="py-4">{booking.stylistName}</td>
-                <td className="py-4">{booking.serviceName}</td>
-                <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(booking.startsAt)}</td>
-                <td className="py-4">
-                  <select
-                    value={booking.status}
-                    onChange={(event) => updateStatus(booking.id, event.target.value)}
-                    className="rounded-full bg-white/40 px-4 py-2 text-sm outline-none dark:bg-black/40"
-                  >
-                    <option value="confirmed">Confirmed</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+            {bookings.length > 0 ? (
+              bookings.map((booking) => (
+                <tr key={booking.id} className="border-b border-black/5 text-sm dark:border-white/5">
+                  <td className="py-4 font-medium text-[#1A1008] dark:text-white">{booking.bookingReference}</td>
+                  <td className="py-4">{booking.clientName}</td>
+                  <td className="py-4">{booking.stylistName}</td>
+                  <td className="py-4">{booking.serviceName}</td>
+                  <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(booking.startsAt)}</td>
+                  <td className="py-4">
+                    <select
+                      value={booking.status}
+                      onChange={(event) => updateStatus(booking.id, event.target.value)}
+                      className="rounded-full bg-white/40 px-4 py-2 text-sm outline-none dark:bg-black/40"
+                    >
+                      <option value="confirmed">Confirmed</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="py-10 text-center text-sm text-[var(--text-secondary)]">
+                  No bookings yet. New reservations will appear here.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

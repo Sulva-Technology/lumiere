@@ -60,31 +60,39 @@ export default function AdminOrdersPage() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border-b border-black/5 text-sm dark:border-white/5">
-                <td className="py-4 font-medium text-[#1A1008] dark:text-white">{order.orderNumber}</td>
-                <td className="py-4">
-                  <p>{order.customerName}</p>
-                  <p className="text-[var(--text-secondary)]">{order.email}</p>
-                </td>
-                <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(order.createdAt)}</td>
-                <td className="py-4">{order.itemsCount}</td>
-                <td className="py-4 font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(order.total)}</td>
-                <td className="py-4 uppercase tracking-[0.2em] text-[var(--text-secondary)]">{order.paymentStatus}</td>
-                <td className="py-4">
-                  <select
-                    value={order.fulfillmentStatus}
-                    onChange={(event) => updateStatus(order.id, event.target.value)}
-                    className="rounded-full bg-white/40 px-4 py-2 text-sm outline-none dark:bg-black/40"
-                  >
-                    <option value="unfulfilled">Unfulfilled</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                  </select>
+            {orders.length > 0 ? (
+              orders.map((order) => (
+                <tr key={order.id} className="border-b border-black/5 text-sm dark:border-white/5">
+                  <td className="py-4 font-medium text-[#1A1008] dark:text-white">{order.orderNumber}</td>
+                  <td className="py-4">
+                    <p>{order.customerName}</p>
+                    <p className="text-[var(--text-secondary)]">{order.email}</p>
+                  </td>
+                  <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(order.createdAt)}</td>
+                  <td className="py-4">{order.itemsCount}</td>
+                  <td className="py-4 font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(order.total)}</td>
+                  <td className="py-4 uppercase tracking-[0.2em] text-[var(--text-secondary)]">{order.paymentStatus}</td>
+                  <td className="py-4">
+                    <select
+                      value={order.fulfillmentStatus}
+                      onChange={(event) => updateStatus(order.id, event.target.value)}
+                      className="rounded-full bg-white/40 px-4 py-2 text-sm outline-none dark:bg-black/40"
+                    >
+                      <option value="unfulfilled">Unfulfilled</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="py-10 text-center text-sm text-[var(--text-secondary)]">
+                  No orders yet. Paid and pending checkouts will appear here.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

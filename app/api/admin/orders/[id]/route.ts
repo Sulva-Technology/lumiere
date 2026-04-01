@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiUser } from '@/lib/auth';
 import { updateOrderStatus } from '@/lib/data/admin';
+import { adminOrderStatusSchema } from '@/lib/schemas';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAdminApiUser();
     const { id } = await params;
-    const body = await request.json();
+    const body = adminOrderStatusSchema.parse(await request.json());
     const order = await updateOrderStatus(id, {
       paymentStatus: body.paymentStatus,
       fulfillmentStatus: body.fulfillmentStatus,

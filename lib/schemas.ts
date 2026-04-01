@@ -40,3 +40,19 @@ export const adminProductUpdateSchema = z.object({
   active: z.boolean(),
 });
 
+export const adminOrderStatusSchema = z.object({
+  paymentStatus: z.enum(['pending', 'paid', 'failed', 'cancelled']).optional(),
+  fulfillmentStatus: z.enum(['unfulfilled', 'processing', 'shipped', 'delivered']).optional(),
+});
+
+export const adminBookingStatusSchema = z.object({
+  status: z.enum(['confirmed', 'completed', 'cancelled']),
+});
+
+export const storeSettingsSchema = z.object({
+  storeName: z.string().trim().min(2).max(160),
+  supportEmail: z.string().email(),
+  supportPhone: z.string().trim().max(40).optional().or(z.literal('')),
+  bookingContactEmail: z.string().email().optional().or(z.literal('')),
+  announcementBar: z.string().trim().max(280).optional().or(z.literal('')),
+});

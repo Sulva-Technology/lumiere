@@ -54,33 +54,41 @@ export default function AdminDashboard() {
         <Glass level="medium" className="p-6">
           <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Recent Orders</h2>
           <div className="mt-6 space-y-4">
-            {metrics.recentOrders.map((order) => (
-              <div key={order.id} className="flex items-start justify-between gap-4 rounded-2xl bg-white/10 p-4 dark:bg-black/10">
-                <div>
-                  <p className="font-medium text-[#1A1008] dark:text-white">{order.orderNumber}</p>
-                  <p className="text-sm text-[var(--text-secondary)]">{order.customerName} · {order.email}</p>
-                  <p className="text-xs text-[var(--text-secondary)]">{formatDateTime(order.createdAt)}</p>
+            {metrics.recentOrders.length > 0 ? (
+              metrics.recentOrders.map((order) => (
+                <div key={order.id} className="flex items-start justify-between gap-4 rounded-2xl bg-white/10 p-4 dark:bg-black/10">
+                  <div>
+                    <p className="font-medium text-[#1A1008] dark:text-white">{order.orderNumber}</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{order.customerName} · {order.email}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{formatDateTime(order.createdAt)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(order.total)}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">{order.fulfillmentStatus}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(order.total)}</p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">{order.fulfillmentStatus}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)] dark:bg-black/10">No orders have been placed yet.</p>
+            )}
           </div>
         </Glass>
 
         <Glass level="medium" className="p-6">
           <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Low Stock</h2>
           <div className="mt-6 space-y-4">
-            {metrics.lowStockProducts.map((item) => (
-              <div key={item.variantId}>
-                <div className="flex justify-between gap-4 text-sm">
-                  <span className="font-medium text-[#1A1008] dark:text-white">{item.label}</span>
-                  <span className="text-red-600 dark:text-red-400">{item.stockQuantity} left</span>
+            {metrics.lowStockProducts.length > 0 ? (
+              metrics.lowStockProducts.map((item) => (
+                <div key={item.variantId}>
+                  <div className="flex justify-between gap-4 text-sm">
+                    <span className="font-medium text-[#1A1008] dark:text-white">{item.label}</span>
+                    <span className="text-red-600 dark:text-red-400">{item.stockQuantity} left</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)] dark:bg-black/10">Inventory looks healthy right now.</p>
+            )}
           </div>
         </Glass>
       </div>

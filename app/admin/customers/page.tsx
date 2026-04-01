@@ -41,19 +41,27 @@ export default function AdminCustomersPage() {
             </tr>
           </thead>
           <tbody>
-            {customers.map((customer) => (
-              <tr key={customer.id} className="border-b border-black/5 text-sm dark:border-white/5">
-                <td className="py-4">
-                  <p className="font-medium text-[#1A1008] dark:text-white">{customer.name}</p>
-                  <p className="text-[var(--text-secondary)]">{customer.email}</p>
+            {customers.length > 0 ? (
+              customers.map((customer) => (
+                <tr key={customer.id} className="border-b border-black/5 text-sm dark:border-white/5">
+                  <td className="py-4">
+                    <p className="font-medium text-[#1A1008] dark:text-white">{customer.name}</p>
+                    <p className="text-[var(--text-secondary)]">{customer.email}</p>
+                  </td>
+                  <td className="py-4 text-[var(--text-secondary)]">{customer.phone ?? '—'}</td>
+                  <td className="py-4">{customer.ordersCount}</td>
+                  <td className="py-4">{customer.bookingsCount}</td>
+                  <td className="py-4 font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(customer.totalSpent)}</td>
+                  <td className="py-4 text-[var(--text-secondary)]">{customer.lastActiveAt ? formatDateTime(customer.lastActiveAt) : '—'}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="py-10 text-center text-sm text-[var(--text-secondary)]">
+                  Customer activity will appear here once orders or bookings start coming in.
                 </td>
-                <td className="py-4 text-[var(--text-secondary)]">{customer.phone ?? '—'}</td>
-                <td className="py-4">{customer.ordersCount}</td>
-                <td className="py-4">{customer.bookingsCount}</td>
-                <td className="py-4 font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(customer.totalSpent)}</td>
-                <td className="py-4 text-[var(--text-secondary)]">{customer.lastActiveAt ? formatDateTime(customer.lastActiveAt) : '—'}</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
