@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -108,7 +108,7 @@ export function CheckoutClient() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
           <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Order confirmed</h1>
-          <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We&apos;ve recorded your order and will begin fulfillment shortly.</p>
+          <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We've recorded your order and will begin fulfillment shortly.</p>
           <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
             Continue Shopping
           </Link>
@@ -146,7 +146,7 @@ export function CheckoutClient() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_0.42fr]">
         <Glass level="heavy" className="p-6 sm:p-8">
           <h1 className="font-serif text-3xl text-[#1A1008] dark:text-white">Checkout</h1>
-          <p className="mt-2 text-[var(--text-secondary)]">Secure Stripe checkout starts here, and every line is revalidated on the server before payment.</p>
+          <p className="mt-2 text-[var(--text-secondary)]">Secure Stripe checkout starts here, and every line is revalidated on the server before payment. Eligible shoppers can also use Apple Pay when it is available on their device and browser.</p>
 
           <form className="mt-8 space-y-4" onSubmit={handleCheckout}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -173,13 +173,17 @@ export function CheckoutClient() {
               disabled={loading}
               className="w-full rounded-full bg-[#8B6914] py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
             >
-              {loading ? 'Redirecting to Stripe...' : `Continue to Stripe - ${formatCurrency(total)}`}
+              {loading ? 'Redirecting to secure checkout...' : `Continue to secure checkout - ${formatCurrency(total)}`}
             </button>
           </form>
         </Glass>
 
         <Glass level="medium" className="h-fit p-6">
           <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Order summary</h2>
+          <div className="mt-4 rounded-3xl border border-black/10 bg-white/30 p-4 text-sm text-[var(--text-secondary)] dark:border-white/10 dark:bg-white/5">
+            <p>Payment options shown by Stripe may include cards and Apple Pay for eligible shoppers.</p>
+            <p className="mt-2">PayPal is not live in this checkout yet because it needs a separate integration from the current Stripe flow.</p>
+          </div>
           <div className="mt-6 space-y-4">
             {items.map((item) => (
               <div key={item.variantId} className="flex items-start justify-between gap-4">

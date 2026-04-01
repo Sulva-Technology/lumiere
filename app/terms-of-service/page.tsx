@@ -1,11 +1,14 @@
-import { InfoPage } from '@/components/info-page';
+﻿import { InfoPage } from '@/components/info-page';
+import { getPublicStoreSettings } from '@/lib/data/public';
 
-export default function TermsOfServicePage() {
+export default async function TermsOfServicePage() {
+  const store = await getPublicStoreSettings();
+
   return (
     <InfoPage
       eyebrow="Legal"
       title="Terms of Service"
-      intro="These terms describe how customers use Lumiere’s storefront, appointment booking flow, and support channels."
+      intro={`These terms describe how customers use ${store.storeName}'s storefront, appointment booking flow, and support channels.`}
       sections={[
         {
           title: 'Storefront Purchases',

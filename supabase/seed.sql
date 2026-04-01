@@ -1,4 +1,4 @@
-insert into public.product_categories (name, slug, description)
+﻿insert into public.product_categories (name, slug, description)
 values
   ('Hair Extensions', 'wigs-extensions', 'Premium raw hair bundles, closures, wigs, and extension essentials.'),
   ('Hair Care', 'natural-care', 'Hydration, styling, and repair essentials for healthy hair.'),
@@ -84,7 +84,7 @@ select
   4.8,
   76,
   'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&q=80&w=800&h=1000',
-  array['Heat protection up to 450°F', 'Adds shine without heaviness', 'Works well for silk presses and blowouts'],
+  array['Heat protection up to 450Â°F', 'Adds shine without heaviness', 'Works well for silk presses and blowouts'],
   array['Apply lightly to damp or dry hair', 'Focus on mid-lengths and ends', 'Layer before heat styling'],
   array['Ships in 1-2 business days', 'Final sale if opened']
 from public.product_categories c
@@ -252,12 +252,13 @@ on conflict do nothing;
 
 update public.store_settings
 set
-  store_name = 'Lumiere Beauty',
-  support_email = 'support@lumiere.com',
+  store_name = 'Dee''s luxury',
+  support_email = 'support@deesluxury.com',
   support_phone = '+1 (555) 123-4567',
-  booking_contact_email = 'bookings@lumiere.com',
+  booking_contact_email = 'bookings@deesluxury.com',
   announcement_bar = 'Shop premium hair, makeup, and beauty essentials with complimentary shipping on orders over $400.';
 
 insert into public.store_settings (store_name, support_email, support_phone, booking_contact_email, announcement_bar)
-select 'Lumiere Beauty', 'support@lumiere.com', '+1 (555) 123-4567', 'bookings@lumiere.com', 'Shop premium hair, makeup, and beauty essentials with complimentary shipping on orders over $400.'
+select 'Dee''s luxury', 'support@deesluxury.com', '+1 (555) 123-4567', 'bookings@deesluxury.com', 'Shop premium hair, makeup, and beauty essentials with complimentary shipping on orders over $400.'
 where not exists (select 1 from public.store_settings);
+

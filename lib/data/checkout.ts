@@ -1,4 +1,4 @@
-import { headers } from 'next/headers';
+﻿import { headers } from 'next/headers';
 import { getStripe } from '@/lib/stripe';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { validateCartLines } from '@/lib/data/public';
@@ -106,7 +106,6 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
       customer_email: input.email,
       success_url: `${origin}/checkout?success=1&order=${order.id}`,
       cancel_url: `${origin}/checkout?canceled=1&order=${order.id}`,
-      payment_method_types: ['card'],
       shipping_address_collection: {
         allowed_countries: [input.shippingAddress.country.toUpperCase() as 'US'],
       },

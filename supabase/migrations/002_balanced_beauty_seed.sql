@@ -1,4 +1,4 @@
-insert into public.product_categories (name, slug, description)
+﻿insert into public.product_categories (name, slug, description)
 values
   ('Hair Extensions', 'wigs-extensions', 'Premium raw hair bundles, closures, wigs, and extension essentials.'),
   ('Hair Care', 'natural-care', 'Hydration, styling, and repair essentials for healthy hair.'),
@@ -117,5 +117,6 @@ set
 
 update public.store_settings
 set
-  store_name = 'Lumiere Beauty',
+  store_name = 'Dee''s luxury',
   announcement_bar = 'Shop premium hair, makeup, and beauty essentials with complimentary shipping on orders over $400.';
+

@@ -1,11 +1,14 @@
-import { InfoPage } from '@/components/info-page';
+﻿import { InfoPage } from '@/components/info-page';
+import { getPublicStoreSettings } from '@/lib/data/public';
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const store = await getPublicStoreSettings();
+
   return (
     <InfoPage
       eyebrow="Customer Care"
       title="Frequently Asked Questions"
-      intro="Everything clients usually ask before shopping, booking, or checking out with Lumiere."
+      intro={`Everything clients usually ask before shopping, booking, or checking out with ${store.storeName}.`}
       sections={[
         {
           title: 'Orders',
@@ -18,13 +21,13 @@ export default function FaqPage() {
           title: 'Bookings',
           body: [
             'Salon bookings reserve a real availability slot with your selected stylist and service.',
-            'Online booking does not collect payment for salon services in this first release. Payment is handled in salon unless your team later enables deposits.',
+            'Online booking does not collect payment for salon services at this stage. Payment is handled in salon unless your team later enables deposits.',
           ],
         },
         {
           title: 'Returns',
           body: [
-            'Unaltered hair products can be reviewed for return eligibility according to the store return policy.',
+            'Unaltered hair and beauty products can be reviewed for return eligibility according to the store return policy.',
             'Opened, worn, or customized products are usually not eligible for return unless there is a verified fulfillment issue.',
           ],
         },

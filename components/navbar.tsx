@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { label: 'Shop', href: '/shop' },
 ];
 
-export function NavBar() {
+export function NavBar({ brandName }: { brandName: string }) {
   const { theme, toggleTheme } = useTheme();
   const { openCart, itemCount } = useCart();
   const [scrolled, setScrolled] = useState(false);
@@ -58,7 +58,7 @@ export function NavBar() {
           <Link href="/" className="flex items-center justify-center">
             <div className="glass-subtle rounded-full px-4 py-2 sm:px-6">
               <span className="font-serif text-lg tracking-[0.2em] uppercase text-[var(--text-primary)] sm:text-xl">
-                LumiÃ¨re
+                {brandName}
               </span>
             </div>
           </Link>

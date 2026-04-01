@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import { Inter, Cormorant_Garamond } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AmbientBackground } from '@/components/ambient-background';
@@ -7,7 +8,7 @@ import { NavBar } from '@/components/navbar';
 import { CartProvider } from '@/components/cart-context';
 import { CartDrawer } from '@/components/cart-drawer';
 import { Footer } from '@/components/footer';
-import Script from 'next/script';
+import { getPublicStoreSettings } from '@/lib/data/public';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,12 +21,18 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
 });
 
-export const metadata: Metadata = {
-  title: 'LumiÃ¨re | Beauty Shop',
-  description: 'A curated beauty storefront for premium hair and makeup collections.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const store = await getPublicStoreSettings();
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return {
+    title: `${store.storeName} | Beauty Shop`,
+    description: 'A curated beauty storefront for premium hair and makeup collections.',
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const store = await getPublicStoreSettings();
+
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cormorant.variable}`}>
       <head>
@@ -48,10 +55,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartProvider>
             <div className="noise-overlay" />
             <AmbientBackground />
-            <NavBar />
+            <NavBar brandName={store.storeName} />
             <CartDrawer />
             <main className="flex-1 pt-24 pb-16">{children}</main>
-            <Footer />
+            <Footer brandName={store.storeName} />
           </CartProvider>
         </ThemeProvider>
       </body>

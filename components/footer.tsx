@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function Footer() {
+export function Footer({ brandName }: { brandName: string }) {
   const pathname = usePathname();
 
   if (pathname?.startsWith('/admin')) return null;
@@ -12,9 +12,7 @@ export function Footer() {
     <footer className="relative z-10 mt-auto border-t border-[#c8a03c]/20 bg-[rgba(245,240,234,0.6)] backdrop-blur-xl dark:border-[#d4a847]/15 dark:bg-[rgba(26,16,8,0.6)]">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
         <div className="max-w-xl space-y-4">
-          <span className="font-serif text-2xl tracking-widest uppercase text-[var(--text-primary)]">
-            LumiÃ¨re
-          </span>
+          <span className="font-serif text-2xl tracking-widest uppercase text-[var(--text-primary)]">{brandName}</span>
           <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
             Discover and shop premium hair, makeup, and beauty essentials.
           </p>
@@ -58,9 +56,7 @@ export function Footer() {
       </div>
 
       <div className="mx-auto max-w-7xl border-t border-[#c8a03c]/20 px-6 py-6 dark:border-[#d4a847]/15">
-        <p className="text-sm text-[var(--text-secondary)]">
-          Â© {new Date().getFullYear()} LumiÃ¨re. All rights reserved.
-        </p>
+        <p className="text-sm text-[var(--text-secondary)]">Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
       </div>
     </footer>
   );

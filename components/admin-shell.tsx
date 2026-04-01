@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
@@ -32,7 +32,7 @@ const ADMIN_LINKS = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-export function AdminShell({ children, adminEmail }: { children: React.ReactNode; adminEmail: string }) {
+export function AdminShell({ children, adminEmail, brandName }: { children: React.ReactNode; adminEmail: string; brandName: string }) {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -72,7 +72,7 @@ export function AdminShell({ children, adminEmail }: { children: React.ReactNode
         <div className="flex h-20 items-center justify-between border-b border-[#c8a03c]/20 px-4 sm:px-6 dark:border-[#d4a847]/15">
           {(!isCollapsed || isMobileSidebarOpen) && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-serif text-2xl uppercase tracking-widest text-[#1A1008] dark:text-[#F0D080]">
-              Lumiere
+              {brandName}
             </motion.span>
           )}
 
@@ -186,3 +186,4 @@ export function AdminShell({ children, adminEmail }: { children: React.ReactNode
     </div>
   );
 }
+

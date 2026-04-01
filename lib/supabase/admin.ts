@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+﻿import { createClient } from '@supabase/supabase-js';
 import { getOptionalEnv, getRequiredEnv } from '@/lib/env';
 
 export function createSupabaseAdminClient() {
@@ -9,9 +9,10 @@ export function createSupabaseAdminClient() {
     },
     global: {
       headers: {
-        'x-application-name': getOptionalEnv('APP_NAME', 'lumiere-store'),
+        'x-application-name': getOptionalEnv('APP_NAME', 'dees-luxury-store'),
       },
     },
   });
 }
+
 

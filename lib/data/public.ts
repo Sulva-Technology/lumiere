@@ -1,4 +1,4 @@
-import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+﻿import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -365,3 +365,36 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
     status: booking.status,
   };
 }
+
+export async function getPublicStoreSettings() {
+  const fallback = {
+    storeName: "Dee's luxury",
+    supportEmail: 'support@deesluxury.com',
+    supportPhone: '+1 (555) 123-4567',
+    bookingContactEmail: 'bookings@deesluxury.com',
+    announcementBar: null,
+  };
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from('store_settings')
+      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar')
+      .order('created_at')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return {
+      storeName: data?.store_name?.trim() || fallback.storeName,
+      supportEmail: data?.support_email?.trim() || fallback.supportEmail,
+      supportPhone: data?.support_phone?.trim() || fallback.supportPhone,
+      bookingContactEmail: data?.booking_contact_email?.trim() || fallback.bookingContactEmail,
+      announcementBar: data?.announcement_bar?.trim() || fallback.announcementBar,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
