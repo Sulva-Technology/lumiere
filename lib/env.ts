@@ -17,7 +17,8 @@ export function getRequiredEnv(name: (typeof requiredServerEnv)[number]) {
 }
 
 export function getPublicEnv(name: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
-  const value = process.env[name];
+  const value =
+    name === 'NEXT_PUBLIC_SUPABASE_URL' ? process.env.NEXT_PUBLIC_SUPABASE_URL : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!value) {
     throw new Error(`Missing required public environment variable: ${name}`);
@@ -36,4 +37,3 @@ export function getAdminSeedEmails() {
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
 }
-
