@@ -127,7 +127,8 @@ export default function AdminAvailabilityPage() {
     <div className="space-y-8 p-6">
       <header className="flex flex-col gap-2">
         <h1 className="font-serif text-3xl font-medium text-[#1A1008] dark:text-[#F0D080]">Manage Availability</h1>
-        <p className="text-[var(--text-secondary)]">Set your working hours and available sessions for theDMAshop.</p>
+        <p className="text-[var(--text-secondary)]">Set your working hours and available sessions for thedmashop.</p>
+
       </header>
 
       {error && (

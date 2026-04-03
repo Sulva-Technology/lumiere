@@ -390,12 +390,14 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
 
 export async function getPublicStoreSettings() {
   const fallback = {
-    storeName: "theDMAshop",
+    storeName: "thedmashop",
     supportEmail: 'support@thedmashop.com',
     supportPhone: '+1 (555) 123-4567',
     bookingContactEmail: 'bookings@thedmashop.com',
+
     announcementBar: null,
   };
+
 
 
   try {

@@ -167,6 +167,7 @@ export default function Home() {
       <section className="mx-auto mb-24 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <Glass level="heavy" className="p-8 text-center md:p-12">
           <h2 className="font-serif text-3xl md:text-5xl">theDMAshop: Styled with Intention.</h2>
+
           <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--text-secondary)]">
             Elevate your brand with premium makeup artistry and custom-crafted content designed for impact.
           </p>

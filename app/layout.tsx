@@ -26,13 +26,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: `${store.storeName} | Makeup & Content Studio`,
-      template: `%s | ${store.storeName}`,
+      default: `theDMAshop`,
+      template: `%s | theDMAshop`,
     },
+
     description: 'A premium makeup artistry and digital content creation studio defined by high-end aesthetics and creative storytelling.',
     keywords: ['makeup artistry', 'content studio', 'digital content creation', 'editorial makeup', 'bridal glam', 'social media reels', 'studio sessions'],
     authors: [{ name: 'theDMAshop' }],
     creator: 'theDMAshop',
+
     openGraph: {
       type: 'website',
       locale: 'en_US',

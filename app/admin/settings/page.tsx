@@ -25,6 +25,7 @@ export default function AdminSettingsPage() {
         setSettings(
           json.settings ?? {
             store_name: "theDMAshop",
+
             support_email: '',
             support_phone: '',
             booking_contact_email: '',

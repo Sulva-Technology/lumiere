@@ -389,8 +389,10 @@ export async function updateOrderStatus(orderId: string, input: { paymentStatus?
     try {
       const settings = await getStoreSettings();
       await sendOrderStatusUpdateEmail({
-        storeName: settings?.store_name?.trim() || "theDMAshop",
-        supportEmail: settings?.support_email?.trim() || 'support@thedmashop.com',
+        storeName: settings?.store_name?.trim() || "thedmashop",
+        supportEmail: settings?.store_name?.trim() || "support@thedmashop.com",
+
+
 
         customerName: relationFirst(existingOrder.customers)?.full_name ?? 'there',
         customerEmail: data.email,

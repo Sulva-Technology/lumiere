@@ -1,4 +1,4 @@
-﻿export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
 import { getAuthenticatedAdminUser } from '@/lib/auth';
 import { AdminShell } from '@/components/admin-shell';
@@ -8,7 +8,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const [user, settings] = await Promise.all([getAuthenticatedAdminUser(), getStoreSettings()]);
 
   return (
-    <AdminShell adminEmail={user?.email ?? 'admin@deesluxury.com'} brandName={settings?.store_name?.trim() || "Dee's luxury"}>
+    <AdminShell adminEmail={user?.email ?? 'admin@thedmashop.com'} brandName={settings?.store_name?.trim() || "thedmashop"}>
+
       {children}
     </AdminShell>
   );

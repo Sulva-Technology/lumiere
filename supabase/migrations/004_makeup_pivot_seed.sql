@@ -13,13 +13,14 @@ on conflict (slug) do update set name = excluded.name, description = excluded.de
 -- Ensure store settings are updated
 update public.store_settings
 set
-  store_name = 'theDMAshop Makeup & Content Studio',
+  store_name = 'thedmashop',
   announcement_bar = 'Focusing on Makeup Artistry and Premium Content Creation services.';
 
 -- Add the single creator/artist
 insert into public.stylists (name, slug, bio, specialties, rating, available, base_price)
-values ('theDMAshop Lead Artist', 'theDMAshop-artist', 'Expert makeup artist and content creator specializing in high-end editorial looks and dynamic digital storytelling.', '{Makeup, Editorial, Content Creation}', 5.0, true, 75.00)
+values ('thedmashop artist', 'thedmashop-artist', 'Expert makeup artist and content creator specializing in high-end editorial looks and dynamic digital storytelling.', '{Makeup, Editorial, Content Creation}', 5.0, true, 75.00)
 on conflict (slug) do nothing;
+
 
 
 -- Add Services

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,7 +14,8 @@ export function Footer({ brandName }: { brandName: string }) {
         <div className="max-w-xl space-y-4">
           <span className="font-serif text-2xl tracking-widest uppercase text-[var(--text-primary)]">{brandName}</span>
           <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-            Discover and shop premium hair, makeup, and beauty essentials.
+            Discover and shop professional makeup artistry tools and digital content essentials.
+
           </p>
         </div>
 
