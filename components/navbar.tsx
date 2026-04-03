@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
+  { label: 'Book', href: '/book' },
   { label: 'Shop', href: '/shop' },
 ];
 
@@ -120,10 +121,10 @@ export function NavBar({ brandName }: { brandName: string }) {
           </button>
 
           <Link
-            href="/shop"
+            href="/book"
             className="hidden items-center justify-center rounded-full bg-[#8B6914] px-5 py-2.5 text-sm font-medium text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] md:flex"
           >
-            Shop Now
+            Book Now
           </Link>
         </div>
       </div>
@@ -152,3 +153,4 @@ export function NavBar({ brandName }: { brandName: string }) {
     </header>
   );
 }
+
