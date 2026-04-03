@@ -21,11 +21,44 @@ const cormorant = Cormorant_Garamond({
 
 export async function generateMetadata(): Promise<Metadata> {
   const store = await getPublicStoreSettings();
+  const siteUrl = 'https://thedmashop.com'; // Placeholder base URL
 
   return {
-    title: `${store.storeName} | Makeup & Content Creation`,
-    description: 'A premium makeup studio and digital content creation storefront.',
-
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: `${store.storeName} | Makeup & Content Studio`,
+      template: `%s | ${store.storeName}`,
+    },
+    description: 'A premium makeup artistry and digital content creation studio defined by high-end aesthetics and creative storytelling.',
+    keywords: ['makeup artistry', 'content studio', 'digital content creation', 'editorial makeup', 'bridal glam', 'social media reels', 'studio sessions'],
+    authors: [{ name: 'theDMAshop' }],
+    creator: 'theDMAshop',
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: siteUrl,
+      siteName: store.storeName,
+      title: `${store.storeName} | Makeup & Content Studio`,
+      description: 'Defined by high-end aesthetics and professional creativity. Experience the new standard in makeup and content.',
+      images: [
+        {
+          url: '/images/content_studio.png',
+          width: 1200,
+          height: 630,
+          alt: store.storeName,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${store.storeName} | Makeup & Content Studio`,
+      description: 'Your premium destination for professional makeup and content creation.',
+      images: ['/images/content_studio.png'],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   };
 }
 

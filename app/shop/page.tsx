@@ -1,5 +1,12 @@
 import { Suspense } from 'react';
 import { ShopClient } from './shop-client';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Shop Makeup Essentials',
+  description: 'Curated professional makeup artistry tools and complexion essentials for the modern creator.',
+};
+
 
 export default async function ShopPage({
   searchParams,
