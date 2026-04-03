@@ -57,20 +57,23 @@ export function NavBar({ brandName }: { brandName: string }) {
           ))}
         </nav>
 
-        <div className="shrink-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+        <div className="mx-auto flex min-w-0 flex-1 justify-center px-2 md:absolute md:left-1/2 md:w-auto md:-translate-x-1/2 md:px-0">
           <Link href="/" className="flex items-center justify-center">
-            <div className="glass-subtle flex items-center gap-3 rounded-full px-4 py-2 sm:px-6">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#c8a03c]/25 bg-white/70">
+            <div className="glass-subtle flex items-center gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-6">
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#c8a03c]/25 bg-white/70 sm:h-10 sm:w-10">
                 <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
               </div>
-              <span className="font-serif text-base tracking-[0.2em] uppercase text-[var(--text-primary)] sm:text-lg">
+              <span className="hidden font-serif text-base tracking-[0.16em] uppercase text-[var(--text-primary)] sm:inline sm:text-lg">
                 {brandName}
+              </span>
+              <span className="font-serif text-sm tracking-[0.12em] uppercase text-[var(--text-primary)] sm:hidden">
+                itzlola
               </span>
             </div>
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 md:ml-0">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
           <button
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
             className="glass-subtle rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 md:hidden"

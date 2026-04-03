@@ -213,7 +213,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
 
   if (error) throw error;
 
-  return (data ?? []).slice(0, 2).map((service) => ({
+  return (data ?? []).map((service) => ({
     id: service.id,
     slug: service.slug,
     name: service.name,
