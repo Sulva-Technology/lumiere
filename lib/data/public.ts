@@ -11,6 +11,7 @@ import type {
   Category,
   CreateBookingCheckoutResult,
   CreateBookingInput,
+  MakeupBookingIntake,
   ProductDetail,
   ProductListItem,
   StylistSummary,
@@ -36,6 +37,11 @@ function expiresIn(minutes: number) {
   return new Date(Date.now() + minutes * 60_000).toISOString();
 }
 
+function normalizeIntakePayload(value: unknown): MakeupBookingIntake | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return Object.keys(value as Record<string, unknown>).length > 0 ? (value as MakeupBookingIntake) : null;
+}
+
 function mapReservation(row: any): BookingReservation {
   return {
     id: row.id,
@@ -46,6 +52,7 @@ function mapReservation(row: any): BookingReservation {
     email: row.email,
     phone: row.phone,
     notes: row.notes,
+    makeupIntake: normalizeIntakePayload(row.intake_payload),
     reservationStatus: row.reservation_status,
     expiresAt: row.expires_at,
   };
@@ -359,6 +366,13 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
   const [slot, services] = await Promise.all([getAvailableSlot(input), getBookingServices()]);
   const service = services.find((item) => item.id === input.serviceId);
   if (!service) throw new Error('Selected service is unavailable.');
+  const isMakeupService = service.slug.includes('makeup');
+
+  if (isMakeupService && !input.makeupIntake) {
+    throw new Error('Complete the makeup booking form before continuing.');
+  }
+
+  const normalizedIntake = isMakeupService && input.makeupIntake ? input.makeupIntake : null;
 
   const { data: reservation, error: reservationError } = await supabase
     .from('booking_reservations')
@@ -370,6 +384,7 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
       email: input.email,
       phone: input.phone,
       notes: input.notes ?? null,
+      intake_payload: normalizedIntake,
       reservation_status: 'pending_payment',
       expires_at: expiresIn(15),
     })
@@ -391,6 +406,7 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
       metadata: {
         kind: 'booking',
         serviceName: service.name,
+        makeupIntake: normalizedIntake,
       },
     })
     .select('id')
@@ -488,6 +504,8 @@ export async function finalizePaidBooking(paymentId: string, providerReference?:
 
   const bookingReference = `BKG-${Math.floor(Date.now() / 1000)}`;
 
+  const reservationIntake = normalizeIntakePayload(reservation.intake_payload);
+
   const { data: booking, error: bookingError } = await supabase
     .from('bookings')
     .insert({
@@ -500,6 +518,7 @@ export async function finalizePaidBooking(paymentId: string, providerReference?:
       email: reservation.email,
       phone: reservation.phone,
       notes: reservation.notes ?? null,
+      intake_payload: reservationIntake ?? {},
       starts_at: reservationAvailability?.starts_at,
       ends_at: reservationAvailability?.ends_at,
       status: 'confirmed',
@@ -555,6 +574,7 @@ export async function finalizePaidBooking(paymentId: string, providerReference?:
       startsAt: reservationAvailability?.starts_at ?? nowIso(),
       phone: reservation.phone,
       notes: reservation.notes ?? null,
+      makeupIntake: reservationIntake,
     });
   } catch (notificationError) {
     console.error('Booking confirmation email failed', notificationError);
@@ -639,10 +659,10 @@ export async function expireStaleBookingReservations() {
 
 export async function getPublicStoreSettings() {
   const fallback = {
-    storeName: 'theDMAshop',
-    supportEmail: 'support@thedmashop.com',
+    storeName: 'itzlolabeauty',
+    supportEmail: 'hello@itzlolabeauty.com',
     supportPhone: '+1 (555) 123-4567',
-    bookingContactEmail: 'bookings@thedmashop.com',
+    bookingContactEmail: 'ogunjobiniyiola906@gmail.com',
     announcementBar: null,
   };
 

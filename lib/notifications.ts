@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { getOptionalEnv } from '@/lib/env';
+import type { MakeupBookingIntake } from '@/lib/types';
 
 type MailPayload = {
   to: string | string[];
@@ -37,6 +38,7 @@ type BookingEmailPayload = {
   startsAt: string;
   phone: string;
   notes?: string | null;
+  makeupIntake?: MakeupBookingIntake | null;
 };
 
 type OrderStatusEmailPayload = {
@@ -49,7 +51,7 @@ type OrderStatusEmailPayload = {
 };
 
 const resendApiKey = getOptionalEnv('RESEND_API_KEY');
-const resendFromEmail = getOptionalEnv('RESEND_FROM_EMAIL', 'orders@deesluxury.com');
+const resendFromEmail = getOptionalEnv('RESEND_FROM_EMAIL', 'hello@itzlolabeauty.com');
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
@@ -158,6 +160,38 @@ export async function sendOrderConfirmationEmails(payload: OrderEmailPayload) {
 }
 
 export async function sendBookingConfirmationEmails(payload: BookingEmailPayload) {
+  const internalRecipient = payload.bookingContactEmail || payload.supportEmail;
+  const makeupRows = payload.makeupIntake
+    ? [
+        ['Appointment Date & Time Needed', payload.makeupIntake.appointmentDateTimeNeeded],
+        ['What is the occasion?', payload.makeupIntake.occasion],
+        ['Reference / inspiration details', payload.makeupIntake.referenceDescription],
+        ['Reference image', payload.makeupIntake.referenceImageUrl ?? 'No upload attached'],
+        ['What type of look are you going for?', payload.makeupIntake.lookType],
+        ['What is your skin type?', payload.makeupIntake.skinType],
+        ['Skin conditions or allergies', payload.makeupIntake.skinConditionsOrAllergies],
+        ['Will you need lashes included?', payload.makeupIntake.lashesPreference],
+        ['Have you had your makeup done professionally before?', payload.makeupIntake.hadProfessionalMakeupBefore],
+        ['If yes, anything you liked or didn’t like?', payload.makeupIntake.priorExperienceNotes ?? 'Not provided'],
+        ['Any product preferences or restrictions?', payload.makeupIntake.productPreferencesOrRestrictions ?? 'Not provided'],
+      ]
+    : [];
+
+  const makeupMarkup =
+    makeupRows.length > 0
+      ? `
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid #e7dcc8;">
+          <h3 style="margin:0 0 12px;font-size:16px;">Makeup intake</h3>
+          ${makeupRows
+            .map(
+              ([label, value]) =>
+                `<p style="margin:0 0 10px;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`
+            )
+            .join('')}
+        </div>
+      `
+      : '';
+
   const customerHtml = `
     <div style="background:#120b05;padding:32px;font-family:Georgia,serif;color:#f8f1dd;">
       <h1 style="margin:0 0 12px;font-size:32px;color:#f0d080;">${escapeHtml(payload.storeName)}</h1>
@@ -179,10 +213,12 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       <h2 style="margin-top:0;">New booking confirmed</h2>
       <p><strong>Reference:</strong> ${escapeHtml(payload.bookingReference)}</p>
       <p><strong>Client:</strong> ${escapeHtml(payload.fullName)} (${escapeHtml(payload.email)})</p>
+      <p><strong>Phone:</strong> ${escapeHtml(payload.phone)}</p>
       <p><strong>Service:</strong> ${escapeHtml(payload.serviceName)}</p>
       <p><strong>Artist:</strong> ${escapeHtml(payload.stylistName)}</p>
       <p><strong>Starts:</strong> ${formatDateTime(payload.startsAt)}</p>
       ${payload.notes ? `<p><strong>Notes:</strong> ${escapeHtml(payload.notes)}</p>` : ''}
+      ${makeupMarkup}
     </div>
   `;
 
@@ -193,7 +229,6 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
     replyTo: payload.bookingContactEmail || payload.supportEmail,
   });
 
-  const internalRecipient = payload.bookingContactEmail || payload.supportEmail;
   if (internalRecipient && internalRecipient !== payload.email) {
     await sendMail({
       to: internalRecipient,

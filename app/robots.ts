@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin', '/api'],
     },
-    sitemap: 'https://thedmashop.com/sitemap.xml',
+    sitemap: 'https://itzlolabeauty.com/sitemap.xml',
   };
 }

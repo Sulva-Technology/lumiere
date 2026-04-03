@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Moon, Sun, ShoppingBag, Menu, X } from 'lucide-react';
+import Image from 'next/image';
 import { useTheme } from './theme-provider';
 import { useCart } from './cart-context';
 import Link from 'next/link';
@@ -57,8 +58,11 @@ export function NavBar({ brandName }: { brandName: string }) {
 
         <div className="shrink-0 md:absolute md:left-1/2 md:-translate-x-1/2">
           <Link href="/" className="flex items-center justify-center">
-            <div className="glass-subtle rounded-full px-4 py-2 sm:px-6">
-              <span className="font-serif text-lg tracking-[0.2em] uppercase text-[var(--text-primary)] sm:text-xl">
+            <div className="glass-subtle flex items-center gap-3 rounded-full px-4 py-2 sm:px-6">
+              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#c8a03c]/25 bg-white/70">
+                <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
+              </div>
+              <span className="font-serif text-base tracking-[0.2em] uppercase text-[var(--text-primary)] sm:text-lg">
                 {brandName}
               </span>
             </div>

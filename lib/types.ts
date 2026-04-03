@@ -102,6 +102,25 @@ export type PaymentProvider = 'hosted_checkout';
 export type PaymentMethodFamily = 'hosted_checkout';
 export type OrderLifecycleState = 'draft' | 'pending_payment' | 'paid' | 'payment_failed' | 'cancelled' | 'refunded';
 export type BookingLifecycleState = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled' | 'expired' | 'refunded';
+export type MakeupLookType = 'Soft glam' | 'Full glam' | 'Natural' | 'Not sure';
+export type MakeupSkinType = 'Oily' | 'Dry' | 'Combination' | 'Normal' | 'Not sure';
+export type MakeupLashesPreference = 'Yes' | 'No' | 'I\u2019ll bring my own';
+export type MakeupHistoryAnswer = 'Yes' | 'No';
+
+export interface MakeupBookingIntake {
+  appointmentDateTimeNeeded: string;
+  occasion: string;
+  referenceDescription: string;
+  referenceImageUrl?: string | null;
+  referenceImageAssetId?: string | null;
+  lookType: MakeupLookType;
+  skinType: MakeupSkinType;
+  skinConditionsOrAllergies: string;
+  lashesPreference: MakeupLashesPreference;
+  hadProfessionalMakeupBefore: MakeupHistoryAnswer;
+  priorExperienceNotes?: string | null;
+  productPreferencesOrRestrictions?: string | null;
+}
 
 export interface PaymentRecord {
   id: string;
@@ -173,6 +192,7 @@ export interface CreateBookingInput {
   email: string;
   phone: string;
   notes?: string;
+  makeupIntake?: MakeupBookingIntake | null;
 }
 
 export interface BookingReservation {
@@ -184,6 +204,7 @@ export interface BookingReservation {
   email: string;
   phone: string;
   notes: string | null;
+  makeupIntake: MakeupBookingIntake | null;
   reservationStatus: 'pending_payment' | 'confirmed' | 'cancelled' | 'expired';
   expiresAt: string;
 }

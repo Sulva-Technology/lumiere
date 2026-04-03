@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
         if (!response.ok) throw new Error(json.error ?? 'Unable to load settings.');
         setSettings(
           json.settings ?? {
-            store_name: "theDMAshop",
+            store_name: 'itzlolabeauty',
 
             support_email: '',
             support_phone: '',
@@ -93,5 +93,4 @@ export default function AdminSettingsPage() {
     </Glass>
   );
 }
-
 

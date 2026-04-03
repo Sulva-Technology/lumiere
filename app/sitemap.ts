@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://thedmashop.com';
+  const baseUrl = 'https://itzlolabeauty.com';
   let productUrls: MetadataRoute.Sitemap = [];
 
   try {

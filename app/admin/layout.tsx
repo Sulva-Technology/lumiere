@@ -8,7 +8,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const [user, settings] = await Promise.all([getAuthenticatedAdminUser(), getStoreSettings()]);
 
   return (
-    <AdminShell adminEmail={user?.email ?? 'admin@thedmashop.com'} brandName={settings?.store_name?.trim() || "thedmashop"}>
+    <AdminShell adminEmail={user?.email ?? 'admin@itzlolabeauty.com'} brandName={settings?.store_name?.trim() || 'itzlolabeauty'}>
 
       {children}
     </AdminShell>

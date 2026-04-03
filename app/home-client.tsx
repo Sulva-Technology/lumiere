@@ -35,7 +35,12 @@ export default function Home() {
 
           <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
             <Glass level="heavy" className="flex w-full max-w-3xl flex-col items-center p-6 text-center sm:p-10 md:p-16">
-              <p className="mb-4 text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">Two Journeys. One Signature Experience.</p>
+              <div className="mb-5 flex items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/40 px-4 py-2 dark:bg-black/20">
+                <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                  <Image src="/images/logo.jpeg" alt="itzlolabeauty logo" fill className="object-cover" sizes="40px" />
+                </div>
+                <p className="text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">itzlolabeauty</p>
+              </div>
 
               <h1 className="mb-5 flex flex-wrap justify-center gap-x-4 font-serif text-4xl font-medium tracking-tight sm:mb-6 sm:text-5xl md:text-7xl">
                 {headlineWords.map((word, index) => (
@@ -56,7 +61,7 @@ export default function Home() {
                 transition={{ delay: 0.8, duration: 1 }}
                 className="mb-8 max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:text-lg md:text-xl"
               >
-                 Discover premium makeup essentials or reserve a polished studio service built around makeup artistry and creator-ready content.
+                Discover premium makeup essentials or reserve a polished studio service built around makeup artistry and creator-ready content.
 
               </motion.p>
 
@@ -159,12 +164,12 @@ export default function Home() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Elevated Product Selection</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">Build your beauty kit with polished essentials chosen to support artistry, wear, and camera-ready results.</p>
+            <h3 className="font-serif text-2xl">Beauty Led by Vision</h3>
+            <p className="mt-2 text-[var(--text-secondary)]">Every product and appointment is curated to help clients feel confident, seen, and ready for the moment in front of them.</p>
           </Glass>
           <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Service-Led Results</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">Move from booking to confirmation with a guided flow designed for premium appointments and reliable scheduling.</p>
+            <h3 className="font-serif text-2xl">Founder Guided Experience</h3>
+            <p className="mt-2 text-[var(--text-secondary)]">Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.</p>
           </Glass>
         </div>
       </section>

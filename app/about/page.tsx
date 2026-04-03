@@ -1,125 +1,80 @@
 'use client';
 
 import Image from 'next/image';
-import { motion } from 'motion/react';
-import { Sparkles, Heart, ShieldCheck, Leaf } from 'lucide-react';
 import Link from 'next/link';
+import { motion } from 'motion/react';
+import { Glass } from '@/components/ui/glass';
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen pt-32 pb-24 px-6">
-      <div className="max-w-7xl mx-auto space-y-32">
-        
-        {/* Hero Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-8"
-          >
-            <h1 className="text-5xl md:text-7xl font-serif text-[var(--text-primary)] leading-tight">
-              Redefining <br/>
-              <span className="italic text-[#8B6914] dark:text-[#D4A847]">Luxury</span> Hair Care
-            </h1>
-            <p className="text-lg text-[var(--text-secondary)] leading-relaxed max-w-md">
-              Lumière was born from a simple belief: every individual deserves to experience the transformative power of truly premium hair extensions and natural care products.
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative h-[600px] rounded-3xl overflow-hidden"
-          >
-            <Image 
-              src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&q=80&w=800&h=1200"
-              alt="Luxury Salon Experience"
-              fill
-              className="object-cover"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          </motion.div>
-        </section>
-
-        {/* Our Story */}
-        <section className="relative">
-          <div className="absolute inset-0 bg-[#8B6914]/5 dark:bg-[#D4A847]/5 rounded-3xl -z-10 transform -rotate-1" />
-          <div className="bg-white/60 dark:bg-[rgba(26,16,8,0.8)] backdrop-blur-xl border border-[#c8a03c]/20 dark:border-[#d4a847]/15 rounded-3xl p-12 md:p-20 text-center max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="space-y-8"
-            >
-              <h2 className="text-4xl font-serif text-[var(--text-primary)]">Our Story</h2>
-              <p className="text-[var(--text-secondary)] leading-relaxed text-lg">
-                Founded in 2020, Lumière began as a boutique studio dedicated to sourcing the finest, ethically-obtained raw hair. We noticed a gap in the market for extensions that not only looked flawless but maintained their integrity over time. Today, we&apos;ve grown into a comprehensive beauty destination, offering our signature collections alongside expert styling services and natural care products designed to nourish and protect.
+    <main className="min-h-screen px-6 pb-24 pt-32">
+      <div className="mx-auto flex max-w-7xl flex-col gap-20">
+        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="space-y-8">
+            <div className="inline-flex items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/50 px-4 py-2 text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)] dark:bg-black/20">
+              <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                <Image src="/images/logo.jpeg" alt="itzlolabeauty logo" fill className="object-cover" sizes="40px" />
+              </div>
+              itzlolabeauty
+            </div>
+            <div className="space-y-5">
+              <h1 className="font-serif text-5xl leading-tight text-[var(--text-primary)] md:text-7xl">Beauty, storytelling, and a studio shaped by intention.</h1>
+              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
+                My name is Damilola. I’m a creative based in Arizona.I’ve always been drawn to creating whether it’s through visuals, beauty, or storytelling.
               </p>
-              <p className="text-[var(--text-secondary)] leading-relaxed text-lg">
-                Our commitment remains unchanged: to provide an unparalleled experience of elegance, confidence, and radiant beauty.
+              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
+                I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.
               </p>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Values */}
-        <section className="space-y-16">
-          <div className="text-center space-y-4">
-            <h2 className="text-4xl font-serif text-[var(--text-primary)]">Our Values</h2>
-            <p className="text-[var(--text-secondary)]">The principles that guide everything we do.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: Sparkles, title: 'Uncompromising Quality', desc: 'We source only the highest grade, 100% raw human hair for our extensions.' },
-              { icon: Heart, title: 'Ethical Sourcing', desc: 'Every product is obtained through transparent, fair-trade practices.' },
-              { icon: ShieldCheck, title: 'Expert Craftsmanship', desc: 'Our stylists are master artisans, continuously trained in the latest techniques.' },
-              { icon: Leaf, title: 'Natural Ingredients', desc: 'Our care line is formulated with pure, botanical ingredients free from harsh chemicals.' }
-            ].map((value, i) => (
-              <motion.div 
-                key={value.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="p-8 rounded-2xl bg-white/40 dark:bg-black/40 border border-[#c8a03c]/20 dark:border-[#d4a847]/15 space-y-4"
+              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
+                I’d love to be a part of your story and help bring your vision to life.
+              </p>
+            </div>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/book"
+                className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
               >
-                <div className="w-12 h-12 rounded-full bg-[#8B6914]/10 dark:bg-[#D4A847]/10 flex items-center justify-center text-[#8B6914] dark:text-[#D4A847]">
-                  <value.icon size={24} />
-                </div>
-                <h3 className="text-xl font-serif text-[var(--text-primary)]">{value.title}</h3>
-                <p className="text-[var(--text-secondary)] leading-relaxed">{value.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+                Book a Session
+              </Link>
+              <Link
+                href="/shop"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80"
+              >
+                Shop the Edit
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.15 }}>
+            <Glass level="heavy" className="overflow-hidden p-0">
+              <div className="relative aspect-[4/5]">
+                <Image src="/images/founder.jpeg" alt="Damilola of itzlolabeauty" fill className="object-cover" priority sizes="(min-width: 1024px) 40vw, 100vw" />
+              </div>
+            </Glass>
+          </motion.div>
         </section>
 
-        {/* CTA */}
-        <section className="text-center space-y-8 pb-12">
-          <h2 className="text-4xl font-serif text-[var(--text-primary)]">Experience Lumière</h2>
-          <p className="text-[var(--text-secondary)] max-w-2xl mx-auto text-lg">
-            Ready to elevate your look? Explore our premium collections or book a consultation with one of our master stylists today.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link 
-              href="/shop"
-              className="px-8 py-4 rounded-full bg-[#8B6914] dark:bg-[#D4A847] text-white dark:text-[#1A1008] font-medium hover:opacity-90 transition-opacity w-full sm:w-auto"
-            >
-              Shop Collections
-            </Link>
-            <Link 
-              href="/book"
-              className="px-8 py-4 rounded-full border border-[#8B6914] dark:border-[#D4A847] text-[#8B6914] dark:text-[#D4A847] font-medium hover:bg-[#8B6914]/5 dark:hover:bg-[#D4A847]/5 transition-colors w-full sm:w-auto"
-            >
-              Book a Stylist
-            </Link>
-          </div>
+        <section className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              title: 'Founder-led artistry',
+              body: 'Every client experience is shaped with a personal eye for beauty, confidence, and detail.',
+            },
+            {
+              title: 'Two clear journeys',
+              body: 'Shop beauty essentials or book a service crafted for makeup artistry and creator-ready results.',
+            },
+            {
+              title: 'Made to feel elevated',
+              body: 'The goal is simple: help every client feel polished, visible, and fully aligned with their vision.',
+            },
+          ].map((item) => (
+            <Glass key={item.title} level="medium" className="p-8">
+              <h2 className="font-serif text-2xl text-[var(--text-primary)]">{item.title}</h2>
+              <p className="mt-3 text-[var(--text-secondary)]">{item.body}</p>
+            </Glass>
+          ))}
         </section>
-
       </div>
     </main>
   );

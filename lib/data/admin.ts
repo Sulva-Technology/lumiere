@@ -583,11 +583,11 @@ export async function updateOrderStatus(orderId: string, input: { paymentStatus?
     data.fulfillment_status === input.fulfillmentStatus;
 
   if (didFulfillmentChange) {
-    try {
+      try {
       const settings = await getStoreSettings();
       await sendOrderStatusUpdateEmail({
-        storeName: settings?.store_name?.trim() || 'theDMAshop',
-        supportEmail: settings?.support_email?.trim() || 'support@thedmashop.com',
+        storeName: settings?.store_name?.trim() || 'itzlolabeauty',
+        supportEmail: settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
         customerName: relationFirst(existingOrder.customers)?.full_name ?? 'there',
         customerEmail: data.email,
         orderNumber: data.order_number,

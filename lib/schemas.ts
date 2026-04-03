@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const makeupLookTypes = ['Soft glam', 'Full glam', 'Natural', 'Not sure'] as const;
+const makeupSkinTypes = ['Oily', 'Dry', 'Combination', 'Normal', 'Not sure'] as const;
+const makeupLashesPreferences = ['Yes', 'No', 'I\u2019ll bring my own'] as const;
+const makeupHistoryAnswers = ['Yes', 'No'] as const;
+
 export const cartLineInputSchema = z.object({
   variantId: z.string().uuid(),
   quantity: z.number().int().positive().max(20),
@@ -29,6 +34,22 @@ export const createBookingSchema = z.object({
   email: z.string().email(),
   phone: z.string().trim().min(7).max(30),
   notes: z.string().trim().max(500).optional(),
+  makeupIntake: z
+    .object({
+      appointmentDateTimeNeeded: z.string().trim().min(2).max(160),
+      occasion: z.string().trim().min(2).max(160),
+      referenceDescription: z.string().trim().min(2).max(1500),
+      referenceImageUrl: z.string().trim().url().nullable().optional(),
+      referenceImageAssetId: z.string().uuid().nullable().optional(),
+      lookType: z.enum(makeupLookTypes),
+      skinType: z.enum(makeupSkinTypes),
+      skinConditionsOrAllergies: z.string().trim().min(2).max(1000),
+      lashesPreference: z.enum(makeupLashesPreferences),
+      hadProfessionalMakeupBefore: z.enum(makeupHistoryAnswers),
+      priorExperienceNotes: z.string().trim().max(1000).nullable().optional(),
+      productPreferencesOrRestrictions: z.string().trim().max(1000).nullable().optional(),
+    })
+    .optional(),
 });
 
 export const cancelReservationSchema = z.object({

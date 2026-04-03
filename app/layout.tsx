@@ -21,30 +21,29 @@ const cormorant = Cormorant_Garamond({
 
 export async function generateMetadata(): Promise<Metadata> {
   const store = await getPublicStoreSettings();
-  const siteUrl = 'https://thedmashop.com'; // Placeholder base URL
+  const siteUrl = 'https://itzlolabeauty.com';
 
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: `theDMAshop`,
-      template: `%s | theDMAshop`,
+      default: store.storeName,
+      template: `%s | ${store.storeName}`,
     },
-
-    description: 'A premium makeup artistry and digital content creation studio defined by high-end aesthetics and creative storytelling.',
+    description: 'itzlolabeauty is a founder-led beauty studio where clients can shop makeup essentials or book polished makeup and content sessions.',
     keywords: ['makeup artistry', 'content studio', 'digital content creation', 'editorial makeup', 'bridal glam', 'social media reels', 'studio sessions'],
-    authors: [{ name: 'theDMAshop' }],
-    creator: 'theDMAshop',
+    authors: [{ name: store.storeName }],
+    creator: store.storeName,
 
     openGraph: {
       type: 'website',
       locale: 'en_US',
       url: siteUrl,
       siteName: store.storeName,
-      title: `${store.storeName} | Makeup & Content Studio`,
-      description: 'Defined by high-end aesthetics and professional creativity. Experience the new standard in makeup and content.',
+      title: `${store.storeName} | Shop Makeup. Book Beauty.`,
+      description: 'Shop beauty essentials or reserve a signature makeup or content session with itzlolabeauty.',
       images: [
         {
-          url: '/images/content_studio.png',
+          url: '/images/logo.jpeg',
           width: 1200,
           height: 630,
           alt: store.storeName,
@@ -53,9 +52,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${store.storeName} | Makeup & Content Studio`,
-      description: 'Your premium destination for professional makeup and content creation.',
-      images: ['/images/content_studio.png'],
+      title: `${store.storeName} | Shop Makeup. Book Beauty.`,
+      description: 'A founder-led beauty studio for makeup artistry, creator sessions, and beauty essentials.',
+      images: ['/images/logo.jpeg'],
     },
     robots: {
       index: true,
