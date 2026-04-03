@@ -11,6 +11,8 @@ interface AvailabilitySlot {
   starts_at: string;
   ends_at: string;
   is_available: boolean;
+  has_booking: boolean;
+  is_reserved: boolean;
   booking_services: { name: string } | null;
   stylists: { name: string } | null;
 }
@@ -45,7 +47,7 @@ export default function AdminAvailabilityPage() {
         if (!servRes.ok) throw new Error(servData.error || 'Failed to load services');
         if (!styRes.ok) throw new Error(styData.error || 'Failed to load artists');
 
-        setAvailability(availData.availability);
+        setAvailability(availData.data.availability);
         setServices(servData.services);
         setStylists(styData.stylists);
       } catch (err) {
@@ -89,7 +91,7 @@ export default function AdminAvailabilityPage() {
       // Refresh availability
       const availRes = await fetch('/api/admin/availability');
       const availData = await availRes.json();
-      setAvailability(availData.availability);
+      setAvailability(availData.data.availability);
 
       // Reset form
       setSelectedService('');
@@ -219,8 +221,7 @@ export default function AdminAvailabilityPage() {
               <tbody>
                 {availability.length > 0 ? (
                   availability.map((slot) => {
-                    const isPast = new Date(slot.starts_at) < new Date();
-                    return (
+                     return (
                       <tr key={slot.id} className="border-b border-black/5 text-sm dark:border-white/5 last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                         <td className="py-4 font-medium text-[#1A1008] dark:text-white">
                           {slot.booking_services?.name || 'Unknown Service'}
@@ -234,7 +235,7 @@ export default function AdminAvailabilityPage() {
                               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
                               : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                           }`}>
-                            {slot.is_available ? 'Available' : 'Booked'}
+                            {slot.has_booking ? 'Booked' : slot.is_reserved ? 'Reserved' : slot.is_available ? 'Available' : 'Closed'}
                           </span>
                         </td>
                         <td className="py-4 text-right">

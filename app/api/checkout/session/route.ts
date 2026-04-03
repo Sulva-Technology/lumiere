@@ -8,15 +8,15 @@ export async function POST(request: NextRequest) {
   const rateLimit = checkRateLimit(`checkout:${ip}`, 15, 60_000);
 
   if (!rateLimit.allowed) {
-    return NextResponse.json({ error: 'Too many checkout attempts. Please wait a moment and try again.' }, { status: 429 });
+    return NextResponse.json({ data: null, error: 'Too many checkout attempts. Please wait a moment and try again.', meta: null }, { status: 429 });
   }
 
   try {
     const body = await request.json();
     const input = checkoutSessionSchema.parse(body);
     const result = await createCheckoutSession(input);
-    return NextResponse.json(result, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to start checkout.' }, { status: 400 });
+    return NextResponse.json({ data: result, error: null, meta: null }, { status: 201 });
+  } catch {
+    return NextResponse.json({ data: null, error: 'Unable to start secure checkout.', meta: null }, { status: 400 });
   }
 }

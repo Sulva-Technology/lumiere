@@ -10,8 +10,8 @@ export default function PrivacyPolicyPage() {
         {
           title: 'Information We Use',
           body: [
-            'We use customer contact details, shipping details, and booking details to fulfill orders and salon reservations.',
-            'Payment card details are handled by Stripe and are not stored directly in this application.',
+            'We use customer contact details, shipping details, and booking details to fulfill orders and confirmed appointments.',
+            'Sensitive payment details are handled by our secure payment infrastructure and are not stored directly in this application.',
           ],
         },
         {

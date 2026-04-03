@@ -31,13 +31,21 @@ export const createBookingSchema = z.object({
   notes: z.string().trim().max(500).optional(),
 });
 
+export const cancelReservationSchema = z.object({
+  reservationId: z.string().uuid(),
+});
+
 export const adminProductUpdateSchema = z.object({
+  id: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(160),
   slug: z.string().trim().min(2).max(180),
   description: z.string().trim().max(4000).nullable(),
   categoryId: z.string().uuid().nullable(),
   featured: z.boolean(),
   active: z.boolean(),
+  lifecycleStatus: z.enum(['active', 'archived']).optional(),
+  defaultImageUrl: z.union([z.string().trim().url(), z.literal(''), z.null()]).optional(),
+  mediaAssetId: z.union([z.string().uuid(), z.literal(''), z.null()]).optional(),
 });
 
 export const adminProductCreateSchema = z.object({
@@ -53,6 +61,7 @@ export const adminProductCreateSchema = z.object({
   featured: z.boolean().optional().default(false),
   active: z.boolean().optional().default(true),
   defaultImageUrl: z.string().trim().url().optional().or(z.literal('')),
+  mediaAssetId: z.string().uuid().optional().or(z.literal('')),
   variantTitle: z.string().trim().min(1).max(160),
   sku: z.string().trim().min(2).max(120),
   price: z.coerce.number().min(0),
@@ -69,7 +78,23 @@ export const adminOrderStatusSchema = z.object({
 });
 
 export const adminBookingStatusSchema = z.object({
-  status: z.enum(['confirmed', 'completed', 'cancelled']),
+  status: z.enum(['confirmed', 'completed', 'cancelled', 'expired', 'refunded']),
+});
+
+export const adminAvailabilityCreateSchema = z.object({
+  stylistId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+  startsAt: z.string().datetime(),
+  durationMinutes: z.number().int().min(15).max(12 * 60),
+});
+
+export const adminAvailabilityDeleteSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const adminMediaLifecycleSchema = z.object({
+  assetId: z.string().uuid(),
+  lifecycleStatus: z.enum(['active', 'archived', 'deleted', 'orphaned']),
 });
 
 export const storeSettingsSchema = z.object({

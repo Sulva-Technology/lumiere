@@ -94,6 +94,45 @@ export interface CreateCheckoutSessionInput {
 export interface CreateCheckoutSessionResult {
   checkoutUrl: string;
   orderId: string;
+  paymentId: string;
+}
+
+export type PaymentStatus = 'created' | 'pending' | 'authorized' | 'paid' | 'failed' | 'cancelled' | 'expired' | 'refunded';
+export type PaymentProvider = 'hosted_checkout';
+export type PaymentMethodFamily = 'hosted_checkout';
+export type OrderLifecycleState = 'draft' | 'pending_payment' | 'paid' | 'payment_failed' | 'cancelled' | 'refunded';
+export type BookingLifecycleState = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled' | 'expired' | 'refunded';
+
+export interface PaymentRecord {
+  id: string;
+  orderId: string | null;
+  bookingId: string | null;
+  reservationId: string | null;
+  provider: PaymentProvider;
+  status: PaymentStatus;
+  amount: number;
+  currency: string;
+  methodFamily: PaymentMethodFamily;
+  providerReference: string | null;
+  sessionReference: string | null;
+  failureReason: string | null;
+  reconciliationState: string | null;
+  createdAt: string;
+  updatedAt: string;
+  paidAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface MediaAsset {
+  id: string;
+  bucket: string;
+  objectPath: string;
+  publicUrl: string;
+  alt: string | null;
+  ownerType: 'product' | 'product_image' | 'variant' | 'general';
+  ownerId: string | null;
+  lifecycleStatus: 'active' | 'archived' | 'deleted' | 'orphaned';
+  sortOrder: number;
 }
 
 export interface BookingService {
@@ -136,13 +175,33 @@ export interface CreateBookingInput {
   notes?: string;
 }
 
+export interface BookingReservation {
+  id: string;
+  availabilityId: string;
+  stylistId: string;
+  serviceId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  notes: string | null;
+  reservationStatus: 'pending_payment' | 'confirmed' | 'cancelled' | 'expired';
+  expiresAt: string;
+}
+
+export interface CreateBookingCheckoutResult {
+  checkoutUrl: string;
+  reservationId: string;
+  paymentId: string;
+}
+
 export interface BookingConfirmation {
   id: string;
   bookingReference: string;
   stylistName: string;
   serviceName: string;
   startsAt: string;
-  status: string;
+  status: BookingLifecycleState;
+  paymentStatus: PaymentStatus;
 }
 
 export interface AdminOrderRow {
@@ -155,16 +214,24 @@ export interface AdminOrderRow {
   paymentStatus: string;
   fulfillmentStatus: string;
   itemsCount: number;
+  paymentProvider: string | null;
+  paymentReference: string | null;
 }
 
 export interface AdminBookingRow {
   id: string;
-  bookingReference: string;
+  bookingReference: string | null;
+  reservationId: string | null;
   clientName: string;
   stylistName: string;
   serviceName: string;
   startsAt: string;
   status: string;
+  paymentStatus: string;
+  paymentProvider: string | null;
+  paymentReference: string | null;
+  notes: string | null;
+  entryType: 'booking' | 'reservation';
 }
 
 export interface AdminCustomerRow {
@@ -184,6 +251,7 @@ export interface DashboardMetrics {
   activeBookings: number;
   newCustomers: number;
   recentOrders: AdminOrderRow[];
+  pendingPayments: number;
   lowStockProducts: Array<{
     variantId: string;
     label: string;

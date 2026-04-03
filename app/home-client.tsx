@@ -1,13 +1,12 @@
 'use client';
 
-import { Metadata } from 'next';
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-const headlineWords = 'Your Brand, Artfully Captured.'.split(' ');
+const headlineWords = 'Shop the Edit. Book the Session.'.split(' ');
 
 
 
@@ -36,7 +35,7 @@ export default function Home() {
 
           <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
             <Glass level="heavy" className="flex w-full max-w-3xl flex-col items-center p-6 text-center sm:p-10 md:p-16">
-              <p className="mb-4 text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">Makeup + Content Studio</p>
+              <p className="mb-4 text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">Two Journeys. One Signature Experience.</p>
 
               <h1 className="mb-5 flex flex-wrap justify-center gap-x-4 font-serif text-4xl font-medium tracking-tight sm:mb-6 sm:text-5xl md:text-7xl">
                 {headlineWords.map((word, index) => (
@@ -57,7 +56,7 @@ export default function Home() {
                 transition={{ delay: 0.8, duration: 1 }}
                 className="mb-8 max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:text-lg md:text-xl"
               >
-                Professional makeup artistry and high-performance content creation for brands and creators who demand excellence.
+                 Discover premium makeup essentials or reserve a polished studio service built around makeup artistry and creator-ready content.
 
               </motion.p>
 
@@ -65,13 +64,19 @@ export default function Home() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.8 }}
-                className="flex items-center justify-center"
+                className="flex flex-col items-center justify-center gap-3 sm:flex-row"
               >
                 <Link
-                  href="/shop"
+                  href="/book"
                   className="w-full rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white shadow-lg transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] sm:w-auto"
                 >
                   Book a Session
+                </Link>
+                <Link
+                  href="/shop"
+                  className="w-full rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-90 sm:w-auto"
+                >
+                  Shop the Edit
                 </Link>
               </motion.div>
             </Glass>
@@ -146,7 +151,7 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="mb-10 flex items-end justify-between"
         >
-          <h2 className="font-serif text-3xl md:text-4xl">Makeup Essentials</h2>
+          <h2 className="font-serif text-3xl md:text-4xl">Shop the Edit</h2>
           <Link href="/shop" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
             Shop Collection <ArrowRight size={16} />
           </Link>
@@ -154,22 +159,22 @@ export default function Home() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Refined Artistry</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">From subtle enhancements to dramatic editorial looks, our makeup artistry is designed for the modern frame.</p>
+            <h3 className="font-serif text-2xl">Elevated Product Selection</h3>
+            <p className="mt-2 text-[var(--text-secondary)]">Build your beauty kit with polished essentials chosen to support artistry, wear, and camera-ready results.</p>
           </Glass>
           <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Digital Storytelling</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">We don't just capture video; we create high-performance assets that resonate with your audience's digital experience.</p>
+            <h3 className="font-serif text-2xl">Service-Led Results</h3>
+            <p className="mt-2 text-[var(--text-secondary)]">Move from booking to confirmation with a guided flow designed for premium appointments and reliable scheduling.</p>
           </Glass>
         </div>
       </section>
 
       <section className="mx-auto mb-24 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <Glass level="heavy" className="p-8 text-center md:p-12">
-          <h2 className="font-serif text-3xl md:text-5xl">theDMAshop: Styled with Intention.</h2>
+          <h2 className="font-serif text-3xl md:text-5xl">Everything points to one of two outcomes: shop beautifully or book confidently.</h2>
 
           <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--text-secondary)]">
-            Elevate your brand with premium makeup artistry and custom-crafted content designed for impact.
+            The storefront and service experience now work together, so clients can move quickly from discovery to purchase or appointment confirmation.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link

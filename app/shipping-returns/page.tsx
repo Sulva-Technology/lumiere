@@ -10,14 +10,14 @@ export default function ShippingReturnsPage() {
         {
           title: 'Shipping',
           body: [
-            'Orders are created only after payment is verified through Stripe and inventory is confirmed on the server.',
+            'Orders are created only after payment is verified and inventory is confirmed on the server.',
             'Standard shipping is free over the configured threshold. Orders below that threshold receive a flat shipping charge during checkout.',
           ],
         },
         {
           title: 'Processing',
           body: [
-            'Orders move from pending to processing after the Stripe webhook marks payment as complete.',
+            'Orders move from pending to processing after payment confirmation is received securely.',
             'Fulfillment updates in the admin dashboard are reflected in the order lifecycle for internal operations.',
           ],
         },

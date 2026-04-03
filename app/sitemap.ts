@@ -3,20 +3,25 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://thedmashop.com';
-  const supabase = createSupabaseAdminClient();
+  let productUrls: MetadataRoute.Sitemap = [];
 
-  // Fetch all active product slugs
-  const { data: products } = await supabase
-    .from('products')
-    .select('slug, updated_at')
-    .eq('active', true);
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: products } = await supabase
+      .from('products')
+      .select('slug, updated_at')
+      .eq('active', true)
+      .eq('lifecycle_status', 'active');
 
-  const productUrls = (products ?? []).map((product) => ({
-    url: `${baseUrl}/product/${product.slug}`,
-    lastModified: product.updated_at,
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
+    productUrls = (products ?? []).map((product) => ({
+      url: `${baseUrl}/product/${product.slug}`,
+      lastModified: product.updated_at,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch {
+    productUrls = [];
+  }
 
   const staticUrls = [
     {

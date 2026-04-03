@@ -13,15 +13,15 @@ export default async function FaqPage() {
         {
           title: 'Orders',
           body: [
-            'Orders are confirmed after Stripe payment succeeds and your order is recorded successfully.',
+            'Orders are confirmed after payment is verified and your purchase is recorded successfully.',
             'You will receive email confirmation once the order is placed and another update when fulfillment begins.',
           ],
         },
         {
           title: 'Bookings',
           body: [
-            'Salon bookings reserve a real availability slot with your selected stylist and service.',
-            'Online booking does not collect payment for salon services at this stage. Payment is handled in salon unless your team later enables deposits.',
+            'Bookings reserve a real availability slot with your selected artist and service.',
+            'Online booking collects payment during the secure checkout flow before an appointment is confirmed.',
           ],
         },
         {

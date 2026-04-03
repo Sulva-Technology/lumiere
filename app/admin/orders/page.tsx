@@ -9,7 +9,7 @@ function paymentTone(status: string) {
   switch (status) {
     case 'paid':
       return 'bg-emerald-500/15 text-emerald-300';
-    case 'failed':
+    case 'payment_failed':
       return 'bg-red-500/15 text-red-300';
     case 'cancelled':
       return 'bg-white/10 text-white/55';

@@ -1,16 +1,24 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
+import { AnimatePresence, motion } from 'motion/react';
+import { Calendar, Check, ChevronRight, Clock, Sparkles, User, Camera } from 'lucide-react';
+
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency, formatDateTime } from '@/lib/format';
-import { motion, AnimatePresence } from 'motion/react';
-import { Check, ChevronRight, ChevronLeft, Calendar, Clock, Sparkles, User, Camera } from 'lucide-react';
-import Image from 'next/image';
-import type { AvailableSlot, BookingConfirmation, BookingService, StylistSummary } from '@/lib/types';
+import type { AvailableSlot, BookingReservation, BookingService, StylistSummary } from '@/lib/types';
 
 type Step = 'service' | 'artist' | 'availability' | 'details';
 
-export default function BookingPage() {
+function BookingPageContent() {
+  const searchParams = useSearchParams();
+  const success = searchParams.get('success') === '1';
+  const canceled = searchParams.get('canceled') === '1';
+  const reservationId = searchParams.get('reservation');
+  const cancelHandledRef = useRef(false);
+
   const [currentStep, setCurrentStep] = useState<Step>('service');
   const [stylists, setStylists] = useState<StylistSummary[]>([]);
   const [services, setServices] = useState<BookingService[]>([]);
@@ -23,24 +31,21 @@ export default function BookingPage() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
+  const [reservation, setReservation] = useState<BookingReservation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [servicesResponse, stylistsResponse] = await Promise.all([
-          fetch('/api/booking/services'),
-          fetch('/api/booking/stylists')
-        ]);
+        const [servicesResponse, stylistsResponse] = await Promise.all([fetch('/api/booking/services'), fetch('/api/booking/stylists')]);
         const servicesJson = await servicesResponse.json();
         const stylistsJson = await stylistsResponse.json();
         if (!servicesResponse.ok) throw new Error(servicesJson.error ?? 'Unable to load services.');
-        if (!stylistsResponse.ok) throw new Error(stylistsJson.error ?? 'Unable to load stylists.');
+        if (!stylistsResponse.ok) throw new Error(stylistsJson.error ?? 'Unable to load artists.');
         setServices(servicesJson.services);
         setStylists(stylistsJson.stylists);
-        
-        // Auto-select the first artist if not already selected
+
         if (stylistsJson.stylists.length > 0 && !selectedStylist) {
           setSelectedStylist(stylistsJson.stylists[0].id);
         }
@@ -70,6 +75,40 @@ export default function BookingPage() {
     void loadAvailability();
   }, [selectedService, selectedStylist]);
 
+  useEffect(() => {
+    async function syncReservationStatus() {
+      if (!reservationId) return;
+
+      if (success) {
+        setReservation((current) => current ?? { id: reservationId, availabilityId: '', stylistId: '', serviceId: '', fullName: '', email: '', phone: '', notes: null, reservationStatus: 'confirmed', expiresAt: new Date().toISOString() });
+        setStatusMessage('Your payment completed successfully. We are finalizing your appointment confirmation now.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/bookings?reservation=${reservationId}`);
+        const json = await response.json();
+        if (response.ok && json.data) {
+          setReservation(json.data);
+        }
+      } catch {
+        // Keep the page resilient even if the background lookup fails.
+      }
+
+      if (canceled && !cancelHandledRef.current) {
+        cancelHandledRef.current = true;
+        await fetch('/api/bookings/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reservationId }),
+        });
+        setStatusMessage('Your appointment hold has been released. You can choose another time whenever you are ready.');
+      }
+    }
+
+    void syncReservationStatus();
+  }, [canceled, reservationId, success]);
+
   const selectedServiceDetail = useMemo(() => services.find((s) => s.id === selectedService) ?? null, [services, selectedService]);
   const selectedStylistDetail = useMemo(() => stylists.find((s) => s.id === selectedStylist) ?? null, [stylists, selectedStylist]);
   const selectedSlot = useMemo(() => availability.find((s) => s.id === selectedAvailability) ?? null, [availability, selectedAvailability]);
@@ -87,15 +126,19 @@ export default function BookingPage() {
           stylistId: selectedStylist,
           serviceId: selectedService,
           availabilityId: selectedAvailability,
-          fullName, email, phone, notes,
+          fullName,
+          email,
+          phone,
+          notes,
         }),
       });
 
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Unable to save booking.');
-      setConfirmation(json.booking);
+      if (!response.ok) throw new Error(json.error ?? 'Unable to continue.');
+
+      window.location.href = json.data.checkoutUrl;
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Unable to save booking.');
+      setError(submitError instanceof Error ? submitError.message : 'Unable to continue.');
     } finally {
       setSaving(false);
     }
@@ -108,25 +151,23 @@ export default function BookingPage() {
     { key: 'details', label: 'Details', icon: Check },
   ];
 
-  if (confirmation) {
+  if (success) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-20">
         <Glass level="heavy" className="p-10 text-center">
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500 mb-6">
+          <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500">
               <Check size={40} />
             </div>
-            <h2 className="font-serif text-4xl text-[#1A1008] dark:text-white">Booking Confirmed</h2>
-            <p className="mt-4 text-xl text-[var(--text-secondary)]">Reference: <span className="font-mono font-bold text-[#8B6914] dark:text-[#F0D080]">{confirmation.bookingReference}</span></p>
-            <div className="mt-10 w-full rounded-2xl bg-black/5 p-6 text-left dark:bg-white/5">
-              <p className="text-sm uppercase tracking-widest text-[var(--text-secondary)]">Experience Details</p>
-              <div className="mt-4 space-y-3">
-                <p className="text-lg"><strong>Service:</strong> {confirmation.serviceName}</p>
-                <p className="text-lg"><strong>Artist:</strong> {confirmation.stylistName}</p>
-                <p className="text-lg"><strong>When:</strong> {formatDateTime(confirmation.startsAt)}</p>
-              </div>
-            </div>
-            <p className="mt-8 text-[var(--text-secondary)]">A confirmation email has been sent to {email}.</p>
+            <h2 className="font-serif text-4xl text-[#1A1008] dark:text-white">Payment Received</h2>
+            <p className="mt-4 max-w-2xl text-lg text-[var(--text-secondary)]">
+              {statusMessage ?? 'Your appointment is being finalized. Confirmation details will follow shortly.'}
+            </p>
+            {reservationId && (
+              <p className="mt-6 rounded-full bg-black/5 px-5 py-3 text-sm text-[var(--text-secondary)] dark:bg-white/5">
+                Reference hold: {reservationId}
+              </p>
+            )}
           </motion.div>
         </Glass>
       </div>
@@ -135,19 +176,29 @@ export default function BookingPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-      {/* Step Indicator */}
+      {statusMessage && (
+        <Glass level="medium" className="mb-6 p-4 text-sm text-[var(--text-secondary)]">
+          {statusMessage}
+        </Glass>
+      )}
+
       <div className="mb-12 flex justify-between px-4 sm:px-10">
         {steps.map((step, idx) => {
           const Icon = step.icon;
           const isActive = currentStep === step.key;
-          const isCompleted = steps.findIndex(s => s.key === currentStep) > idx;
-          
+          const isCompleted = steps.findIndex((s) => s.key === currentStep) > idx;
+
           return (
             <div key={step.key} className="relative flex flex-col items-center">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-500 ${
-                isActive ? 'bg-[#8B6914] text-white ring-4 ring-[#8B6914]/20 scale-110 dark:bg-[#D4A847] dark:text-[#1A1008]' : 
-                isCompleted ? 'bg-green-500/20 text-green-500' : 'bg-black/5 text-[var(--text-secondary)] dark:bg-white/5'
-              }`}>
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-500 ${
+                  isActive
+                    ? 'bg-[#8B6914] text-white ring-4 ring-[#8B6914]/20 scale-110 dark:bg-[#D4A847] dark:text-[#1A1008]'
+                    : isCompleted
+                      ? 'bg-green-500/20 text-green-500'
+                      : 'bg-black/5 text-[var(--text-secondary)] dark:bg-white/5'
+                }`}
+              >
                 {isCompleted ? <Check size={20} /> : <Icon size={20} />}
               </div>
               <span className={`mt-3 hidden text-[10px] font-bold uppercase tracking-[0.2em] sm:block ${isActive ? 'text-[#8B6914] dark:text-[#D4A847]' : 'text-[var(--text-secondary)] opacity-50'}`}>
@@ -165,14 +216,17 @@ export default function BookingPage() {
         {currentStep === 'service' && (
           <motion.div key="service" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <header className="text-center">
-              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Choose Your Experience</h1>
-              <p className="mt-4 text-[var(--text-secondary)]">Select from our signature makeup and content services.</p>
+              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Choose Your Service</h1>
+              <p className="mt-4 text-[var(--text-secondary)]">Select either makeup artistry or content creation, then choose your time and complete payment securely.</p>
             </header>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {services.map((service) => (
                 <button
                   key={service.id}
-                  onClick={() => { setSelectedService(service.id); setCurrentStep('artist'); }}
+                  onClick={() => {
+                    setSelectedService(service.id);
+                    setCurrentStep('artist');
+                  }}
                   className={`group relative overflow-hidden rounded-3xl border p-6 text-left transition-all hover:scale-[1.02] ${
                     selectedService === service.id ? 'border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]' : 'border-black/5 dark:border-white/5'
                   }`}
@@ -180,9 +234,9 @@ export default function BookingPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-serif text-2xl text-[#1A1008] dark:text-white">{service.name}</h3>
-                      <p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">{service.description}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{service.description}</p>
                     </div>
-                    {service.slug.includes('content') ? <Camera className="text-[#8B6914] dark:text-[#D4A847] opacity-40" /> : <Sparkles className="text-[#8B6914] dark:text-[#D4A847] opacity-40" />}
+                    {service.slug.includes('content') ? <Camera className="text-[#8B6914] opacity-40 dark:text-[#D4A847]" /> : <Sparkles className="text-[#8B6914] opacity-40 dark:text-[#D4A847]" />}
                   </div>
                   <div className="mt-8 flex items-center justify-between border-t border-black/5 pt-4 dark:border-white/5">
                     <p className="text-sm font-medium text-[var(--text-secondary)]">{service.durationMinutes} minutes</p>
@@ -197,46 +251,50 @@ export default function BookingPage() {
         {currentStep === 'artist' && (
           <motion.div key="artist" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <header className="text-center">
-              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Meet Your Creative</h1>
-              <p className="mt-4 text-[var(--text-secondary)]">Experience artistry tailored to your unique vision.</p>
+              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Meet Your Lead Artist</h1>
+              <p className="mt-4 text-[var(--text-secondary)]">Your booking will be handled through one polished studio flow with a single lead creative at launch.</p>
             </header>
-            
+
             <div className="mx-auto max-w-2xl">
-              {stylists.map((stylist) => (
+              {stylists.slice(0, 1).map((stylist) => (
                 <Glass key={stylist.id} level="heavy" className="overflow-hidden p-0">
                   <div className="grid grid-cols-1 md:grid-cols-[240px_1fr]">
                     <div className="relative aspect-square md:aspect-auto">
-                      <Image 
-                        src="/images/content_studio.png" 
-                        alt={stylist.name} 
-                        fill 
-                        className="object-cover"
-                      />
+                      <Image src="/images/content_studio.png" alt={stylist.name} fill className="object-cover" />
                     </div>
                     <div className="p-8">
                       <div className="mb-2 flex items-center gap-2">
                         <span className="rounded-full bg-[#8B6914]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#8B6914] dark:bg-[#D4A847]/10 dark:text-[#D4A847]">Lead Artist</span>
-                        <div className="flex gap-0.5 text-yellow-500"><Sparkles size={12} fill="currentColor" /></div>
+                        <div className="flex gap-0.5 text-yellow-500">
+                          <Sparkles size={12} fill="currentColor" />
+                        </div>
                       </div>
                       <h3 className="font-serif text-3xl text-[#1A1008] dark:text-white">{stylist.name}</h3>
                       <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">{stylist.bio}</p>
                       <div className="mt-6 flex flex-wrap gap-2">
-                        {stylist.specialties.map(spec => (
-                          <span key={spec} className="rounded-full border border-black/5 bg-black/5 px-3 py-1 text-xs text-[var(--text-secondary)] dark:border-white/5 dark:bg-white/5">{spec}</span>
+                        {stylist.specialties.map((spec) => (
+                          <span key={spec} className="rounded-full border border-black/5 bg-black/5 px-3 py-1 text-xs text-[var(--text-secondary)] dark:border-white/5 dark:bg-white/5">
+                            {spec}
+                          </span>
                         ))}
                       </div>
                       <button
-                        onClick={() => setCurrentStep('availability')}
+                        onClick={() => {
+                          setSelectedStylist(stylist.id);
+                          setCurrentStep('availability');
+                        }}
                         className="group mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-[#1A1008] py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-[#1A1008]"
                       >
-                        Confirm Artist
+                        Continue to Schedule
                         <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" />
                       </button>
                     </div>
                   </div>
                 </Glass>
               ))}
-              <button onClick={() => setCurrentStep('service')} className="mt-6 text-sm text-[var(--text-secondary)] underline underline-offset-4">Back to services</button>
+              <button onClick={() => setCurrentStep('service')} className="mt-6 text-sm text-[var(--text-secondary)] underline underline-offset-4">
+                Back to services
+              </button>
             </div>
           </motion.div>
         )}
@@ -245,7 +303,7 @@ export default function BookingPage() {
           <motion.div key="availability" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <header className="text-center">
               <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Choose a Time</h1>
-              <p className="mt-4 text-[var(--text-secondary)]">Your session for {selectedServiceDetail?.name}.</p>
+              <p className="mt-4 text-[var(--text-secondary)]">Select a live opening for {selectedServiceDetail?.name}.</p>
             </header>
 
             <div className="mx-auto max-w-2xl">
@@ -254,17 +312,24 @@ export default function BookingPage() {
                   {availability.map((slot) => (
                     <button
                       key={slot.id}
-                      onClick={() => { setSelectedAvailability(slot.id); setCurrentStep('details'); }}
+                      onClick={() => {
+                        setSelectedAvailability(slot.id);
+                        setCurrentStep('details');
+                      }}
                       className={`flex flex-col rounded-2xl border p-5 text-left transition-all hover:scale-[1.02] ${
-                        selectedAvailability === slot.id ? 'border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]' : 'border-black/5 dark:border-white/5 bg-white/5'
+                        selectedAvailability === slot.id ? 'border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]' : 'border-black/5 bg-white/5 dark:border-white/5'
                       }`}
                     >
                       <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                         <Calendar size={14} />
-                        <span className="text-xs uppercase tracking-widest">{new Date(slot.startsAt).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+                        <span className="text-xs uppercase tracking-widest">
+                          {new Date(slot.startsAt).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </span>
                       </div>
                       <div className="mt-3 flex items-center justify-between">
-                        <span className="font-serif text-2xl text-[#1A1008] dark:text-white">{new Date(slot.startsAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="font-serif text-2xl text-[#1A1008] dark:text-white">
+                          {new Date(slot.startsAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                         <ChevronRight size={18} className="text-[#8B6914] dark:text-[#D4A847]" />
                       </div>
                     </button>
@@ -272,12 +337,16 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <Glass level="medium" className="p-12 text-center">
-                  <Clock size={32} className="mx-auto text-[var(--text-secondary)] opacity-30 mb-4" />
-                  <p className="text-[var(--text-secondary)]">No available slots found for the next few days.</p>
-                  <button onClick={() => setCurrentStep('service')} className="mt-6 font-medium text-[#8B6914] dark:text-[#F0D080]">Choose another service</button>
+                  <Clock size={32} className="mx-auto mb-4 text-[var(--text-secondary)] opacity-30" />
+                  <p className="text-[var(--text-secondary)]">No available appointments were found for the next few days.</p>
+                  <button onClick={() => setCurrentStep('service')} className="mt-6 font-medium text-[#8B6914] dark:text-[#F0D080]">
+                    Choose another service
+                  </button>
                 </Glass>
               )}
-              <button onClick={() => setCurrentStep('artist')} className="mt-6 text-sm text-[var(--text-secondary)] underline underline-offset-4">Back to artist</button>
+              <button onClick={() => setCurrentStep('artist')} className="mt-6 text-sm text-[var(--text-secondary)] underline underline-offset-4">
+                Back to artist
+              </button>
             </div>
           </motion.div>
         )}
@@ -285,8 +354,8 @@ export default function BookingPage() {
         {currentStep === 'details' && (
           <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <header className="text-center">
-              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Finalize Your Booking</h1>
-              <p className="mt-4 text-[var(--text-secondary)]">Secure your session at theDMAshop.</p>
+              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Complete Your Booking</h1>
+              <p className="mt-4 text-[var(--text-secondary)]">We will hold your appointment briefly while you complete secure payment.</p>
             </header>
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
@@ -308,7 +377,7 @@ export default function BookingPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Notes for Artist</label>
-                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any specific requirements or vision for the session?" className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" />
+                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything we should know before your appointment?" className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" />
                   </div>
                 </form>
               </Glass>
@@ -327,7 +396,7 @@ export default function BookingPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[var(--text-secondary)]">Date & Time</span>
-                      <span className="font-medium text-right">{selectedSlot ? formatDateTime(selectedSlot.startsAt) : '-'}</span>
+                      <span className="text-right font-medium">{selectedSlot ? formatDateTime(selectedSlot.startsAt) : '-'}</span>
                     </div>
                     <div className="border-t border-black/5 pt-4 dark:border-white/5">
                       <div className="flex justify-between text-lg font-bold">
@@ -344,10 +413,12 @@ export default function BookingPage() {
                   disabled={saving || !fullName || !email || !phone}
                   className="group flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-5 font-bold text-white transition-all hover:shadow-xl hover:shadow-[#8B6914]/20 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
                 >
-                  {saving ? 'Processing...' : 'Confirm Booking'}
+                  {saving ? 'Preparing secure checkout...' : 'Continue to secure checkout'}
                   <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
                 </button>
-                <button onClick={() => setCurrentStep('availability')} className="w-full text-sm text-[var(--text-secondary)]">Change time</button>
+                <button onClick={() => setCurrentStep('availability')} className="w-full text-sm text-[var(--text-secondary)]">
+                  Change time
+                </button>
               </div>
             </div>
             {error && <p className="mt-4 text-center text-sm text-red-500">{error}</p>}
@@ -355,5 +426,13 @@ export default function BookingPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">Loading booking experience...</div>}>
+      <BookingPageContent />
+    </Suspense>
   );
 }

@@ -1,16 +1,26 @@
-﻿import { headers } from 'next/headers';
-import { getStripe } from '@/lib/stripe';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { createHostedCheckoutSession } from '@/lib/payments';
 import { getPublicStoreSettings, validateCartLines } from '@/lib/data/public';
+import { createAuditLog } from '@/lib/data/audit';
 import { sendOrderConfirmationEmails } from '@/lib/notifications';
 import type { CheckoutSummary, CreateCheckoutSessionInput, CreateCheckoutSessionResult } from '@/lib/types';
 
-function cents(amount: number) {
-  return Math.round(amount * 100);
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function expiresIn(minutes: number) {
+  return new Date(Date.now() + minutes * 60_000).toISOString();
 }
 
 function generateOrderNumber() {
   return `LUM-${Math.floor(Date.now() / 1000)}`;
+}
+
+function money(value: number | string | null | undefined) {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return Number(value);
+  return 0;
 }
 
 export async function buildCheckoutSummary(lines: CreateCheckoutSessionInput['lines']): Promise<CheckoutSummary> {
@@ -30,10 +40,6 @@ export async function buildCheckoutSummary(lines: CreateCheckoutSessionInput['li
 export async function createCheckoutSession(input: CreateCheckoutSessionInput): Promise<CreateCheckoutSessionResult> {
   const summary = await buildCheckoutSummary(input.lines);
   const supabase = createSupabaseAdminClient();
-  const stripe = getStripe();
-  const hdrs = await headers();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || hdrs.get('origin') || 'http://localhost:3000';
-  let orderId: string | null = null;
 
   const { data: customer } = await supabase
     .from('customers')
@@ -76,15 +82,15 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
       shipping_total: summary.shipping,
       total: summary.total,
       currency: summary.currency,
-      payment_status: 'pending',
+      payment_status: 'pending_payment',
       fulfillment_status: 'unfulfilled',
       shipping_address_id: address.id,
+      checkout_expires_at: expiresIn(30),
     })
     .select('id')
     .single();
 
   if (orderError) throw orderError;
-  orderId = order.id;
 
   const lineItems = summary.lines.map((line) => ({
     order_id: order.id,
@@ -101,107 +107,151 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
   const { error: orderItemsError } = await supabase.from('order_items').insert(lineItems);
   if (orderItemsError) throw orderItemsError;
 
-  try {
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      customer_email: input.email,
-      success_url: `${origin}/checkout?success=1&order=${order.id}`,
-      cancel_url: `${origin}/checkout?canceled=1&order=${order.id}`,
-      shipping_address_collection: {
-        allowed_countries: [input.shippingAddress.country.toUpperCase() as 'US'],
+  const { data: payment, error: paymentError } = await supabase
+    .from('payments')
+    .insert({
+      order_id: order.id,
+      provider: 'hosted_checkout',
+      status: 'pending',
+      amount: summary.total,
+      currency: summary.currency,
+      method_family: 'hosted_checkout',
+      expires_at: expiresIn(30),
+      metadata: {
+        kind: 'order',
+        orderNumber,
       },
-      line_items: [
+    })
+    .select('id')
+    .single();
+
+  if (paymentError) throw paymentError;
+
+  try {
+    const session = await createHostedCheckoutSession({
+      email: input.email,
+      successPath: `/checkout?success=1&order=${order.id}`,
+      cancelPath: `/checkout?canceled=1&order=${order.id}`,
+      metadata: {
+        kind: 'order',
+        orderId: order.id,
+        paymentId: payment.id,
+        orderNumber,
+      },
+      lines: [
         ...summary.lines.map((line) => ({
+          name: `${line.productName} - ${line.variantTitle}`,
+          amount: line.unitAmount,
           quantity: line.quantity,
-          price_data: {
-            currency: 'usd',
-            unit_amount: cents(line.unitAmount),
-            product_data: {
-              name: `${line.productName} - ${line.variantTitle}`,
-              images: line.imageUrl ? [line.imageUrl] : [],
-            },
-          },
+          imageUrl: line.imageUrl,
         })),
         ...(summary.shipping > 0
           ? [
               {
+                name: 'Delivery',
+                amount: summary.shipping,
                 quantity: 1,
-                price_data: {
-                  currency: 'usd',
-                  unit_amount: cents(summary.shipping),
-                  product_data: {
-                    name: 'Shipping',
-                  },
-                },
               },
             ]
           : []),
       ],
-      metadata: {
-        orderId: order.id,
-        orderNumber,
-      },
     });
 
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ stripe_checkout_session_id: session.id })
-      .eq('id', order.id);
+    const { error: updatePaymentError } = await supabase
+      .from('payments')
+      .update({
+        session_reference: session.id,
+        provider_reference: session.id,
+        idempotency_key: session.id,
+      })
+      .eq('id', payment.id);
 
-    if (updateError) throw updateError;
-
-    if (!session.url) {
-      throw new Error('Stripe Checkout session did not return a redirect URL.');
-    }
+    if (updatePaymentError) throw updatePaymentError;
 
     return {
-      checkoutUrl: session.url,
+      checkoutUrl: session.url!,
       orderId: order.id,
+      paymentId: payment.id,
     };
   } catch (error) {
-    if (orderId) {
-      await supabase.from('orders').update({ payment_status: 'failed' }).eq('id', orderId);
-    }
+    await supabase
+      .from('payments')
+      .update({
+        status: 'failed',
+        failure_reason: error instanceof Error ? error.message : 'Unable to start checkout.',
+        failed_at: nowIso(),
+      })
+      .eq('id', payment.id);
 
+    await supabase.from('orders').update({ payment_status: 'payment_failed' }).eq('id', order.id);
     throw error;
   }
 }
 
-export async function finalizePaidOrder(checkoutSessionId: string, paymentIntentId?: string | null) {
+async function decrementInventoryForOrder(orderId: string) {
   const supabase = createSupabaseAdminClient();
-  const { data: order, error } = await supabase
-    .from('orders')
-    .select('id, payment_status, order_number, email, subtotal, shipping_total, total, customers(full_name), order_items(product_name, variant_title, variant_id, quantity, line_total)')
-    .eq('stripe_checkout_session_id', checkoutSessionId)
-    .maybeSingle();
-
+  const { data: items, error } = await supabase.from('order_items').select('variant_id, quantity').eq('order_id', orderId);
   if (error) throw error;
-  if (!order) return;
-  if (order.payment_status === 'paid') return;
 
-  const { error: updateOrderError } = await supabase
-    .from('orders')
-    .update({
-      payment_status: 'paid',
-      fulfillment_status: 'processing',
-      stripe_payment_intent_id: paymentIntentId ?? null,
-    })
-    .eq('id', order.id);
-
-  if (updateOrderError) throw updateOrderError;
-
-  for (const item of order.order_items ?? []) {
-    const { data: variant } = await supabase.from('product_variants').select('stock_quantity').eq('id', item.variant_id).single();
-
+  for (const item of items ?? []) {
+    if (!item.variant_id) continue;
+    const { data: variant } = await supabase.from('product_variants').select('stock_quantity').eq('id', item.variant_id).maybeSingle();
     if (!variant) continue;
 
     await supabase
       .from('product_variants')
-      .update({
-        stock_quantity: Math.max(0, variant.stock_quantity - item.quantity),
-      })
+      .update({ stock_quantity: Math.max(0, variant.stock_quantity - item.quantity) })
       .eq('id', item.variant_id);
   }
+}
+
+export async function finalizePaidOrder(paymentId: string, providerReference?: string | null) {
+  const supabase = createSupabaseAdminClient();
+  const { data: payment, error: paymentError } = await supabase
+    .from('payments')
+    .select('id, order_id, status, paid_at')
+    .eq('id', paymentId)
+    .maybeSingle();
+
+  if (paymentError) throw paymentError;
+  if (!payment?.order_id) return;
+  if (payment.status === 'paid') return;
+
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .select('id, order_number, email, subtotal, shipping_total, total, customers(full_name), order_items(product_name, variant_title, quantity, line_total)')
+    .eq('id', payment.order_id)
+    .single();
+
+  if (orderError) throw orderError;
+
+  await supabase
+    .from('payments')
+    .update({
+      status: 'paid',
+      paid_at: payment.paid_at ?? nowIso(),
+      provider_reference: providerReference ?? payment.id,
+      reconciliation_state: 'captured',
+    })
+    .eq('id', payment.id)
+    .neq('status', 'paid');
+
+  await supabase
+    .from('orders')
+    .update({
+      payment_status: 'paid',
+      fulfillment_status: 'processing',
+    })
+    .eq('id', order.id)
+    .neq('payment_status', 'paid');
+
+  await decrementInventoryForOrder(order.id);
+  await createAuditLog({
+    action: 'order.payment_captured',
+    entityType: 'order',
+    entityId: order.id,
+    payload: { paymentId: payment.id },
+  });
 
   try {
     const store = await getPublicStoreSettings();
@@ -211,14 +261,14 @@ export async function finalizePaidOrder(checkoutSessionId: string, paymentIntent
       customerName: order.customers?.[0]?.full_name ?? 'there',
       customerEmail: order.email,
       orderNumber: order.order_number,
-      subtotal: Number(order.subtotal),
-      shipping: Number(order.shipping_total),
-      total: Number(order.total),
+      subtotal: money(order.subtotal),
+      shipping: money(order.shipping_total),
+      total: money(order.total),
       items: (order.order_items ?? []).map((item) => ({
         productName: item.product_name,
         variantTitle: item.variant_title,
         quantity: item.quantity,
-        lineTotal: Number(item.line_total),
+        lineTotal: money(item.line_total),
       })),
     });
   } catch (notificationError) {
@@ -233,11 +283,37 @@ export async function markOrderCheckoutCancelled(orderId: string) {
   if (error) throw error;
   if (!order || order.payment_status === 'paid') return;
 
-  const { error: updateError } = await supabase
+  await supabase
     .from('orders')
     .update({ payment_status: 'cancelled' })
     .eq('id', orderId)
     .neq('payment_status', 'paid');
 
-  if (updateError) throw updateError;
+  await supabase
+    .from('payments')
+    .update({
+      status: 'cancelled',
+      cancelled_at: nowIso(),
+    })
+    .eq('order_id', orderId)
+    .in('status', ['created', 'pending', 'authorized']);
+}
+
+export async function expireStaleOrderPayments() {
+  const supabase = createSupabaseAdminClient();
+  const now = nowIso();
+  const { data: stalePayments, error } = await supabase
+    .from('payments')
+    .select('id, order_id')
+    .lt('expires_at', now)
+    .in('status', ['created', 'pending', 'authorized']);
+
+  if (error) throw error;
+
+  for (const payment of stalePayments ?? []) {
+    await supabase.from('payments').update({ status: 'expired' }).eq('id', payment.id);
+    if (payment.order_id) {
+      await supabase.from('orders').update({ payment_status: 'cancelled' }).eq('id', payment.order_id).neq('payment_status', 'paid');
+    }
+  }
 }

@@ -36,7 +36,7 @@ export default function AdminDashboard() {
     { label: 'Total Revenue', value: formatCurrency(metrics.totalRevenue) },
     { label: 'Total Orders', value: metrics.totalOrders.toString() },
     { label: 'Active Bookings', value: metrics.activeBookings.toString() },
-    { label: 'New Customers', value: metrics.newCustomers.toString() },
+    { label: 'Pending Payments', value: metrics.pendingPayments.toString() },
   ];
 
   return (

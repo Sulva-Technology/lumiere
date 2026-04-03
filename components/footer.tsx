@@ -14,8 +14,7 @@ export function Footer({ brandName }: { brandName: string }) {
         <div className="max-w-xl space-y-4">
           <span className="font-serif text-2xl tracking-widest uppercase text-[var(--text-primary)]">{brandName}</span>
           <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-            Discover and shop professional makeup artistry tools and digital content essentials.
-
+            Shop premium beauty essentials or reserve a studio session for makeup artistry and creator-focused content.
           </p>
         </div>
 
@@ -27,6 +26,9 @@ export function Footer({ brandName }: { brandName: string }) {
             </Link>
             <Link href="/shop" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#D4A847]">
               Shop
+            </Link>
+            <Link href="/book" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#D4A847]">
+              Book
             </Link>
             <Link href="/track-order" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#D4A847]">
               Track Order

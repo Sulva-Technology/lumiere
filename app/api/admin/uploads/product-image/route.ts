@@ -3,6 +3,8 @@ import { requireAdminApiUser } from '@/lib/auth';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getOptionalEnv } from '@/lib/env';
 import { getErrorMessage } from '@/lib/validation';
+import { createMediaAsset } from '@/lib/data/media';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const PRODUCT_IMAGE_BUCKET = getOptionalEnv('SUPABASE_PRODUCT_IMAGES_BUCKET', 'product-images');
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -25,6 +27,12 @@ async function ensureBucket() {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const rateLimit = checkRateLimit(`admin-upload:${ip}`, 20, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: 'Upload limit reached. Please wait a moment and try again.' }, { status: 429 });
+    }
+
     await requireAdminApiUser();
 
     const formData = await request.formData();
@@ -56,11 +64,19 @@ export async function POST(request: NextRequest) {
     if (uploadError) throw uploadError;
 
     const { data: publicUrlData } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(filePath);
+    const asset = await createMediaAsset({
+      bucket: PRODUCT_IMAGE_BUCKET,
+      objectPath: filePath,
+      publicUrl: publicUrlData.publicUrl,
+      alt: file.name,
+      ownerType: 'general',
+    });
 
     return NextResponse.json({
       url: publicUrlData.publicUrl,
       path: filePath,
       bucket: PRODUCT_IMAGE_BUCKET,
+      mediaAsset: asset,
     });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error, 'Unable to upload image.') }, { status: 400 });

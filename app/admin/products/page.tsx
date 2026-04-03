@@ -8,11 +8,13 @@ import { formatCurrency } from '@/lib/format';
 import type { Category, ProductDetail } from '@/lib/types';
 
 type ProductFormState = {
+  id: string | null;
   name: string;
   slug: string;
   description: string;
   categoryId: string;
   defaultImageUrl: string;
+  mediaAssetId: string | null;
   sku: string;
   variantTitle: string;
   price: string;
@@ -26,11 +28,13 @@ type ProductFormState = {
 };
 
 const INITIAL_FORM: ProductFormState = {
+  id: null,
   name: '',
   slug: '',
   description: '',
   categoryId: '',
   defaultImageUrl: '',
+  mediaAssetId: null,
   sku: '',
   variantTitle: '',
   price: '',
@@ -63,6 +67,7 @@ export default function AdminProductsPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -92,15 +97,18 @@ export default function AdminProductsPage() {
     setError(null);
 
     try {
+      const isEditing = Boolean(form.id);
       const response = await fetch('/api/admin/products', {
-        method: 'POST',
+        method: isEditing ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: form.id,
           name: form.name,
           slug: form.slug,
           description: form.description,
           categoryId: form.categoryId,
           defaultImageUrl: form.defaultImageUrl,
+          mediaAssetId: form.mediaAssetId,
           sku: form.sku,
           variantTitle: form.variantTitle,
           price: form.price,
@@ -118,9 +126,12 @@ export default function AdminProductsPage() {
       if (!response.ok) throw new Error(json.error ?? 'Unable to create product.');
 
       if (json.product) {
-        setProducts((current) => [json.product, ...current]);
+        setProducts((current) =>
+          isEditing ? current.map((product) => (product.id === json.product.id ? json.product : product)) : [json.product, ...current]
+        );
       }
       setForm(INITIAL_FORM);
+      setSelectedProductId(null);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to create product.');
     } finally {
@@ -138,7 +149,11 @@ export default function AdminProductsPage() {
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? 'Unable to delete product.');
-      setProducts((current) => current.filter((product) => product.id !== productId));
+      setProducts((current) =>
+        json.mode === 'archived'
+          ? current.map((product) => (product.id === productId ? { ...product, active: false } : product))
+          : current.filter((product) => product.id !== productId)
+      );
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete product.');
     } finally {
@@ -162,12 +177,36 @@ export default function AdminProductsPage() {
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? 'Unable to upload image.');
 
-      setForm((current) => ({ ...current, defaultImageUrl: json.url }));
+      setForm((current) => ({ ...current, defaultImageUrl: json.url, mediaAssetId: json.mediaAsset?.id ?? null }));
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : 'Unable to upload image.');
     } finally {
       setUploadingImage(false);
     }
+  }
+
+  function handleStartEdit(product: ProductDetail) {
+    const primaryVariant = product.variants[0];
+    setSelectedProductId(product.id);
+    setForm({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description ?? '',
+      categoryId: product.categoryId ?? '',
+      defaultImageUrl: product.defaultImage ?? '',
+      mediaAssetId: null,
+      sku: primaryVariant?.sku ?? '',
+      variantTitle: primaryVariant?.title ?? '',
+      price: String(primaryVariant?.price ?? ''),
+      compareAtPrice: primaryVariant?.compareAtPrice ? String(primaryVariant.compareAtPrice) : '',
+      stockQuantity: String(primaryVariant?.stockQuantity ?? 0),
+      shade: primaryVariant?.shade ?? '',
+      length: primaryVariant?.length ?? '',
+      size: primaryVariant?.size ?? '',
+      featured: product.featured,
+      active: product.active,
+    });
   }
 
   return (
@@ -196,8 +235,10 @@ export default function AdminProductsPage() {
               <Plus size={18} />
             </div>
             <div>
-              <h2 className="font-serif text-2xl text-[#F7E7C1]">Add Product</h2>
-              <p className="text-sm text-white/55">Create one product with its first sellable variant.</p>
+              <h2 className="font-serif text-2xl text-[#F7E7C1]">{selectedProductId ? 'Edit Product' : 'Add Product'}</h2>
+              <p className="text-sm text-white/55">
+                {selectedProductId ? 'Update live product details and publication settings.' : 'Create one product with its first sellable variant.'}
+              </p>
             </div>
           </div>
 
@@ -379,8 +420,20 @@ export default function AdminProductsPage() {
               disabled={saving || uploadingImage}
               className="w-full rounded-2xl bg-[#D4A847] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60"
             >
-              {saving ? 'Saving product...' : 'Create Product'}
+              {saving ? 'Saving product...' : selectedProductId ? 'Save Changes' : 'Create Product'}
             </button>
+            {selectedProductId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedProductId(null);
+                  setForm(INITIAL_FORM);
+                }}
+                className="w-full rounded-2xl border border-white/10 px-5 py-3 text-sm font-medium text-white/75 transition-colors hover:bg-white/5"
+              >
+                Cancel Editing
+              </button>
+            )}
           </form>
         </Glass>
 
@@ -407,6 +460,13 @@ export default function AdminProductsPage() {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(product)}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                      >
+                        Edit
+                      </button>
                       <span
                         className={`rounded-full px-3 py-2 text-xs font-medium ${
                           product.active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/8 text-white/55'
@@ -421,7 +481,7 @@ export default function AdminProductsPage() {
                         className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/20 disabled:opacity-60"
                       >
                         <Trash2 size={15} />
-                        {deletingId === product.id ? 'Deleting...' : 'Delete'}
+                        {deletingId === product.id ? 'Updating...' : 'Archive / Delete'}
                       </button>
                     </div>
                   </div>

@@ -1,17 +1,21 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { createHostedCheckoutSession } from '@/lib/payments';
+import { sendBookingConfirmationEmails } from '@/lib/notifications';
+import { createAuditLog } from '@/lib/data/audit';
 import type {
   AvailableSlot,
   BookingConfirmation,
+  BookingReservation,
   BookingService,
   CartLineInput,
   Category,
+  CreateBookingCheckoutResult,
   CreateBookingInput,
   ProductDetail,
   ProductListItem,
   StylistSummary,
   ValidatedCartLine,
 } from '@/lib/types';
-import { sendBookingConfirmationEmails } from '@/lib/notifications';
 
 function normalizeMoney(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -22,6 +26,29 @@ function normalizeMoney(value: number | string | null | undefined) {
 function relationFirst<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function expiresIn(minutes: number) {
+  return new Date(Date.now() + minutes * 60_000).toISOString();
+}
+
+function mapReservation(row: any): BookingReservation {
+  return {
+    id: row.id,
+    availabilityId: row.availability_id,
+    stylistId: row.stylist_id,
+    serviceId: row.service_id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone,
+    notes: row.notes,
+    reservationStatus: row.reservation_status,
+    expiresAt: row.expires_at,
+  };
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -48,28 +75,22 @@ export async function getProducts(category?: string): Promise<ProductListItem[]>
         review_count,
         default_image_url,
         active,
+        lifecycle_status,
         product_categories(name),
         product_variants(price, compare_at_price, stock_quantity, active)
       `
     )
     .eq('active', true)
+    .eq('lifecycle_status', 'active')
     .order('featured', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (category && category !== 'all') {
-    const { data: categoryRecord } = await supabase
-      .from('product_categories')
-      .select('id')
-      .eq('slug', category)
-      .maybeSingle();
-
-    if (categoryRecord) {
-      query = query.eq('category_id', categoryRecord.id);
-    }
+    const { data: categoryRecord } = await supabase.from('product_categories').select('id').eq('slug', category).maybeSingle();
+    if (categoryRecord) query = query.eq('category_id', categoryRecord.id);
   }
 
   const { data, error } = await query;
-
   if (error) throw error;
 
   return (data ?? []).map((product) => {
@@ -115,13 +136,15 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
         details,
         care_instructions,
         shipping_notes,
+        lifecycle_status,
         product_categories(name),
         product_variants(id, product_id, sku, title, shade, length, size, price, compare_at_price, stock_quantity, active),
-        product_images(id, url, alt, sort_order)
+        product_images(id, url, alt, sort_order, media_asset_id)
       `
     )
     .eq('slug', slug)
     .eq('active', true)
+    .eq('lifecycle_status', 'active')
     .maybeSingle();
 
   if (error) throw error;
@@ -182,7 +205,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
 
   if (error) throw error;
 
-  return (data ?? []).map((service) => ({
+  return (data ?? []).slice(0, 2).map((service) => ({
     id: service.id,
     slug: service.slug,
     name: service.name,
@@ -197,7 +220,7 @@ export async function getStylists(): Promise<StylistSummary[]> {
   const { data, error } = await supabase
     .from('stylists')
     .select('id, slug, name, bio, specialties, rating, avatar_url, available, base_price')
-    .order('available', { ascending: false })
+    .eq('available', true)
     .order('name');
 
   if (error) throw error;
@@ -221,25 +244,37 @@ export async function getAvailability(stylistId?: string, serviceId?: string): P
     .from('booking_availability')
     .select('id, stylist_id, service_id, starts_at, ends_at, is_available')
     .eq('is_available', true)
-    .gte('starts_at', new Date().toISOString())
+    .gte('starts_at', nowIso())
     .order('starts_at')
     .limit(40);
 
   if (stylistId) query = query.eq('stylist_id', stylistId);
   if (serviceId) query = query.eq('service_id', serviceId);
 
-  const { data, error } = await query;
+  const [{ data, error }, { data: reservations, error: reservationError }] = await Promise.all([
+    query,
+    supabase
+      .from('booking_reservations')
+      .select('availability_id, expires_at, reservation_status')
+      .eq('reservation_status', 'pending_payment')
+      .gt('expires_at', nowIso()),
+  ]);
 
   if (error) throw error;
+  if (reservationError) throw reservationError;
 
-  return (data ?? []).map((slot) => ({
-    id: slot.id,
-    stylistId: slot.stylist_id,
-    serviceId: slot.service_id,
-    startsAt: slot.starts_at,
-    endsAt: slot.ends_at,
-    isAvailable: slot.is_available,
-  }));
+  const blockedIds = new Set((reservations ?? []).map((item) => item.availability_id));
+
+  return (data ?? [])
+    .filter((slot) => !blockedIds.has(slot.id))
+    .map((slot) => ({
+      id: slot.id,
+      stylistId: slot.stylist_id,
+      serviceId: slot.service_id,
+      startsAt: slot.starts_at,
+      endsAt: slot.ends_at,
+      isAvailable: slot.is_available,
+    }));
 }
 
 export async function validateCartLines(lines: CartLineInput[]): Promise<ValidatedCartLine[]> {
@@ -256,7 +291,7 @@ export async function validateCartLines(lines: CartLineInput[]): Promise<Validat
         price,
         stock_quantity,
         active,
-        products!inner(id, slug, name, default_image_url, active)
+        products!inner(id, slug, name, default_image_url, active, lifecycle_status)
       `
     )
     .in('id', variantIds);
@@ -269,8 +304,8 @@ export async function validateCartLines(lines: CartLineInput[]): Promise<Validat
     const variant = variantMap.get(line.variantId);
     const product = relationFirst(variant?.products);
 
-    if (!variant || !variant.active || !product?.active) {
-      throw new Error('One or more cart items are no longer available.');
+    if (!variant || !variant.active || !product?.active || product.lifecycle_status !== 'active') {
+      throw new Error('One or more selected items are no longer available.');
     }
 
     if (variant.stock_quantity < line.quantity) {
@@ -290,9 +325,8 @@ export async function validateCartLines(lines: CartLineInput[]): Promise<Validat
   });
 }
 
-export async function createBooking(input: CreateBookingInput): Promise<BookingConfirmation> {
+async function getAvailableSlot(input: Pick<CreateBookingInput, 'availabilityId' | 'serviceId' | 'stylistId'>) {
   const supabase = createSupabaseAdminClient();
-
   const { data: slot, error: slotError } = await supabase
     .from('booking_availability')
     .select('id, starts_at, ends_at, is_available, stylist_id, service_id')
@@ -302,20 +336,152 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
 
   if (slotError) throw slotError;
   if (!slot || slot.stylist_id !== input.stylistId || slot.service_id !== input.serviceId) {
-    throw new Error('Selected booking slot is no longer available.');
+    throw new Error('That appointment time is no longer available.');
   }
+
+  const { data: activeReservation } = await supabase
+    .from('booking_reservations')
+    .select('id')
+    .eq('availability_id', input.availabilityId)
+    .eq('reservation_status', 'pending_payment')
+    .gt('expires_at', nowIso())
+    .maybeSingle();
+
+  if (activeReservation) {
+    throw new Error('That appointment time is being held for another guest.');
+  }
+
+  return slot;
+}
+
+export async function createBookingCheckout(input: CreateBookingInput): Promise<CreateBookingCheckoutResult> {
+  const supabase = createSupabaseAdminClient();
+  const [slot, services] = await Promise.all([getAvailableSlot(input), getBookingServices()]);
+  const service = services.find((item) => item.id === input.serviceId);
+  if (!service) throw new Error('Selected service is unavailable.');
+
+  const { data: reservation, error: reservationError } = await supabase
+    .from('booking_reservations')
+    .insert({
+      availability_id: input.availabilityId,
+      stylist_id: input.stylistId,
+      service_id: input.serviceId,
+      full_name: input.fullName,
+      email: input.email,
+      phone: input.phone,
+      notes: input.notes ?? null,
+      reservation_status: 'pending_payment',
+      expires_at: expiresIn(15),
+    })
+    .select('*')
+    .single();
+
+  if (reservationError) throw reservationError;
+
+  const { data: payment, error: paymentError } = await supabase
+    .from('payments')
+    .insert({
+      reservation_id: reservation.id,
+      provider: 'hosted_checkout',
+      status: 'pending',
+      amount: service.price,
+      currency: 'usd',
+      method_family: 'hosted_checkout',
+      expires_at: reservation.expires_at,
+      metadata: {
+        kind: 'booking',
+        serviceName: service.name,
+      },
+    })
+    .select('id')
+    .single();
+
+  if (paymentError) throw paymentError;
+
+  try {
+    const session = await createHostedCheckoutSession({
+      email: input.email,
+      successPath: `/book?success=1&reservation=${reservation.id}`,
+      cancelPath: `/book?canceled=1&reservation=${reservation.id}`,
+      metadata: {
+        kind: 'booking',
+        reservationId: reservation.id,
+        paymentId: payment.id,
+        availabilityId: input.availabilityId,
+      },
+      lines: [
+        {
+          name: service.name,
+          description: `Scheduled for ${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(slot.starts_at))}`,
+          amount: service.price,
+          quantity: 1,
+        },
+      ],
+    });
+
+    await supabase
+      .from('payments')
+      .update({
+        session_reference: session.id,
+        provider_reference: session.id,
+        idempotency_key: session.id,
+      })
+      .eq('id', payment.id);
+
+    await createAuditLog({
+      action: 'booking.reservation_created',
+      entityType: 'booking_reservation',
+      entityId: reservation.id,
+      payload: { paymentId: payment.id, availabilityId: input.availabilityId },
+    });
+
+    return {
+      checkoutUrl: session.url!,
+      reservationId: reservation.id,
+      paymentId: payment.id,
+    };
+  } catch (error) {
+    await supabase.from('payments').update({ status: 'failed', failure_reason: error instanceof Error ? error.message : 'Unable to start secure checkout.' }).eq('id', payment.id);
+    await supabase.from('booking_reservations').update({ reservation_status: 'cancelled' }).eq('id', reservation.id);
+    throw error;
+  }
+}
+
+export async function finalizePaidBooking(paymentId: string, providerReference?: string | null): Promise<BookingConfirmation | null> {
+  const supabase = createSupabaseAdminClient();
+  const { data: payment, error: paymentError } = await supabase
+    .from('payments')
+    .select('id, booking_id, reservation_id, status, paid_at')
+    .eq('id', paymentId)
+    .maybeSingle();
+
+  if (paymentError) throw paymentError;
+  if (!payment?.reservation_id) return null;
+
+  if (payment.booking_id) {
+    const existing = await getBookingConfirmation(payment.booking_id);
+    return existing;
+  }
+
+  const { data: reservation, error: reservationError } = await supabase
+    .from('booking_reservations')
+    .select('*, booking_availability(starts_at, ends_at), booking_services(name), stylists(name)')
+    .eq('id', payment.reservation_id)
+    .maybeSingle();
+
+  if (reservationError) throw reservationError;
+  if (!reservation) return null;
+  const reservationAvailability = relationFirst(reservation.booking_availability);
 
   const { data: customer } = await supabase
     .from('customers')
     .upsert(
       {
-        email: input.email,
-        full_name: input.fullName,
-        phone: input.phone,
+        email: reservation.email,
+        full_name: reservation.full_name,
+        phone: reservation.phone,
       },
-      {
-        onConflict: 'email',
-      }
+      { onConflict: 'email' }
     )
     .select('id')
     .single();
@@ -327,37 +493,53 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
     .insert({
       booking_reference: bookingReference,
       customer_id: customer?.id ?? null,
-      stylist_id: input.stylistId,
-      service_id: input.serviceId,
-      availability_id: input.availabilityId,
-      full_name: input.fullName,
-      email: input.email,
-      phone: input.phone,
-      notes: input.notes ?? null,
-      starts_at: slot.starts_at,
-      ends_at: slot.ends_at,
+      stylist_id: reservation.stylist_id,
+      service_id: reservation.service_id,
+      availability_id: reservation.availability_id,
+      full_name: reservation.full_name,
+      email: reservation.email,
+      phone: reservation.phone,
+      notes: reservation.notes ?? null,
+      starts_at: reservationAvailability?.starts_at,
+      ends_at: reservationAvailability?.ends_at,
       status: 'confirmed',
+      payment_status: 'paid',
     })
-    .select(
-      `
-        id,
-        booking_reference,
-        starts_at,
-        status,
-        stylists(name),
-        booking_services(name)
-      `
-    )
+    .select('id')
     .single();
 
-  if (bookingError) throw bookingError;
+  if (bookingError) {
+    if ((bookingError as { code?: string }).code !== '23505') throw bookingError;
+    const { data: existing } = await supabase.from('bookings').select('id').eq('availability_id', reservation.availability_id).maybeSingle();
+    if (!existing) throw bookingError;
+    const existingConfirmation = await getBookingConfirmation(existing.id);
+    return existingConfirmation;
+  }
 
-  const { error: updateAvailabilityError } = await supabase
+  await supabase
     .from('booking_availability')
     .update({ is_available: false })
-    .eq('id', input.availabilityId);
+    .eq('id', reservation.availability_id);
 
-  if (updateAvailabilityError) throw updateAvailabilityError;
+  await supabase.from('booking_reservations').update({ reservation_status: 'confirmed' }).eq('id', reservation.id);
+
+  await supabase
+    .from('payments')
+    .update({
+      booking_id: booking.id,
+      status: 'paid',
+      paid_at: payment.paid_at ?? nowIso(),
+      provider_reference: providerReference ?? payment.id,
+      reconciliation_state: 'captured',
+    })
+    .eq('id', payment.id);
+
+  await createAuditLog({
+    action: 'booking.confirmed',
+    entityType: 'booking',
+    entityId: booking.id,
+    payload: { paymentId: payment.id, reservationId: reservation.id },
+  });
 
   try {
     const store = await getPublicStoreSettings();
@@ -365,40 +547,104 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
       storeName: store.storeName,
       supportEmail: store.supportEmail,
       bookingContactEmail: store.bookingContactEmail,
-      fullName: input.fullName,
-      email: input.email,
-      bookingReference: booking.booking_reference,
-      serviceName: relationFirst(booking.booking_services)?.name ?? 'Selected service',
-      stylistName: relationFirst(booking.stylists)?.name ?? 'Assigned stylist',
-      startsAt: booking.starts_at,
-      phone: input.phone,
-      notes: input.notes ?? null,
+      fullName: reservation.full_name,
+      email: reservation.email,
+      bookingReference,
+      serviceName: relationFirst(reservation.booking_services)?.name ?? 'Selected service',
+      stylistName: relationFirst(reservation.stylists)?.name ?? 'Lead Artist',
+      startsAt: reservationAvailability?.starts_at ?? nowIso(),
+      phone: reservation.phone,
+      notes: reservation.notes ?? null,
     });
   } catch (notificationError) {
     console.error('Booking confirmation email failed', notificationError);
   }
 
+  return getBookingConfirmation(booking.id);
+}
+
+export async function getBookingConfirmation(bookingId: string): Promise<BookingConfirmation | null> {
+  const supabase = createSupabaseAdminClient();
+  const { data: booking, error } = await supabase
+    .from('bookings')
+    .select(
+      `
+        id,
+        booking_reference,
+        starts_at,
+        status,
+        payment_status,
+        stylists(name),
+        booking_services(name)
+      `
+    )
+    .eq('id', bookingId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!booking) return null;
+
   return {
     id: booking.id,
     bookingReference: booking.booking_reference,
-    stylistName: relationFirst(booking.stylists)?.name ?? 'Assigned stylist',
+    stylistName: relationFirst(booking.stylists)?.name ?? 'Lead Artist',
     serviceName: relationFirst(booking.booking_services)?.name ?? 'Selected service',
     startsAt: booking.starts_at,
     status: booking.status,
+    paymentStatus: booking.payment_status,
   };
+}
+
+export async function getReservationById(reservationId: string): Promise<BookingReservation | null> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase.from('booking_reservations').select('*').eq('id', reservationId).maybeSingle();
+  if (error) throw error;
+  return data ? mapReservation(data) : null;
+}
+
+export async function markReservationCancelled(reservationId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: reservation, error } = await supabase
+    .from('booking_reservations')
+    .select('id, reservation_status')
+    .eq('id', reservationId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!reservation || reservation.reservation_status === 'confirmed') return;
+
+  await supabase.from('booking_reservations').update({ reservation_status: 'cancelled' }).eq('id', reservationId);
+  await supabase
+    .from('payments')
+    .update({ status: 'cancelled', cancelled_at: nowIso() })
+    .eq('reservation_id', reservationId)
+    .in('status', ['created', 'pending', 'authorized']);
+}
+
+export async function expireStaleBookingReservations() {
+  const supabase = createSupabaseAdminClient();
+  const { data: staleReservations, error } = await supabase
+    .from('booking_reservations')
+    .select('id')
+    .eq('reservation_status', 'pending_payment')
+    .lt('expires_at', nowIso());
+
+  if (error) throw error;
+
+  for (const reservation of staleReservations ?? []) {
+    await supabase.from('booking_reservations').update({ reservation_status: 'expired' }).eq('id', reservation.id);
+    await supabase.from('payments').update({ status: 'expired' }).eq('reservation_id', reservation.id).in('status', ['created', 'pending', 'authorized']);
+  }
 }
 
 export async function getPublicStoreSettings() {
   const fallback = {
-    storeName: "thedmashop",
+    storeName: 'theDMAshop',
     supportEmail: 'support@thedmashop.com',
     supportPhone: '+1 (555) 123-4567',
     bookingContactEmail: 'bookings@thedmashop.com',
-
     announcementBar: null,
   };
-
-
 
   try {
     const supabase = createSupabaseAdminClient();
@@ -422,4 +668,3 @@ export async function getPublicStoreSettings() {
     return fallback;
   }
 }
-

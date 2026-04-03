@@ -95,7 +95,7 @@ export function CheckoutClient() {
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? 'Unable to start checkout.');
 
-      window.location.href = json.checkoutUrl;
+      window.location.href = json.data.checkoutUrl;
     } catch (checkoutError) {
       setError(checkoutError instanceof Error ? checkoutError.message : 'Unable to start checkout.');
     } finally {
@@ -108,7 +108,7 @@ export function CheckoutClient() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
           <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Order confirmed</h1>
-          <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We've recorded your order and will begin fulfillment shortly.</p>
+          <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We&apos;ve recorded your order and will begin fulfillment shortly.</p>
           <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
             Continue Shopping
           </Link>
@@ -146,7 +146,7 @@ export function CheckoutClient() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_0.42fr]">
         <Glass level="heavy" className="p-6 sm:p-8">
           <h1 className="font-serif text-3xl text-[#1A1008] dark:text-white">Checkout</h1>
-          <p className="mt-2 text-[var(--text-secondary)]">Secure Stripe checkout starts here, and every line is revalidated on the server before payment. Eligible shoppers can also use Apple Pay when it is available on their device and browser.</p>
+          <p className="mt-2 text-[var(--text-secondary)]">Secure checkout starts here, and every line is revalidated on the server before payment is accepted.</p>
 
           <form className="mt-8 space-y-4" onSubmit={handleCheckout}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -174,10 +174,10 @@ export function CheckoutClient() {
                 disabled={loading}
                 className="flex w-full items-center justify-center rounded-full bg-black py-4 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {loading ? 'Opening Apple Pay...' : `Continue with Apple Pay - ${formatCurrency(total)}`}
+                {loading ? 'Preparing secure checkout...' : `Fast checkout - ${formatCurrency(total)}`}
               </button>
               <p className="text-center text-xs text-[var(--text-secondary)]">
-                Apple Pay completes in Stripe Checkout on supported Apple devices and browsers.
+                Available payment methods are shown securely after you continue.
               </p>
               <button
                 type="submit"
@@ -193,8 +193,8 @@ export function CheckoutClient() {
         <Glass level="medium" className="h-fit p-6">
           <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Order summary</h2>
           <div className="mt-4 rounded-3xl border border-black/10 bg-white/30 p-4 text-sm text-[var(--text-secondary)] dark:border-white/10 dark:bg-white/5">
-            <p>Payment options shown by Stripe may include cards and Apple Pay for eligible shoppers.</p>
-            <p className="mt-2">PayPal is not live in this checkout yet because it needs a separate integration from the current Stripe flow.</p>
+            <p>Payment options are presented securely after checkout begins.</p>
+            <p className="mt-2">Your order is only finalized after payment is verified and inventory is confirmed.</p>
           </div>
           <div className="mt-6 space-y-4">
             {items.map((item) => (

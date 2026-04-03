@@ -29,7 +29,7 @@ const ADMIN_LINKS = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
   { name: 'Customers', href: '/admin/customers', icon: Users },
-  { name: 'Reports', href: '/admin/reports', icon: BarChart },
+  { name: 'Payments', href: '/admin/reports', icon: BarChart },
   { name: 'Availability', href: '/admin/availability', icon: Clock },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 
