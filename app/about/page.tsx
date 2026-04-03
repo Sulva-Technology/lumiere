@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 
+const founderIntro = 'My name is Damilola. I’m a creative based in Arizona.I’ve always been drawn to creating whether it’s through visuals, beauty, or storytelling.';
+const founderMission = 'I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.';
+const founderClose = 'I’d love to be a part of your story and help bring your vision to life.';
+
 export default function AboutPage() {
   return (
     <main className="min-h-screen px-6 pb-24 pt-32">
@@ -19,27 +23,15 @@ export default function AboutPage() {
             </div>
             <div className="space-y-5">
               <h1 className="font-serif text-5xl leading-tight text-[var(--text-primary)] md:text-7xl">Beauty, storytelling, and a studio shaped by intention.</h1>
-              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
-                My name is Damilola. I’m a creative based in Arizona.I’ve always been drawn to creating whether it’s through visuals, beauty, or storytelling.
-              </p>
-              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
-                I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.
-              </p>
-              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">
-                I’d love to be a part of your story and help bring your vision to life.
-              </p>
+              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderIntro}</p>
+              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderMission}</p>
+              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderClose}</p>
             </div>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/book"
-                className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
-              >
+              <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]">
                 Book a Session
               </Link>
-              <Link
-                href="/shop"
-                className="inline-flex items-center justify-center rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80"
-              >
+              <Link href="/shop" className="inline-flex items-center justify-center rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80">
                 Shop the Edit
               </Link>
             </div>
@@ -56,18 +48,9 @@ export default function AboutPage() {
 
         <section className="grid gap-6 md:grid-cols-3">
           {[
-            {
-              title: 'Founder-led artistry',
-              body: 'Every client experience is shaped with a personal eye for beauty, confidence, and detail.',
-            },
-            {
-              title: 'Two clear journeys',
-              body: 'Shop beauty essentials or book a service crafted for makeup artistry and creator-ready results.',
-            },
-            {
-              title: 'Made to feel elevated',
-              body: 'The goal is simple: help every client feel polished, visible, and fully aligned with their vision.',
-            },
+            { title: 'Founder-led artistry', body: 'Every client experience is shaped with a personal eye for beauty, confidence, and detail.' },
+            { title: 'Two clear journeys', body: 'Shop beauty essentials or book a service crafted for makeup artistry and creator-ready results.' },
+            { title: 'Made to feel elevated', body: 'The goal is simple: help every client feel polished, visible, and fully aligned with their vision.' },
           ].map((item) => (
             <Glass key={item.title} level="medium" className="p-8">
               <h2 className="font-serif text-2xl text-[var(--text-primary)]">{item.title}</h2>

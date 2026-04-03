@@ -2,7 +2,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
-import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, Category, DashboardMetrics, PaymentRecord, ProductDetail } from '@/lib/types';
+import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, Category, DashboardMetrics, PaymentRecord, ProductDetail } from '@/lib/types';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -281,6 +281,109 @@ export async function getAdminCategories(): Promise<Category[]> {
   const { data, error } = await supabase.from('product_categories').select('id, name, slug, description').order('name');
   if (error) throw error;
   return data ?? [];
+}
+
+export async function getAdminBookingServices(): Promise<BookingService[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase.from('booking_services').select('id, name, slug, description, duration_minutes, price, active').order('price');
+  if (error) throw error;
+  return (data ?? []).map((service) => ({
+    id: service.id,
+    name: service.name,
+    slug: service.slug,
+    description: service.description,
+    durationMinutes: money(service.duration_minutes),
+    price: money(service.price),
+    active: service.active,
+  }));
+}
+
+export async function createAdminBookingService(input: {
+  name: string;
+  slug: string;
+  description?: string | null;
+  durationMinutes: number;
+  price: number;
+  active?: boolean;
+}) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('booking_services')
+    .insert({
+      name: input.name,
+      slug: input.slug,
+      description: input.description?.trim() || null,
+      duration_minutes: input.durationMinutes,
+      price: input.price,
+      active: input.active ?? true,
+    })
+    .select('id, name, slug, description, duration_minutes, price, active')
+    .single();
+
+  if (error) throw error;
+  return {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    description: data.description,
+    durationMinutes: money(data.duration_minutes),
+    price: money(data.price),
+    active: data.active,
+  } satisfies BookingService;
+}
+
+export async function updateAdminBookingService(input: {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  durationMinutes: number;
+  price: number;
+  active?: boolean;
+}) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('booking_services')
+    .update({
+      name: input.name,
+      slug: input.slug,
+      description: input.description?.trim() || null,
+      duration_minutes: input.durationMinutes,
+      price: input.price,
+      active: input.active ?? true,
+    })
+    .eq('id', input.id)
+    .select('id, name, slug, description, duration_minutes, price, active')
+    .single();
+
+  if (error) throw error;
+  return {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    description: data.description,
+    durationMinutes: money(data.duration_minutes),
+    price: money(data.price),
+    active: data.active,
+  } satisfies BookingService;
+}
+
+export async function deleteAdminBookingService(id: string) {
+  const supabase = createSupabaseAdminClient();
+  const [{ count: bookingsCount }, { count: availabilityCount }] = await Promise.all([
+    supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('service_id', id),
+    supabase.from('booking_availability').select('id', { count: 'exact', head: true }).eq('service_id', id),
+  ]);
+
+  if ((bookingsCount ?? 0) > 0 || (availabilityCount ?? 0) > 0) {
+    const { error } = await supabase.from('booking_services').update({ active: false }).eq('id', id);
+    if (error) throw error;
+    return { mode: 'archived' as const };
+  }
+
+  const { error } = await supabase.from('booking_services').delete().eq('id', id);
+  if (error) throw error;
+  return { mode: 'deleted' as const };
 }
 
 export async function createAdminProduct(input: {

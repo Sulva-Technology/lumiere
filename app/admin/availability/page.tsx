@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Calendar, Clock, Plus, Repeat, Trash2 } from 'lucide-react';
 import { Glass } from '@/components/ui/glass';
-import { formatDateTime, formatCurrency } from '@/lib/format';
-import { Plus, Trash2, Calendar, Clock, Sparkles } from 'lucide-react';
-import type { BookingService, StylistSummary } from '@/lib/types';
+import { formatDateTime } from '@/lib/format';
+import type { AvailabilityRule, BookingService, StylistSummary } from '@/lib/types';
 
 interface AvailabilitySlot {
   id: string;
@@ -17,109 +17,150 @@ interface AvailabilitySlot {
   stylists: { name: string } | null;
 }
 
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 export default function AdminAvailabilityPage() {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [rules, setRules] = useState<AvailabilityRule[]>([]);
   const [services, setServices] = useState<BookingService[]>([]);
   const [stylists, setStylists] = useState<StylistSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Form State
   const [selectedService, setSelectedService] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [creating, setCreating] = useState(false);
+  const [creatingSlot, setCreatingSlot] = useState(false);
+
+  const [ruleServiceId, setRuleServiceId] = useState('');
+  const [ruleWeekday, setRuleWeekday] = useState('3');
+  const [ruleStartTime, setRuleStartTime] = useState('13:00');
+  const [ruleEndTime, setRuleEndTime] = useState('16:00');
+  const [creatingRule, setCreatingRule] = useState(false);
+
+  const primaryStylistId = stylists[0]?.id ?? '';
+  const activeRules = useMemo(() => rules.filter((rule) => rule.active), [rules]);
+
+  async function loadData() {
+    try {
+      const [availabilityRes, rulesRes, servicesRes, stylistsRes] = await Promise.all([
+        fetch('/api/admin/availability'),
+        fetch('/api/admin/availability/rules'),
+        fetch('/api/admin/services'),
+        fetch('/api/booking/stylists'),
+      ]);
+
+      const [availabilityJson, rulesJson, servicesJson, stylistsJson] = await Promise.all([
+        availabilityRes.json(),
+        rulesRes.json(),
+        servicesRes.json(),
+        stylistsRes.json(),
+      ]);
+
+      if (!availabilityRes.ok) throw new Error(availabilityJson.error ?? 'Failed to load availability.');
+      if (!rulesRes.ok) throw new Error(rulesJson.error ?? 'Failed to load recurring availability.');
+      if (!servicesRes.ok) throw new Error(servicesJson.error ?? 'Failed to load services.');
+      if (!stylistsRes.ok) throw new Error(stylistsJson.error ?? 'Failed to load artists.');
+
+      setAvailability(availabilityJson.data.availability);
+      setRules(rulesJson.data.rules);
+      setServices(servicesJson.data.services);
+      setStylists(stylistsJson.stylists);
+      setRuleServiceId((current) => current || servicesJson.data.services[0]?.id || '');
+      setSelectedService((current) => current || servicesJson.data.services[0]?.id || '');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to load availability.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [availRes, servRes, styRes] = await Promise.all([
-          fetch('/api/admin/availability'),
-          fetch('/api/booking/services'),
-          fetch('/api/booking/stylists')
-        ]);
-
-        const availData = await availRes.json();
-        const servData = await servRes.json();
-        const styData = await styRes.json();
-
-        if (!availRes.ok) throw new Error(availData.error || 'Failed to load availability');
-        if (!servRes.ok) throw new Error(servData.error || 'Failed to load services');
-        if (!styRes.ok) throw new Error(styData.error || 'Failed to load artists');
-
-        setAvailability(availData.data.availability);
-        setServices(servData.services);
-        setStylists(styData.stylists);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
+    void loadData();
   }, []);
 
-  async function handleCreateSlot(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedService || !date || !time) return;
+  async function handleCreateSlot(event: React.FormEvent) {
+    event.preventDefault();
+    if (!selectedService || !date || !time || !primaryStylistId) return;
 
-    setCreating(true);
+    setCreatingSlot(true);
+    setError(null);
     try {
-      const service = services.find(s => s.id === selectedService);
-      if (!service) throw new Error('Service not found');
+      const service = services.find((item) => item.id === selectedService);
+      if (!service) throw new Error('Service not found.');
 
-      const startsAt = new Date(`${date}T${time}`);
-      const stylistId = stylists[0]?.id; // Always use the first artist as per user request
-
-      if (!stylistId) throw new Error('No artist found in database');
-
-      const res = await fetch('/api/admin/availability', {
+      const response = await fetch('/api/admin/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          stylistId,
+          stylistId: primaryStylistId,
           serviceId: selectedService,
-          startsAt: startsAt.toISOString(),
-          durationMinutes: service.durationMinutes
-        })
+          startsAt: new Date(`${date}T${time}`).toISOString(),
+          durationMinutes: service.durationMinutes,
+        }),
       });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Failed to create slot.');
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create slot');
-
-      // Refresh availability
-      const availRes = await fetch('/api/admin/availability');
-      const availData = await availRes.json();
-      setAvailability(availData.data.availability);
-
-      // Reset form
-      setSelectedService('');
+      await loadData();
       setDate('');
       setTime('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create slot');
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to create slot.');
     } finally {
-      setCreating(false);
+      setCreatingSlot(false);
     }
   }
 
   async function handleDeleteSlot(id: string) {
-    if (!confirm('Are you sure you want to delete this availability slot?')) return;
-
     try {
-      const res = await fetch(`/api/admin/availability?id=${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`/api/admin/availability?id=${id}`, { method: 'DELETE' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Failed to delete slot.');
+      setAvailability((current) => current.filter((slot) => slot.id !== id));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to delete slot.');
+    }
+  }
+
+  async function handleCreateRule(event: React.FormEvent) {
+    event.preventDefault();
+    if (!ruleServiceId || !primaryStylistId) return;
+
+    setCreatingRule(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/availability/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stylistId: primaryStylistId,
+          serviceId: ruleServiceId,
+          weekday: Number(ruleWeekday),
+          startTime: ruleStartTime,
+          endTime: ruleEndTime,
+          active: true,
+        }),
       });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Failed to save recurring availability.');
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to delete slot');
-      }
+      await loadData();
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to save recurring availability.');
+    } finally {
+      setCreatingRule(false);
+    }
+  }
 
-      setAvailability(prev => prev.filter(slot => slot.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete slot');
+  async function handleDeleteRule(id: string) {
+    try {
+      const response = await fetch(`/api/admin/availability/rules?id=${id}`, { method: 'DELETE' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Failed to delete recurring availability.');
+      setRules((current) => current.filter((rule) => rule.id !== id));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to delete recurring availability.');
     }
   }
 
@@ -129,86 +170,124 @@ export default function AdminAvailabilityPage() {
     <div className="space-y-8 p-6">
       <header className="flex flex-col gap-2">
         <h1 className="font-serif text-3xl font-medium text-[#1A1008] dark:text-[#F0D080]">Manage Availability</h1>
-        <p className="text-[var(--text-secondary)]">Set your working hours and available sessions for itzlolabeauty.</p>
-
+        <p className="text-[var(--text-secondary)]">Add one-off slots or save repeating weekly availability for itzlolabeauty.</p>
       </header>
 
-      {error && (
-        <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">{error}</div>}
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr]">
-        {/* Create Slot Form */}
-        <Glass level="medium" className="h-fit p-6">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1fr]">
+        <Glass level="medium" className="p-6">
           <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#1A1008] dark:text-white">
             <Plus size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
-            <h2>Add New Slot</h2>
+            <h2>Add One Slot</h2>
           </div>
-
           <form onSubmit={handleCreateSlot} className="space-y-4">
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Service</label>
-              <select
-                value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
-                required
-                className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none transition-colors focus:bg-white/60 dark:bg-black/40 dark:focus:bg-black/60"
-              >
+              <select value={selectedService} onChange={(event) => setSelectedService(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40">
                 <option value="">Select a service...</option>
-                {services.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.durationMinutes}m)</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} ({service.durationMinutes}m)
+                  </option>
                 ))}
               </select>
             </div>
-
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Date</label>
               <div className="relative">
                 <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  required
-                  className="w-full rounded-2xl bg-white/40 py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:bg-white/60 dark:bg-black/40 dark:focus:bg-black/60"
-                />
+                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required className="w-full rounded-2xl bg-white/40 py-3 pl-10 pr-4 text-sm outline-none dark:bg-black/40" />
               </div>
             </div>
-
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Start Time</label>
               <div className="relative">
                 <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  required
-                  className="w-full rounded-2xl bg-white/40 py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:bg-white/60 dark:bg-black/40 dark:focus:bg-black/60"
-                />
+                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} required className="w-full rounded-2xl bg-white/40 py-3 pl-10 pr-4 text-sm outline-none dark:bg-black/40" />
               </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={creating}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-3 font-medium text-white shadow-lg transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
-            >
-              {creating ? 'Creating...' : 'Create Availability Slot'}
+            <button type="submit" disabled={creatingSlot} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]">
+              {creatingSlot ? 'Creating...' : 'Create Availability Slot'}
             </button>
           </form>
         </Glass>
 
-        {/* Slots List */}
         <Glass level="medium" className="p-6">
           <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#1A1008] dark:text-white">
-            <Sparkles size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
-            <h2>Existing Availability</h2>
+            <Repeat size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
+            <h2>Set Weekly Availability</h2>
           </div>
+          <form onSubmit={handleCreateRule} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Service</label>
+              <select value={ruleServiceId} onChange={(event) => setRuleServiceId(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40">
+                <option value="">Select a service...</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Weekday</label>
+              <select value={ruleWeekday} onChange={(event) => setRuleWeekday(event.target.value)} className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40">
+                {WEEKDAYS.map((weekday, index) => (
+                  <option key={weekday} value={index}>
+                    {weekday}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Start Time</label>
+                <input type="time" value={ruleStartTime} onChange={(event) => setRuleStartTime(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">End Time</label>
+                <input type="time" value={ruleEndTime} onChange={(event) => setRuleEndTime(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40" />
+              </div>
+            </div>
+            <p className="text-sm text-[var(--text-secondary)]">This creates a repeating weekly rule and automatically fills future bookable slots ahead for that window.</p>
+            <button type="submit" disabled={creatingRule} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1A1008] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-[#1A1008]">
+              {creatingRule ? 'Saving rule...' : 'Save Weekly Availability'}
+            </button>
+          </form>
+        </Glass>
+      </div>
 
-          <div className="overflow-x-auto">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[0.9fr_1.1fr]">
+        <Glass level="medium" className="p-6">
+          <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Weekly Rules</h2>
+          <div className="mt-6 space-y-3">
+            {activeRules.length > 0 ? (
+              activeRules.map((rule) => {
+                const service = services.find((item) => item.id === rule.serviceId);
+                return (
+                  <div key={rule.id} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/30 p-4 dark:border-white/10 dark:bg-black/20">
+                    <div>
+                      <p className="font-medium text-[#1A1008] dark:text-white">{service?.name ?? 'Service'}</p>
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        {WEEKDAYS[rule.weekday]} · {rule.startTime} to {rule.endTime}
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => void handleDeleteRule(rule.id)} className="rounded-full p-2 text-red-500 transition-colors hover:bg-red-500/10">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="rounded-2xl bg-white/30 p-4 text-sm text-[var(--text-secondary)] dark:bg-black/20">No weekly availability rules yet.</p>
+            )}
+          </div>
+        </Glass>
+
+        <Glass level="medium" className="p-6">
+          <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Upcoming Slots</h2>
+          <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[600px] text-left">
               <thead>
                 <tr className="border-b border-black/10 text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)] dark:border-white/10">
@@ -220,41 +299,25 @@ export default function AdminAvailabilityPage() {
               </thead>
               <tbody>
                 {availability.length > 0 ? (
-                  availability.map((slot) => {
-                     return (
-                      <tr key={slot.id} className="border-b border-black/5 text-sm dark:border-white/5 last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                        <td className="py-4 font-medium text-[#1A1008] dark:text-white">
-                          {slot.booking_services?.name || 'Unknown Service'}
-                        </td>
-                        <td className="py-4 text-[var(--text-secondary)]">
-                          {formatDateTime(slot.starts_at)}
-                        </td>
-                        <td className="py-4">
-                          <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            slot.is_available 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                              : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                          }`}>
-                            {slot.has_booking ? 'Booked' : slot.is_reserved ? 'Reserved' : slot.is_available ? 'Available' : 'Closed'}
-                          </span>
-                        </td>
-                        <td className="py-4 text-right">
-                          <button 
-                            onClick={() => handleDeleteSlot(slot.id)}
-                            className="text-red-500 hover:text-red-700 p-2 transition-colors"
-                            title="Delete Slot"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
+                  availability.map((slot) => (
+                    <tr key={slot.id} className="border-b border-black/5 text-sm dark:border-white/5 last:border-0">
+                      <td className="py-4 font-medium text-[#1A1008] dark:text-white">{slot.booking_services?.name || 'Unknown Service'}</td>
+                      <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(slot.starts_at)}</td>
+                      <td className="py-4">
+                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${slot.has_booking ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : slot.is_reserved ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                          {slot.has_booking ? 'Booked' : slot.is_reserved ? 'Reserved' : 'Available'}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right">
+                        <button onClick={() => void handleDeleteSlot(slot.id)} className="p-2 text-red-500 transition-colors hover:text-red-700" title="Delete Slot">
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-12 text-center text-[var(--text-secondary)]">
-                      No availability slots found. Create one using the form on the left.
-                    </td>
+                    <td colSpan={4} className="py-12 text-center text-[var(--text-secondary)]">No availability slots found yet.</td>
                   </tr>
                 )}
               </tbody>

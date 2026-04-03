@@ -33,6 +33,9 @@ export function Footer({ brandName }: { brandName: string }) {
             <Link href="/shop" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#D4A847]">
               Shop
             </Link>
+            <Link href="/about" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#D4A847]">
+              About
+            </Link>
             <Link href="/book" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#8B6914] dark:hover:text-[#D4A847]">
               Book
             </Link>

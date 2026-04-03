@@ -161,6 +161,17 @@ export interface BookingService {
   description: string | null;
   durationMinutes: number;
   price: number;
+  active?: boolean;
+}
+
+export interface AvailabilityRule {
+  id: string;
+  stylistId: string;
+  serviceId: string;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  active: boolean;
 }
 
 export interface StylistSummary {

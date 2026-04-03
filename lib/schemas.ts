@@ -113,6 +113,31 @@ export const adminAvailabilityDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const adminBookingServiceSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(2).max(160),
+  slug: z
+    .string()
+    .trim()
+    .min(2)
+    .max(180)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers, and hyphens only.'),
+  description: z.string().trim().max(2000).optional().or(z.literal('')),
+  durationMinutes: z.coerce.number().int().min(15).max(12 * 60),
+  price: z.coerce.number().min(0),
+  active: z.boolean().optional().default(true),
+});
+
+export const adminAvailabilityRuleSchema = z.object({
+  id: z.string().uuid().optional(),
+  stylistId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+  weekday: z.coerce.number().int().min(0).max(6),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  active: z.boolean().optional().default(true),
+});
+
 export const adminMediaLifecycleSchema = z.object({
   assetId: z.string().uuid(),
   lifecycleStatus: z.enum(['active', 'archived', 'deleted', 'orphaned']),

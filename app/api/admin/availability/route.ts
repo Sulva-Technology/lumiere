@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdminApiUser } from '@/lib/auth';
 import { adminAvailabilityCreateSchema, adminAvailabilityDeleteSchema } from '@/lib/schemas';
-import { createAvailabilitySlot, deleteAvailabilitySlot, getAvailabilityAdminRows } from '@/lib/data/admin';
+import { createAvailabilitySlot, deleteAvailabilitySlot, getAvailabilityAdminRows } from '@/lib/data/availability';
 
 export async function GET() {
   try {

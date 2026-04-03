@@ -2,6 +2,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createHostedCheckoutSession } from '@/lib/payments';
 import { sendBookingConfirmationEmails } from '@/lib/notifications';
 import { createAuditLog } from '@/lib/data/audit';
+import { syncRecurringAvailabilityRules } from '@/lib/data/availability';
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -246,6 +247,7 @@ export async function getStylists(): Promise<StylistSummary[]> {
 }
 
 export async function getAvailability(stylistId?: string, serviceId?: string): Promise<AvailableSlot[]> {
+  await syncRecurringAvailabilityRules();
   const supabase = createSupabaseAdminClient();
   let query = supabase
     .from('booking_availability')

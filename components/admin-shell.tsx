@@ -18,6 +18,7 @@ import {
   LogOut,
   Store,
   Clock,
+  WandSparkles,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const ADMIN_LINKS = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
+  { name: 'Services', href: '/admin/services', icon: WandSparkles },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Payments', href: '/admin/reports', icon: BarChart },
   { name: 'Availability', href: '/admin/availability', icon: Clock },
