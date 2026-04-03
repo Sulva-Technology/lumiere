@@ -67,7 +67,7 @@ export function NavBar({ brandName }: { brandName: string }) {
                 {brandName}
               </span>
               <span className="font-serif text-sm tracking-[0.12em] uppercase text-[var(--text-primary)] sm:hidden">
-                itzlola
+                itzlolabeauty
               </span>
             </div>
           </Link>
