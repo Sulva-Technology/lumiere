@@ -6,7 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-const headlineWords = 'Own Your Look.'.split(' ');
+const headlineWords = 'Your Brand, Artfully Captured.'.split(' ');
+
 
 export default function Home() {
   return (
@@ -15,24 +16,26 @@ export default function Home() {
         <div className="relative h-[72vh] min-h-[520px] w-full overflow-hidden rounded-[32px] sm:min-h-[600px]">
           <motion.div
             className="absolute inset-0 z-0"
-            animate={{ scale: [1.0, 1.08, 1.0] }}
-            transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+            animate={{ scale: [1.0, 1.05, 1.0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           >
             <Image
-              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=1920&h=1080"
-              alt="Beauty editorial model"
+              src="/images/content_studio.png"
+
+              alt="Content Creation Studio"
               fill
               className="object-cover"
               priority
-              referrerPolicy="no-referrer"
             />
           </motion.div>
+
 
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#F5F0EA]/90 via-transparent to-transparent dark:from-[#1A1008]/90" />
 
           <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
             <Glass level="heavy" className="flex w-full max-w-3xl flex-col items-center p-6 text-center sm:p-10 md:p-16">
-              <p className="mb-4 text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">Hair + Makeup</p>
+              <p className="mb-4 text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">Makeup + Content Studio</p>
+
               <h1 className="mb-5 flex flex-wrap justify-center gap-x-4 font-serif text-4xl font-medium tracking-tight sm:mb-6 sm:text-5xl md:text-7xl">
                 {headlineWords.map((word, index) => (
                   <motion.span
@@ -52,7 +55,8 @@ export default function Home() {
                 transition={{ delay: 0.8, duration: 1 }}
                 className="mb-8 max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:text-lg md:text-xl"
               >
-                Shop a polished beauty edit of premium hair, complexion essentials, and artist-loved finishing touches.
+                Professional makeup artistry and high-performance content creation for brands and creators who demand excellence.
+
               </motion.p>
 
               <motion.div
@@ -65,7 +69,7 @@ export default function Home() {
                   href="/shop"
                   className="w-full rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white shadow-lg transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] sm:w-auto"
                 >
-                  Shop the Beauty Edit
+                  Book a Session
                 </Link>
               </motion.div>
             </Glass>
@@ -81,32 +85,27 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="mb-10 flex items-end justify-between"
         >
-          <h2 className="font-serif text-3xl md:text-4xl">Curated Collections</h2>
-          <Link href="/shop" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
-            View All <ArrowRight size={16} />
+          <h2 className="font-serif text-3xl md:text-4xl">Studio Services</h2>
+          <Link href="/book" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
+            View All Services <ArrowRight size={16} />
           </Link>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {[
             {
-              title: 'Hair Extensions',
-              description: 'Luxury bundles, wigs, and install-ready texture.',
-              href: '/shop?category=wigs-extensions',
-              img: '1519699047748-de8e457a634e',
+              title: 'Makeup Artistry',
+              description: 'Editorial glam, bridal, and personal artistry tailored to your unique features.',
+              href: '/book?category=makeup',
+              img: 'makeup_brushes.png',
             },
             {
-              title: 'Makeup Essentials',
-              description: 'Complexion, color, and glow staples for every look.',
-              href: '/shop?category=makeup-essentials',
-              img: '1487412720507-e7ab37603c6f',
+              title: 'Content Creation',
+              description: 'Professional vertical video, brand photography, and social storytelling.',
+              href: '/book?category=content',
+              img: 'content_studio.png',
             },
-            {
-              title: 'Beauty Tools',
-              description: 'Brushes, finishers, and pro-level accessories.',
-              href: '/shop?category=beauty-tools',
-              img: '1522337660859-02fbefca4702',
-            },
+
           ].map((cat, index) => (
             <motion.div
               key={cat.title}
@@ -116,13 +115,13 @@ export default function Home() {
               transition={{ delay: index * 0.15, duration: 0.6 }}
             >
               <Link href={cat.href} className="group block cursor-pointer">
-                <Glass level="medium" className="relative flex aspect-[4/5] flex-col justify-end p-6 transition-transform duration-500 group-hover:scale-[1.02]">
+                <Glass level="medium" className="relative flex aspect-[16/9] flex-col justify-end p-6 transition-transform duration-500 group-hover:scale-[1.02]">
                   <Image
-                    src={`https://images.unsplash.com/photo-${cat.img}?auto=format&fit=crop&q=80&w=600&h=800`}
+                    src={`/images/${cat.img}`}
+
                     alt={cat.title}
                     fill
                     className="object-cover opacity-60 transition-opacity duration-500 group-hover:opacity-80 dark:opacity-40 dark:group-hover:opacity-60"
-                    referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                   <div className="relative z-10">
@@ -137,20 +136,55 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8 }}
+          className="mb-10 flex items-end justify-between"
+        >
+          <h2 className="font-serif text-3xl md:text-4xl">Makeup Essentials</h2>
+          <Link href="/shop" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
+            Shop Collection <ArrowRight size={16} />
+          </Link>
+        </motion.div>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <Glass level="medium" className="p-8">
+            <h3 className="font-serif text-2xl">Refined Artistry</h3>
+            <p className="mt-2 text-[var(--text-secondary)]">From subtle enhancements to dramatic editorial looks, our makeup artistry is designed for the modern frame.</p>
+          </Glass>
+          <Glass level="medium" className="p-8">
+            <h3 className="font-serif text-2xl">Digital Storytelling</h3>
+            <p className="mt-2 text-[var(--text-secondary)]">We don't just capture video; we create high-performance assets that resonate with your audience's digital experience.</p>
+          </Glass>
+        </div>
+      </section>
+
       <section className="mx-auto mb-24 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <Glass level="heavy" className="p-8 text-center md:p-12">
-          <h2 className="font-serif text-3xl md:text-5xl">Beauty, styled with intention.</h2>
+          <h2 className="font-serif text-3xl md:text-5xl">theDMAshop: Styled with Intention.</h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--text-secondary)]">
-            From premium hair textures to makeup must-haves, every product is selected to help customers build polished looks with confidence.
+            Elevate your brand with premium makeup artistry and custom-crafted content designed for impact.
           </p>
-          <Link
-            href="/shop"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--text-primary)] px-6 py-3 font-medium text-[var(--bg-gradient-start)] transition-opacity hover:opacity-90"
-          >
-            Browse the collection <ArrowRight size={18} />
-          </Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/book"
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--text-primary)] px-8 py-3 font-medium text-[var(--bg-gradient-start)] transition-opacity hover:opacity-90"
+            >
+              Book a Session <ArrowRight size={18} />
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--text-primary)] px-8 py-3 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80"
+            >
+              Shop the Edit
+            </Link>
+          </div>
         </Glass>
       </section>
+
     </div>
   );
 }

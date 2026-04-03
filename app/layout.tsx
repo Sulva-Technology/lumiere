@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { Inter, Cormorant_Garamond } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
@@ -23,8 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const store = await getPublicStoreSettings();
 
   return {
-    title: `${store.storeName} | Beauty Shop`,
-    description: 'A curated beauty storefront for premium hair and makeup collections.',
+    title: `${store.storeName} | Makeup & Content Creation`,
+    description: 'A premium makeup studio and digital content creation storefront.',
+
   };
 }
 

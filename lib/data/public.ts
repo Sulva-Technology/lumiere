@@ -1,4 +1,4 @@
-﻿import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -390,12 +390,13 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingC
 
 export async function getPublicStoreSettings() {
   const fallback = {
-    storeName: "Dee's luxury",
-    supportEmail: 'support@deesluxury.com',
+    storeName: "theDMAshop",
+    supportEmail: 'support@thedmashop.com',
     supportPhone: '+1 (555) 123-4567',
-    bookingContactEmail: 'bookings@deesluxury.com',
+    bookingContactEmail: 'bookings@thedmashop.com',
     announcementBar: null,
   };
+
 
   try {
     const supabase = createSupabaseAdminClient();

@@ -42,11 +42,12 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
     <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
       <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Hair + Makeup</p>
-          <h1 className="mt-3 font-serif text-4xl md:text-5xl">The Beauty Edit</h1>
+          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Makeup Essentials</p>
+          <h1 className="mt-3 font-serif text-4xl md:text-5xl">The Makeup Edit</h1>
           <p className="mt-4 max-w-2xl text-[var(--text-secondary)]">
-            Explore hair, makeup, and beauty essentials with live catalog data, real pricing, and inventory-aware product pages.
+            Explore our curated selection of premium makeup artistry tools and complexion essentials, designed for the modern creator.
           </p>
+
           <div className="mt-6 flex gap-4 overflow-x-auto pb-2">
             <button
               onClick={() => router.push('/shop')}

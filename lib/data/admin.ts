@@ -105,7 +105,8 @@ export async function getAdminBookings(): Promise<AdminBookingRow[]> {
     id: booking.id,
     bookingReference: booking.booking_reference,
     clientName: booking.full_name,
-    stylistName: relationFirst(booking.stylists)?.name ?? 'Unknown stylist',
+    stylistName: relationFirst(booking.stylists)?.name ?? 'Unknown artist',
+
     serviceName: relationFirst(booking.booking_services)?.name ?? 'Unknown service',
     startsAt: booking.starts_at,
     status: booking.status,
@@ -388,8 +389,9 @@ export async function updateOrderStatus(orderId: string, input: { paymentStatus?
     try {
       const settings = await getStoreSettings();
       await sendOrderStatusUpdateEmail({
-        storeName: settings?.store_name?.trim() || "Dee's luxury",
-        supportEmail: settings?.support_email?.trim() || 'support@deesluxury.com',
+        storeName: settings?.store_name?.trim() || "theDMAshop",
+        supportEmail: settings?.support_email?.trim() || 'support@thedmashop.com',
+
         customerName: relationFirst(existingOrder.customers)?.full_name ?? 'there',
         customerEmail: data.email,
         orderNumber: data.order_number,

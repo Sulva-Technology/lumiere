@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { Glass } from '@/components/ui/glass';
@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
         if (!response.ok) throw new Error(json.error ?? 'Unable to load settings.');
         setSettings(
           json.settings ?? {
-            store_name: "Dee's luxury",
+            store_name: "theDMAshop",
             support_email: '',
             support_phone: '',
             booking_contact_email: '',

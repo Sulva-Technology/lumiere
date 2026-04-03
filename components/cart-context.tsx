@@ -31,7 +31,7 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-const CART_STORAGE_KEY = 'lumiere-cart-v1';
+const CART_STORAGE_KEY = 'thedmashop-cart-v1';
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);

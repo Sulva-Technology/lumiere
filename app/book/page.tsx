@@ -30,6 +30,10 @@ export default function BookingPage() {
         if (!stylistsResponse.ok) throw new Error(stylistsJson.error ?? 'Unable to load stylists.');
         setServices(servicesJson.services);
         setStylists(stylistsJson.stylists);
+        if (stylistsJson.stylists.length > 0) {
+          setSelectedStylist(stylistsJson.stylists[0].id);
+        }
+
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Unable to load booking data.');
       }
@@ -97,10 +101,11 @@ export default function BookingPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <section className="mb-10 text-center">
-        <h1 className="font-serif text-4xl md:text-6xl">Book Your Luxury Hair Experience</h1>
+        <h1 className="font-serif text-4xl md:text-6xl">Book Your Creative Experience</h1>
         <p className="mx-auto mt-4 max-w-3xl text-lg text-[var(--text-secondary)]">
-          Live stylist schedules and real availability power bookings. Choose a stylist, reserve a slot, and your appointment is saved instantly.
+          Reserve your session for professional makeup artistry or high-end content creation. Live availability and instant confirmation.
         </p>
+
       </section>
 
       {confirmation ? (
@@ -114,26 +119,7 @@ export default function BookingPage() {
       ) : (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
-            <Glass level="heavy" className="p-6">
-              <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Choose a stylist</h2>
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                {stylists.map((stylist) => (
-                  <button
-                    key={stylist.id}
-                    onClick={() => setSelectedStylist(stylist.id)}
-                    className={`rounded-3xl border p-5 text-left transition-colors ${
-                      selectedStylist === stylist.id ? 'border-[#8B6914] bg-[#8B6914]/10 dark:border-[#D4A847] dark:bg-[#D4A847]/10' : 'border-black/5 dark:border-white/5'
-                    }`}
-                  >
-                    <p className="font-serif text-xl text-[#1A1008] dark:text-white">{stylist.name}</p>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">{stylist.specialties.join(' • ')}</p>
-                    <p className="mt-3 text-sm font-medium text-[#8B6914] dark:text-[#F0D080]">
-                      {stylist.basePrice ? `From ${formatCurrency(stylist.basePrice)}` : 'Custom pricing'}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </Glass>
+
 
             <Glass level="heavy" className="p-6">
               <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Choose a service</h2>
@@ -181,12 +167,14 @@ export default function BookingPage() {
               <input value={fullName} onChange={(event) => setFullName(event.target.value)} required placeholder="Full name" className="w-full rounded-full bg-white/30 px-5 py-3 outline-none dark:bg-black/30" />
               <input value={email} onChange={(event) => setEmail(event.target.value)} required type="email" placeholder="Email address" className="w-full rounded-full bg-white/30 px-5 py-3 outline-none dark:bg-black/30" />
               <input value={phone} onChange={(event) => setPhone(event.target.value)} required placeholder="Phone number" className="w-full rounded-full bg-white/30 px-5 py-3 outline-none dark:bg-black/30" />
-              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Anything your stylist should know?" className="min-h-28 w-full rounded-3xl bg-white/30 px-5 py-4 outline-none dark:bg-black/30" />
+              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Anything our artist should know?" className="min-h-28 w-full rounded-3xl bg-white/30 px-5 py-4 outline-none dark:bg-black/30" />
+
 
               <div className="rounded-3xl bg-white/20 p-5 dark:bg-black/20">
                 <p className="font-serif text-xl text-[#1A1008] dark:text-white">Summary</p>
                 <div className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
-                  <p>Stylist: {selectedStylistDetail?.name ?? 'Select a stylist'}</p>
+                  <p>Artist: {selectedStylistDetail?.name ?? 'Loading...'}</p>
+
                   <p>Service: {selectedServiceDetail?.name ?? 'Select a service'}</p>
                   <p>Time: {selectedSlot ? formatDateTime(selectedSlot.startsAt) : 'Select a time slot'}</p>
                   <p>Total due in salon: {selectedServiceDetail ? formatCurrency(selectedServiceDetail.price) : '-'}</p>

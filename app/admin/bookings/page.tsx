@@ -48,7 +48,8 @@ export default function AdminBookingsPage() {
             <tr className="border-b border-black/10 text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)] dark:border-white/10">
               <th className="pb-3">Reference</th>
               <th className="pb-3">Client</th>
-              <th className="pb-3">Stylist</th>
+              <th className="pb-3">Artist</th>
+
               <th className="pb-3">Service</th>
               <th className="pb-3">Start</th>
               <th className="pb-3">Status</th>

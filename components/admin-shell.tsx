@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
@@ -17,7 +17,9 @@ import {
   X,
   LogOut,
   Store,
+  Clock,
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
@@ -28,7 +30,9 @@ const ADMIN_LINKS = [
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Reports', href: '/admin/reports', icon: BarChart },
+  { name: 'Availability', href: '/admin/availability', icon: Clock },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
+
 ];
 
 export function AdminShell({ children, adminEmail, brandName }: { children: React.ReactNode; adminEmail: string; brandName: string }) {
