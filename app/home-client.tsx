@@ -26,7 +26,7 @@ export default function Home() {
               alt="Content Creation Studio"
               fill
               className="object-cover"
-              style={{ backgroundPosition: 'top' }}
+              style={{ objectPosition: 'center 30%' }}
               priority
             />
           </motion.div>
@@ -35,15 +35,15 @@ export default function Home() {
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#F5F0EA]/90 via-transparent to-transparent dark:from-[#1A1008]/90" />
 
           <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
-            <Glass level="heavy" className="flex w-full max-w-3xl flex-col items-center p-6 text-center sm:p-10 md:p-16">
-              <div className="mb-5 flex items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/40 px-4 py-2 dark:bg-black/20">
+            <Glass level="heavy" className="flex w-full max-w-3xl flex-col items-center p-4 text-center sm:p-10 md:p-16">
+              <div className="mb-5 hidden items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/40 px-4 py-2 dark:bg-black/20 sm:flex">
                 <div className="relative h-10 w-10 overflow-hidden rounded-full">
                   <Image src="/images/logo.jpeg" alt="itzlolabeauty logo" fill className="object-cover" sizes="40px" />
                 </div>
                 <p className="text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">itzlolabeauty</p>
               </div>
 
-              <h1 className="mb-5 flex flex-wrap justify-center gap-x-4 font-serif text-4xl font-medium tracking-tight sm:mb-6 sm:text-5xl md:text-7xl">
+              <h1 className="mb-5 hidden flex-wrap justify-center gap-x-4 font-serif text-4xl font-medium tracking-tight sm:mb-6 sm:flex sm:text-5xl md:text-7xl">
                 {headlineWords.map((word, index) => (
                   <motion.span
                     key={index}
@@ -60,7 +60,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 1 }}
-                className="mb-8 max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:text-lg md:text-xl"
+                className="mb-8 hidden max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:block sm:text-lg md:text-xl"
               >
                 Discover premium makeup essentials or reserve a polished studio service built around makeup artistry and creator-ready content.
 
@@ -110,7 +110,7 @@ export default function Home() {
               title: 'Makeup Artistry',
               description: 'Editorial glam, bridal, and personal artistry tailored to your unique features.',
               href: '/book?type=makeup',
-              img: 'makeup_brushes.png',
+              img: 'makeup.jpeg',
             },
             {
               title: 'Content Creation',
