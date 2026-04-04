@@ -92,29 +92,41 @@ export default function AdminSettingsPage() {
   }
 
   function updateShopItem(index: number, patch: Partial<HomeShopSectionItem>) {
-    setSettings({
-      ...settings,
-      home_shop_section_items: settings.home_shop_section_items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
+    setSettings((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        home_shop_section_items: current.home_shop_section_items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
+      };
     });
   }
 
   function addShopItem() {
-    setSettings({
-      ...settings,
-      home_shop_section_items: [
-        ...settings.home_shop_section_items,
-        {
-          title: '',
-          description: '',
-        },
-      ],
+    setSettings((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        home_shop_section_items: [
+          ...current.home_shop_section_items,
+          {
+            title: '',
+            description: '',
+          },
+        ],
+      };
     });
   }
 
   function removeShopItem(index: number) {
-    setSettings({
-      ...settings,
-      home_shop_section_items: settings.home_shop_section_items.filter((_, itemIndex) => itemIndex !== index),
+    setSettings((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        home_shop_section_items: current.home_shop_section_items.filter((_, itemIndex) => itemIndex !== index),
+      };
     });
   }
 
