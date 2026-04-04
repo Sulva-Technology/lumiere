@@ -1,5 +1,5 @@
 import type { NextRequest, NextResponse } from 'next/server';
-import { getAbsoluteUrl } from '@/lib/site';
+import { getAbsoluteUrl, getConfiguredSiteOrigin, getOriginFromHeaders } from '@/lib/site';
 
 export function getClientIp(request: NextRequest | Request) {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -37,7 +37,16 @@ export function assertTrustedOrigin(request: NextRequest | Request) {
   const origin = request.headers.get('origin');
   if (!origin) return;
 
-  const allowedOrigins = new Set([getAbsoluteUrl('/').replace(/\/$/, ''), 'http://localhost:3000']);
+  const requestOrigin = getOriginFromHeaders(request.headers);
+  const configuredOrigin = getConfiguredSiteOrigin();
+  const allowedOrigins = new Set([
+    configuredOrigin,
+    requestOrigin,
+    getAbsoluteUrl('/').replace(/\/$/, ''),
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ].filter((value): value is string => Boolean(value)));
+
   if (!allowedOrigins.has(origin)) {
     throw new Error('Untrusted request origin.');
   }
