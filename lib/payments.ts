@@ -1,8 +1,9 @@
 import { headers } from 'next/headers';
 import type Stripe from 'stripe';
 
-import { getStripe } from '@/lib/stripe';
 import { getOptionalEnv } from '@/lib/env';
+import { getOriginFromHeaders } from '@/lib/site';
+import { getStripe } from '@/lib/stripe';
 
 export type HostedCheckoutLine = {
   name: string;
@@ -26,7 +27,7 @@ function cents(amount: number) {
 
 export async function getAppOrigin() {
   const hdrs = await headers();
-  return getOptionalEnv('NEXT_PUBLIC_SITE_URL', hdrs.get('origin') || 'http://localhost:3000');
+  return getOriginFromHeaders(hdrs) || getOptionalEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000');
 }
 
 export async function createHostedCheckoutSession(input: HostedCheckoutInput) {

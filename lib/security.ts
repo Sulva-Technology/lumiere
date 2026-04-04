@@ -1,6 +1,5 @@
 import type { NextRequest, NextResponse } from 'next/server';
-import { getAbsoluteUrl } from '@/lib/site';
-import { getOptionalEnv } from '@/lib/env';
+import { getAbsoluteUrl, getConfiguredSiteOrigin, getOriginFromHeaders } from '@/lib/site';
 
 function normalizeOrigin(origin: string) {
   return origin.replace(/\/$/, '').toLowerCase();
@@ -25,11 +24,20 @@ function withAlternateWww(origin: string) {
   }
 }
 
-function getAllowedOrigins() {
-  const configuredSiteUrl = getOptionalEnv('NEXT_PUBLIC_SITE_URL', getAbsoluteUrl('/'));
+function getAllowedOrigins(request: NextRequest | Request) {
+  const requestOrigin = getOriginFromHeaders(request.headers);
+  const configuredOrigin = getConfiguredSiteOrigin();
   const origins = new Set<string>();
 
-  for (const origin of [configuredSiteUrl, getAbsoluteUrl('/'), 'http://localhost:3000']) {
+  for (const origin of [
+    configuredOrigin,
+    requestOrigin,
+    getAbsoluteUrl('/').replace(/\/$/, ''),
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ]) {
+    if (!origin) continue;
+
     for (const candidate of withAlternateWww(origin)) {
       origins.add(candidate);
     }
@@ -75,7 +83,7 @@ export function assertTrustedOrigin(request: NextRequest | Request) {
   if (!origin) return;
 
   const normalizedOrigin = normalizeOrigin(origin);
-  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigins = getAllowedOrigins(request);
   if (!allowedOrigins.has(normalizedOrigin)) {
     throw new Error('Untrusted request origin.');
   }
