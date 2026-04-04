@@ -6,30 +6,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import type { StoreSettings } from '@/lib/types';
+import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 const headlineWords = 'Shop. Book the Session.'.split(' ');
 
-const defaultShopSection = {
-  title: 'Shop',
-  linkLabel: 'Shop Collection',
-  linkHref: '/shop',
-  items: [
-    {
-      title: 'Beauty Led by Vision',
-      description: 'Every product and appointment is curated to help clients feel confident, seen, and ready for the moment in front of them.',
-    },
-    {
-      title: 'Founder Guided Experience',
-      description: 'Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.',
-    },
-  ],
-};
-
 export default function Home({ settings }: { settings: StoreSettings | null }) {
-  const shopSectionTitle = settings?.home_shop_section_title?.trim() || defaultShopSection.title;
-  const shopSectionLinkLabel = settings?.home_shop_section_link_label?.trim() || defaultShopSection.linkLabel;
-  const shopSectionLinkHref = settings?.home_shop_section_link_href?.trim() || defaultShopSection.linkHref;
-  const shopSectionItems = settings?.home_shop_section_items?.length ? settings.home_shop_section_items : defaultShopSection.items;
+  const resolvedSettings = applyStoreSettingsDefaults(settings);
+  const shopSectionTitle = resolvedSettings.home_shop_section_title;
+  const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label;
+  const shopSectionLinkHref = resolvedSettings.home_shop_section_link_href;
+  const shopSectionItems = resolvedSettings.home_shop_section_items;
 
   return (
     <div className="flex flex-col gap-24">

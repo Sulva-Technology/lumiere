@@ -3,33 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Glass } from '@/components/ui/glass';
 import type { HomeShopSectionItem, StoreSettings } from '@/lib/types';
+import { applyStoreSettingsDefaults, createDefaultStoreSettings } from '@/lib/store-settings';
 
 type SettingsState = StoreSettings;
-
-const defaultShopSectionItems: HomeShopSectionItem[] = [
-  {
-    title: 'Beauty Led by Vision',
-    description: 'Every product and appointment is curated to help clients feel confident, seen, and ready for the moment in front of them.',
-  },
-  {
-    title: 'Founder Guided Experience',
-    description: 'Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.',
-  },
-];
-
-function createDefaultSettings(): SettingsState {
-  return {
-    store_name: 'itzlolabeauty',
-    support_email: '',
-    support_phone: '',
-    booking_contact_email: '',
-    announcement_bar: '',
-    home_shop_section_title: 'Shop',
-    home_shop_section_link_label: 'Shop Collection',
-    home_shop_section_link_href: '/shop',
-    home_shop_section_items: defaultShopSectionItems,
-  };
-}
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SettingsState | null>(null);
@@ -42,7 +18,7 @@ export default function AdminSettingsPage() {
         const response = await fetch('/api/admin/settings');
         const json = await response.json();
         if (!response.ok) throw new Error(json.error ?? 'Unable to load settings.');
-        setSettings(json.settings ?? createDefaultSettings());
+        setSettings(applyStoreSettingsDefaults(json.settings ?? createDefaultStoreSettings()));
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.');
       }
@@ -75,7 +51,7 @@ export default function AdminSettingsPage() {
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? 'Unable to save settings.');
-      setSettings(json.settings);
+      setSettings(applyStoreSettingsDefaults(json.settings));
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save settings.');
     } finally {

@@ -3,6 +3,7 @@ import { sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
 import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
+import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -630,10 +631,10 @@ export async function getStoreSettings(): Promise<StoreSettings | null> {
   if (error) throw error;
   if (!data) return null;
 
-  return {
+  return applyStoreSettingsDefaults({
     ...data,
     home_shop_section_items: normalizeHomeShopSectionItems(data.home_shop_section_items),
-  };
+  });
 }
 
 export async function updateStoreSettings(input: {
@@ -675,10 +676,10 @@ export async function updateStoreSettings(input: {
       .single();
 
     if (error) throw error;
-    return {
+    return applyStoreSettingsDefaults({
       ...data,
       home_shop_section_items: normalizeHomeShopSectionItems(data.home_shop_section_items),
-    } satisfies StoreSettings;
+    });
   }
 
   const { data, error } = await supabase
@@ -699,10 +700,10 @@ export async function updateStoreSettings(input: {
     .single();
 
   if (error) throw error;
-  return {
+  return applyStoreSettingsDefaults({
     ...data,
     home_shop_section_items: normalizeHomeShopSectionItems(data.home_shop_section_items),
-  } satisfies StoreSettings;
+  });
 }
 
 export async function updateOrderStatus(orderId: string, input: { paymentStatus?: string; fulfillmentStatus?: string }) {
