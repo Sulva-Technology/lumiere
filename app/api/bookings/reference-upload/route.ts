@@ -4,6 +4,8 @@ import { getOptionalEnv } from '@/lib/env';
 import { getErrorMessage } from '@/lib/validation';
 import { createMediaAsset } from '@/lib/data/media';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { assertTrustedOrigin, getClientIp } from '@/lib/security';
+import { logEvent } from '@/lib/observability';
 
 const BOOKING_REFERENCE_BUCKET = getOptionalEnv('SUPABASE_BOOKING_REFERENCE_BUCKET', 'booking-reference-images');
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -25,11 +27,13 @@ async function ensureBucket() {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-    const rateLimit = checkRateLimit(`booking-reference-upload:${ip}`, 10, 60_000);
+    const ip = getClientIp(request);
+    const rateLimit = await checkRateLimit(`booking-reference-upload:${ip}`, 10, 60_000);
     if (!rateLimit.allowed) {
+      logEvent('warn', 'booking_reference_upload.rate_limited', { ip });
       return NextResponse.json({ error: 'Upload limit reached. Please wait a moment and try again.' }, { status: 429 });
     }
+    assertTrustedOrigin(request);
 
     const formData = await request.formData();
     const file = formData.get('file');
@@ -69,6 +73,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: { url: publicUrlData.publicUrl, path: filePath, bucket: BOOKING_REFERENCE_BUCKET, mediaAsset }, error: null, meta: null });
   } catch (error) {
+    logEvent('warn', 'booking_reference_upload.failed', { reason: getErrorMessage(error, 'Unable to upload image.') });
     return NextResponse.json({ data: null, error: getErrorMessage(error, 'Unable to upload image.'), meta: null }, { status: 400 });
   }
 }

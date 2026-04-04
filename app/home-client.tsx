@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-const headlineWords = 'Shop the Edit. Book the Session.'.split(' ');
+const headlineWords = 'Shop. Book the Session.'.split(' ');
 
 
 
@@ -21,7 +21,7 @@ export default function Home() {
             transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           >
             <Image
-              src="/images/content_studio.png"
+              src="/images/home.jpeg"
 
               alt="Content Creation Studio"
               fill
@@ -77,12 +77,12 @@ export default function Home() {
                 >
                   Book a Session
                 </Link>
-                <Link
+                {/* <Link
                   href="/shop"
                   className="w-full rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-90 sm:w-auto"
                 >
-                  Shop the Edit
-                </Link>
+                  Shop
+                </Link> */}
               </motion.div>
             </Glass>
           </div>
@@ -156,7 +156,7 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="mb-10 flex items-end justify-between"
         >
-          <h2 className="font-serif text-3xl md:text-4xl">Shop the Edit</h2>
+          <h2 className="font-serif text-3xl md:text-4xl">Shop</h2>
           <Link href="/shop" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
             Shop Collection <ArrowRight size={16} />
           </Link>
@@ -192,7 +192,7 @@ export default function Home() {
               href="/shop"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--text-primary)] px-8 py-3 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80"
             >
-              Shop the Edit
+              Shop
             </Link>
           </div>
         </Glass>

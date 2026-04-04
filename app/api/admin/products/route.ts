@@ -6,7 +6,7 @@ import { getErrorMessage } from '@/lib/validation';
 
 export async function GET() {
   try {
-    await requireAdminApiUser();
+    await requireAdminApiUser('staff');
     const [products, categories] = await Promise.all([getAdminProducts(), getAdminCategories()]);
     return NextResponse.json({ products, categories });
   } catch (error) {
@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminApiUser();
+    const admin = await requireAdminApiUser('manager');
     const body = adminProductCreateSchema.parse(await request.json());
     const product = await createAdminProduct({
       name: body.name,
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const admin = await requireAdminApiUser();
+    const admin = await requireAdminApiUser('manager');
     const body = adminProductUpdateSchema.parse(await request.json());
 
     if (!body.id) {

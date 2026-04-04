@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSupabaseSession } from '@/lib/supabase/middleware';
+import { applySecurityHeaders } from '@/lib/security';
 
 export async function middleware(request: NextRequest) {
   const { response, user } = await updateSupabaseSession(request);
@@ -7,11 +8,11 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     if (!user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL('/admin/login', request.url)));
     }
   }
 
-  return response;
+  return applySecurityHeaders(response);
 }
 
 export const config = {

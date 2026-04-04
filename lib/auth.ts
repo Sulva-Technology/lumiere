@@ -3,6 +3,12 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { AuthenticatedAdminUser } from '@/lib/types';
 
+const roleRank: Record<AuthenticatedAdminUser['role'], number> = {
+  staff: 1,
+  manager: 2,
+  admin: 3,
+};
+
 export async function getAuthenticatedAdminUser(): Promise<AuthenticatedAdminUser | null> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -31,22 +37,32 @@ export async function getAuthenticatedAdminUser(): Promise<AuthenticatedAdminUse
   };
 }
 
-export async function requireAdminUser() {
+function ensureRole(user: AuthenticatedAdminUser, minimumRole: AuthenticatedAdminUser['role']) {
+  if (roleRank[user.role] < roleRank[minimumRole]) {
+    throw new Error('Forbidden');
+  }
+}
+
+export async function requireAdminUser(minimumRole: AuthenticatedAdminUser['role'] = 'staff') {
   const user = await getAuthenticatedAdminUser();
 
   if (!user) {
     redirect('/admin/login');
   }
 
+  ensureRole(user, minimumRole);
+
   return user;
 }
 
-export async function requireAdminApiUser() {
+export async function requireAdminApiUser(minimumRole: AuthenticatedAdminUser['role'] = 'staff') {
   const user = await getAuthenticatedAdminUser();
 
   if (!user) {
     throw new Error('Unauthorized');
   }
+
+  ensureRole(user, minimumRole);
 
   return user;
 }

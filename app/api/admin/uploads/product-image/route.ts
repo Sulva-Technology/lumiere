@@ -5,6 +5,8 @@ import { getOptionalEnv } from '@/lib/env';
 import { getErrorMessage } from '@/lib/validation';
 import { createMediaAsset } from '@/lib/data/media';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { assertTrustedOrigin, getClientIp } from '@/lib/security';
+import { logEvent } from '@/lib/observability';
 
 const PRODUCT_IMAGE_BUCKET = getOptionalEnv('SUPABASE_PRODUCT_IMAGES_BUCKET', 'product-images');
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -27,13 +29,15 @@ async function ensureBucket() {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-    const rateLimit = checkRateLimit(`admin-upload:${ip}`, 20, 60_000);
+    const ip = getClientIp(request);
+    const rateLimit = await checkRateLimit(`admin-upload:${ip}`, 20, 60_000);
     if (!rateLimit.allowed) {
+      logEvent('warn', 'admin_upload.rate_limited', { ip });
       return NextResponse.json({ error: 'Upload limit reached. Please wait a moment and try again.' }, { status: 429 });
     }
 
-    await requireAdminApiUser();
+    await requireAdminApiUser('manager');
+    assertTrustedOrigin(request);
 
     const formData = await request.formData();
     const file = formData.get('file');
@@ -79,6 +83,7 @@ export async function POST(request: NextRequest) {
       mediaAsset: asset,
     });
   } catch (error) {
+    logEvent('warn', 'admin_upload.failed', { reason: getErrorMessage(error, 'Unable to upload image.') });
     return NextResponse.json({ error: getErrorMessage(error, 'Unable to upload image.') }, { status: 400 });
   }
 }
