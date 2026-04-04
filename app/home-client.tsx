@@ -26,6 +26,7 @@ export default function Home() {
               alt="Content Creation Studio"
               fill
               className="object-cover"
+              style={{ backgroundPosition: 'top' }}
               priority
             />
           </motion.div>
@@ -75,7 +76,7 @@ export default function Home() {
                   href="/book"
                   className="w-full rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white shadow-lg transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] sm:w-auto"
                 >
-                  Book a Session
+                  Book your Glam
                 </Link>
                 {/* <Link
                   href="/shop"
@@ -115,7 +116,7 @@ export default function Home() {
               title: 'Content Creation',
               description: 'Professional vertical video, brand photography, and social storytelling.',
               href: '/book?type=content',
-              img: 'content_studio.png',
+              img: 'content.jpeg',
             },
 
           ].map((cat, index) => (
@@ -186,7 +187,7 @@ export default function Home() {
               href="/book"
               className="inline-flex items-center gap-2 rounded-full bg-[var(--text-primary)] px-8 py-3 font-medium text-[var(--bg-gradient-start)] transition-opacity hover:opacity-90"
             >
-              Book a Session <ArrowRight size={18} />
+              Book your Glam <ArrowRight size={18} />
             </Link>
             <Link
               href="/shop"
