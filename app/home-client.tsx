@@ -5,12 +5,32 @@ import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import type { StoreSettings } from '@/lib/types';
 
 const headlineWords = 'Shop. Book the Session.'.split(' ');
 
+const defaultShopSection = {
+  title: 'Shop',
+  linkLabel: 'Shop Collection',
+  linkHref: '/shop',
+  items: [
+    {
+      title: 'Beauty Led by Vision',
+      description: 'Every product and appointment is curated to help clients feel confident, seen, and ready for the moment in front of them.',
+    },
+    {
+      title: 'Founder Guided Experience',
+      description: 'Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.',
+    },
+  ],
+};
 
+export default function Home({ settings }: { settings: StoreSettings | null }) {
+  const shopSectionTitle = settings?.home_shop_section_title?.trim() || defaultShopSection.title;
+  const shopSectionLinkLabel = settings?.home_shop_section_link_label?.trim() || defaultShopSection.linkLabel;
+  const shopSectionLinkHref = settings?.home_shop_section_link_href?.trim() || defaultShopSection.linkHref;
+  const shopSectionItems = settings?.home_shop_section_items?.length ? settings.home_shop_section_items : defaultShopSection.items;
 
-export default function Home() {
   return (
     <div className="flex flex-col gap-24">
       <section className="relative mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -157,21 +177,19 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="mb-10 flex items-end justify-between"
         >
-          <h2 className="font-serif text-3xl md:text-4xl">Shop</h2>
-          <Link href="/shop" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
-            Shop Collection <ArrowRight size={16} />
+          <h2 className="font-serif text-3xl md:text-4xl">{shopSectionTitle}</h2>
+          <Link href={shopSectionLinkHref} className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
+            {shopSectionLinkLabel} <ArrowRight size={16} />
           </Link>
         </motion.div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Beauty Led by Vision</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">Every product and appointment is curated to help clients feel confident, seen, and ready for the moment in front of them.</p>
-          </Glass>
-          <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Founder Guided Experience</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.</p>
-          </Glass>
+          {shopSectionItems.map((item, index) => (
+            <Glass key={`${item.title}-${index}`} level="medium" className="p-8">
+              <h3 className="font-serif text-2xl">{item.title}</h3>
+              <p className="mt-2 text-[var(--text-secondary)]">{item.description}</p>
+            </Glass>
+          ))}
         </div>
       </section>
 

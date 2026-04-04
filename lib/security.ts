@@ -1,5 +1,42 @@
 import type { NextRequest, NextResponse } from 'next/server';
 import { getAbsoluteUrl } from '@/lib/site';
+import { getOptionalEnv } from '@/lib/env';
+
+function normalizeOrigin(origin: string) {
+  return origin.replace(/\/$/, '').toLowerCase();
+}
+
+function withAlternateWww(origin: string) {
+  try {
+    const url = new URL(origin);
+    const normalized = normalizeOrigin(url.origin);
+    const hostname = url.hostname.toLowerCase();
+
+    if (hostname === 'localhost' || hostname.startsWith('127.')) {
+      return [normalized];
+    }
+
+    const alternate = new URL(url.origin);
+    alternate.hostname = hostname.startsWith('www.') ? hostname.slice(4) : `www.${hostname}`;
+
+    return Array.from(new Set([normalized, normalizeOrigin(alternate.origin)]));
+  } catch {
+    return [normalizeOrigin(origin)];
+  }
+}
+
+function getAllowedOrigins() {
+  const configuredSiteUrl = getOptionalEnv('NEXT_PUBLIC_SITE_URL', getAbsoluteUrl('/'));
+  const origins = new Set<string>();
+
+  for (const origin of [configuredSiteUrl, getAbsoluteUrl('/'), 'http://localhost:3000']) {
+    for (const candidate of withAlternateWww(origin)) {
+      origins.add(candidate);
+    }
+  }
+
+  return origins;
+}
 
 export function getClientIp(request: NextRequest | Request) {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -37,8 +74,9 @@ export function assertTrustedOrigin(request: NextRequest | Request) {
   const origin = request.headers.get('origin');
   if (!origin) return;
 
-  const allowedOrigins = new Set([getAbsoluteUrl('/').replace(/\/$/, ''), 'http://localhost:3000']);
-  if (!allowedOrigins.has(origin)) {
+  const normalizedOrigin = normalizeOrigin(origin);
+  const allowedOrigins = getAllowedOrigins();
+  if (!allowedOrigins.has(normalizedOrigin)) {
     throw new Error('Untrusted request origin.');
   }
 }
