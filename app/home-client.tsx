@@ -12,9 +12,9 @@ const headlineWords = 'Shop. Book the Session.'.split(' ');
 
 export default function Home({ settings }: { settings: StoreSettings | null }) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
-  const shopSectionTitle = resolvedSettings.home_shop_section_title;
-  const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label;
-  const shopSectionLinkHref = resolvedSettings.home_shop_section_link_href;
+  const shopSectionTitle = resolvedSettings.home_shop_section_title || 'Shop';
+  const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label || 'Shop Collection';
+  const shopSectionLinkHref = resolvedSettings.home_shop_section_link_href || '/shop';
   const shopSectionItems = resolvedSettings.home_shop_section_items;
 
   return (
