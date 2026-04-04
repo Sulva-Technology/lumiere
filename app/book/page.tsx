@@ -167,21 +167,38 @@ function BookingPageContent() {
     setSaving(true);
     setError(null);
     try {
+      const payload = {
+        stylistId: selectedStylist,
+        serviceId: selectedService,
+        availabilityId: selectedAvailability,
+        fullName,
+        email,
+        phone,
+        notes,
+        ...(isMakeupService
+          ? {
+              makeupIntake: {
+                appointmentDateTimeNeeded,
+                occasion,
+                referenceDescription,
+                referenceImageUrl,
+                referenceImageAssetId,
+                lookType,
+                skinType,
+                skinConditionsOrAllergies,
+                lashesPreference,
+                hadProfessionalMakeupBefore,
+                priorExperienceNotes: priorExperienceNotes || null,
+                productPreferencesOrRestrictions: productPreferencesOrRestrictions || null,
+              },
+            }
+          : {}),
+      };
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          stylistId: selectedStylist,
-          serviceId: selectedService,
-          availabilityId: selectedAvailability,
-          fullName,
-          email,
-          phone,
-          notes,
-          makeupIntake: isMakeupService
-            ? { appointmentDateTimeNeeded, occasion, referenceDescription, referenceImageUrl, referenceImageAssetId, lookType, skinType, skinConditionsOrAllergies, lashesPreference, hadProfessionalMakeupBefore, priorExperienceNotes: priorExperienceNotes || null, productPreferencesOrRestrictions: productPreferencesOrRestrictions || null }
-            : null,
-        }),
+        body: JSON.stringify(payload),
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? 'Unable to continue.');

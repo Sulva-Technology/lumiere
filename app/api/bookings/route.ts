@@ -36,10 +36,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: session, error: null, meta: null }, { status: 201 });
   } catch (error) {
     console.error('Booking failed:', error);
+    const message = error instanceof Error ? error.message : 'Unable to reserve that appointment right now.';
     logEvent('warn', 'booking.create_failed', {
       ip,
       reason: error instanceof Error ? error.message : 'unknown',
     });
-    return NextResponse.json({ data: null, error: 'Unable to reserve that appointment right now.', meta: null }, { status: 400 });
+    return NextResponse.json({ data: null, error: message, meta: null }, { status: 400 });
   }
 }

@@ -60,6 +60,11 @@ export async function generateMetadata(): Promise<Metadata> {
       index: true,
       follow: true,
     },
+    icons: {
+      icon: '/images/logo.jpeg',
+      shortcut: '/images/logo.jpeg',
+      apple: '/images/logo.jpeg',
+    },
   };
 }
 
