@@ -6,9 +6,8 @@ import { useTheme } from './theme-provider';
 export function AmbientBackground() {
   const { theme } = useTheme();
   
-  // Orbs configuration based on the design system
   const isDark = theme === 'dark';
-  const orbColor = isDark ? 'rgba(212,168,71,0.2)' : 'rgba(240,210,140,0.22)';
+  const orbColor = isDark ? 'rgba(108,139,103,0.18)' : 'rgba(154,177,143,0.2)';
   
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">

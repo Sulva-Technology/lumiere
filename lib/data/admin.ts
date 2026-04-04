@@ -2,7 +2,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
-import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, Category, DashboardMetrics, PaymentRecord, ProductDetail } from '@/lib/types';
+import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, PaymentRecord, ProductDetail } from '@/lib/types';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -285,7 +285,7 @@ export async function getAdminCategories(): Promise<Category[]> {
 
 export async function getAdminBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase.from('booking_services').select('id, name, slug, description, duration_minutes, price, active').order('price');
+  const { data, error } = await supabase.from('booking_services').select('id, name, slug, description, duration_minutes, price, service_type, active').order('price');
   if (error) throw error;
   return (data ?? []).map((service) => ({
     id: service.id,
@@ -294,6 +294,7 @@ export async function getAdminBookingServices(): Promise<BookingService[]> {
     description: service.description,
     durationMinutes: money(service.duration_minutes),
     price: money(service.price),
+    serviceType: service.service_type,
     active: service.active,
   }));
 }
@@ -304,6 +305,7 @@ export async function createAdminBookingService(input: {
   description?: string | null;
   durationMinutes: number;
   price: number;
+  serviceType: BookingServiceType;
   active?: boolean;
 }) {
   const supabase = createSupabaseAdminClient();
@@ -315,9 +317,10 @@ export async function createAdminBookingService(input: {
       description: input.description?.trim() || null,
       duration_minutes: input.durationMinutes,
       price: input.price,
+      service_type: input.serviceType,
       active: input.active ?? true,
     })
-    .select('id, name, slug, description, duration_minutes, price, active')
+    .select('id, name, slug, description, duration_minutes, price, service_type, active')
     .single();
 
   if (error) throw error;
@@ -328,6 +331,7 @@ export async function createAdminBookingService(input: {
     description: data.description,
     durationMinutes: money(data.duration_minutes),
     price: money(data.price),
+    serviceType: data.service_type,
     active: data.active,
   } satisfies BookingService;
 }
@@ -339,6 +343,7 @@ export async function updateAdminBookingService(input: {
   description?: string | null;
   durationMinutes: number;
   price: number;
+  serviceType: BookingServiceType;
   active?: boolean;
 }) {
   const supabase = createSupabaseAdminClient();
@@ -350,10 +355,11 @@ export async function updateAdminBookingService(input: {
       description: input.description?.trim() || null,
       duration_minutes: input.durationMinutes,
       price: input.price,
+      service_type: input.serviceType,
       active: input.active ?? true,
     })
     .eq('id', input.id)
-    .select('id, name, slug, description, duration_minutes, price, active')
+    .select('id, name, slug, description, duration_minutes, price, service_type, active')
     .single();
 
   if (error) throw error;
@@ -364,6 +370,7 @@ export async function updateAdminBookingService(input: {
     description: data.description,
     durationMinutes: money(data.duration_minutes),
     price: money(data.price),
+    serviceType: data.service_type,
     active: data.active,
   } satisfies BookingService;
 }

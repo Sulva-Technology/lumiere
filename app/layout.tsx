@@ -83,7 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           `}
         </Script>
       </head>
-      <body className="relative min-h-screen flex flex-col overflow-x-hidden selection:bg-[#D4A847]/30">
+      <body className="relative min-h-screen flex flex-col overflow-x-hidden selection:bg-[#3A4D39]/20">
         <ThemeProvider>
           <CartProvider>
             <div className="noise-overlay" />

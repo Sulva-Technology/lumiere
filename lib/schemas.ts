@@ -2,8 +2,9 @@ import { z } from 'zod';
 
 const makeupLookTypes = ['Soft glam', 'Full glam', 'Natural', 'Not sure'] as const;
 const makeupSkinTypes = ['Oily', 'Dry', 'Combination', 'Normal', 'Not sure'] as const;
-const makeupLashesPreferences = ['Yes', 'No', 'I\u2019ll bring my own'] as const;
+const makeupLashesPreferences = ['Yes', 'No', "I'll bring my own"] as const;
 const makeupHistoryAnswers = ['Yes', 'No'] as const;
+const bookingServiceTypes = ['makeup', 'content'] as const;
 
 export const cartLineInputSchema = z.object({
   variantId: z.string().uuid(),
@@ -125,6 +126,7 @@ export const adminBookingServiceSchema = z.object({
   description: z.string().trim().max(2000).optional().or(z.literal('')),
   durationMinutes: z.coerce.number().int().min(15).max(12 * 60),
   price: z.coerce.number().min(0),
+  serviceType: z.enum(bookingServiceTypes),
   active: z.boolean().optional().default(true),
 });
 

@@ -5,72 +5,75 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
   
-  --color-mocha-900: #1A1008;
-  --color-mocha-800: #2A1F0E;
-  --color-mocha-700: #3D2B1A;
+  --color-forest-950: #102014;
+  --color-forest-900: #1d3021;
+  --color-forest-800: #2b3f2d;
+  --color-forest-700: #3A4D39;
+  --color-forest-600: #5c7359;
   
-  --color-pearl-100: #FAFAFA;
-  --color-pearl-200: #F5F0EA;
-  --color-pearl-300: #EEE8DC;
+  --color-sage-100: #f7f7f2;
+  --color-sage-200: #eef2ea;
+  --color-sage-300: #e4eadf;
+  --color-sage-400: #d7e0d0;
   
-  --color-gold-light: #F0D080;
-  --color-gold-base: #D4A847;
-  --color-gold-dark: #8B6914;
+  --color-moss-light: #9ab18f;
+  --color-moss-base: #6c8b67;
+  --color-moss-dark: #3A4D39;
 }
 
 @layer base {
   :root {
-    --bg-gradient-start: #FAFAFA;
-    --bg-gradient-mid: #F5F0EA;
-    --bg-gradient-end: #EEE8DC;
-    --text-primary: #1A1008;
-    --text-secondary: rgba(44, 34, 24, 0.85);
-    --text-accent: #8B6914;
-    --heading-primary: #2a1808;
-    --surface-primary: rgba(255, 252, 246, 0.84);
-    --surface-elevated: rgba(255, 248, 236, 0.92);
-    --border-soft: rgba(170, 130, 55, 0.14);
-    --input-bg: rgba(255, 255, 255, 0.7);
-    --shadow-soft: 0 18px 50px rgba(166, 126, 44, 0.12);
+    --bg-gradient-start: #f7f7f2;
+    --bg-gradient-mid: #eef2ea;
+    --bg-gradient-end: #dfe7d8;
+    --text-primary: #16301c;
+    --text-secondary: rgba(22, 48, 28, 0.78);
+    --text-accent: #3A4D39;
+    --heading-primary: #102014;
+    --surface-primary: rgba(250, 252, 247, 0.84);
+    --surface-elevated: rgba(244, 248, 241, 0.92);
+    --border-soft: rgba(58, 77, 57, 0.16);
+    --input-bg: rgba(255, 255, 255, 0.78);
+    --shadow-soft: 0 18px 50px rgba(58, 77, 57, 0.12);
     
     /* Light Mode Glass */
-    --glass-heavy-bg: rgba(240, 210, 140, 0.22);
-    --glass-heavy-border: rgba(200, 160, 60, 0.3);
-    --glass-heavy-shadow: 0 8px 32px rgba(180, 140, 60, 0.15), inset 0 1px 0 rgba(255, 240, 180, 0.6);
+    --glass-heavy-bg: rgba(154, 177, 143, 0.2);
+    --glass-heavy-border: rgba(58, 77, 57, 0.24);
+    --glass-heavy-shadow: 0 8px 32px rgba(58, 77, 57, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     
-    --glass-medium-bg: rgba(240, 210, 140, 0.14);
-    --glass-medium-border: rgba(200, 160, 60, 0.2);
-    --glass-medium-shadow: 0 4px 16px rgba(180, 140, 60, 0.12);
+    --glass-medium-bg: rgba(154, 177, 143, 0.12);
+    --glass-medium-border: rgba(58, 77, 57, 0.18);
+    --glass-medium-shadow: 0 4px 16px rgba(58, 77, 57, 0.1);
     
-    --glass-subtle-bg: rgba(255, 248, 220, 0.5);
-    --glass-subtle-border: rgba(200, 160, 60, 0.12);
+    --glass-subtle-bg: rgba(248, 251, 245, 0.58);
+    --glass-subtle-border: rgba(58, 77, 57, 0.12);
   }
 
   .dark {
-    --bg-gradient-start: #1A1008;
-    --bg-gradient-mid: #3D2B1A;
-    --bg-gradient-end: #2A1F0E;
+    --bg-gradient-start: #0c1510;
+    --bg-gradient-mid: #14211a;
+    --bg-gradient-end: #203126;
     --text-primary: #FFFFFF;
     --text-secondary: rgba(255, 255, 255, 0.8);
-    --text-accent: #F0D080;
-    --heading-primary: #fff8eb;
-    --surface-primary: rgba(24, 16, 8, 0.84);
-    --surface-elevated: rgba(34, 24, 12, 0.92);
-    --border-soft: rgba(240, 208, 128, 0.14);
-    --input-bg: rgba(14, 10, 5, 0.48);
+    --text-accent: #9ab18f;
+    --heading-primary: #f4f8f1;
+    --surface-primary: rgba(15, 24, 18, 0.84);
+    --surface-elevated: rgba(22, 33, 26, 0.92);
+    --border-soft: rgba(154, 177, 143, 0.16);
+    --input-bg: rgba(10, 16, 12, 0.52);
     --shadow-soft: 0 24px 64px rgba(0, 0, 0, 0.34);
     
     /* Dark Mode Glass */
-    --glass-heavy-bg: rgba(212, 168, 71, 0.14);
-    --glass-heavy-border: rgba(212, 168, 71, 0.35);
-    --glass-heavy-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 220, 100, 0.2);
+    --glass-heavy-bg: rgba(108, 139, 103, 0.18);
+    --glass-heavy-border: rgba(154, 177, 143, 0.28);
+    --glass-heavy-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(210, 228, 203, 0.12);
     
-    --glass-medium-bg: rgba(212, 168, 71, 0.08);
-    --glass-medium-border: rgba(212, 168, 71, 0.2);
+    --glass-medium-bg: rgba(108, 139, 103, 0.12);
+    --glass-medium-border: rgba(154, 177, 143, 0.18);
     --glass-medium-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     
     --glass-subtle-bg: rgba(255, 255, 255, 0.04);
-    --glass-subtle-border: rgba(255, 255, 255, 0.08);
+    --glass-subtle-border: rgba(154, 177, 143, 0.14);
   }
 
   body {
@@ -81,7 +84,7 @@
   }
 
   ::selection {
-    background: rgba(212, 168, 71, 0.28);
+    background: rgba(58, 77, 57, 0.24);
     color: var(--text-primary);
   }
 
@@ -115,9 +118,9 @@
   input:focus,
   textarea:focus,
   select:focus {
-    border-color: rgba(212, 168, 71, 0.56);
+    border-color: rgba(58, 77, 57, 0.52);
     box-shadow:
-      0 0 0 4px rgba(212, 168, 71, 0.16),
+      0 0 0 4px rgba(58, 77, 57, 0.14),
       var(--shadow-soft);
   }
 }
@@ -161,7 +164,7 @@
   }
 
   .text-gradient-gold {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-yellow-400 dark:from-yellow-200 dark:to-yellow-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[var(--text-accent)] to-[var(--color-moss-light)] dark:from-[var(--color-sage-100)] dark:to-[var(--color-moss-light)];
   }
 }
 

@@ -104,8 +104,9 @@ export type OrderLifecycleState = 'draft' | 'pending_payment' | 'paid' | 'paymen
 export type BookingLifecycleState = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled' | 'expired' | 'refunded';
 export type MakeupLookType = 'Soft glam' | 'Full glam' | 'Natural' | 'Not sure';
 export type MakeupSkinType = 'Oily' | 'Dry' | 'Combination' | 'Normal' | 'Not sure';
-export type MakeupLashesPreference = 'Yes' | 'No' | 'I\u2019ll bring my own';
+export type MakeupLashesPreference = 'Yes' | 'No' | "I'll bring my own";
 export type MakeupHistoryAnswer = 'Yes' | 'No';
+export type BookingServiceType = 'makeup' | 'content';
 
 export interface MakeupBookingIntake {
   appointmentDateTimeNeeded: string;
@@ -161,6 +162,7 @@ export interface BookingService {
   description: string | null;
   durationMinutes: number;
   price: number;
+  serviceType: BookingServiceType;
   active?: boolean;
 }
 

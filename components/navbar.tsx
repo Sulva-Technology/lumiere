@@ -38,7 +38,7 @@ export function NavBar({ brandName }: { brandName: string }) {
         className={cn(
           'max-w-7xl mx-auto flex items-center justify-between rounded-full border px-3 py-2.5 transition-all duration-500 sm:px-6 sm:py-3',
           scrolled
-            ? 'bg-[#f0d28c]/18 dark:bg-[#d4a847]/10 backdrop-blur-2xl border-[#c8a03c]/30 dark:border-[#d4a847]/35 shadow-lg'
+            ? 'bg-[rgba(154,177,143,0.18)] dark:bg-[rgba(108,139,103,0.12)] backdrop-blur-2xl border-[rgba(58,77,57,0.22)] dark:border-[rgba(154,177,143,0.2)] shadow-lg'
             : 'bg-transparent border-transparent'
         )}
       >
@@ -60,7 +60,7 @@ export function NavBar({ brandName }: { brandName: string }) {
         <div className="mx-auto flex min-w-0 flex-1 justify-center px-2 md:absolute md:left-1/2 md:w-auto md:-translate-x-1/2 md:px-0">
           <Link href="/" className="flex items-center justify-center">
             <div className="glass-subtle flex items-center gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-6">
-              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[#c8a03c]/25 bg-white/70 sm:h-10 sm:w-10">
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[rgba(58,77,57,0.18)] bg-white/70 sm:h-10 sm:w-10">
                 <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
               </div>
               <span className="hidden font-serif text-base tracking-[0.16em] uppercase text-[var(--text-primary)] sm:inline sm:text-lg">
@@ -122,7 +122,7 @@ export function NavBar({ brandName }: { brandName: string }) {
           >
             <ShoppingBag size={20} className="text-[var(--text-primary)]" />
             {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#8B6914] px-1 text-[10px] font-semibold text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#3A4D39] px-1 text-[10px] font-semibold text-white dark:bg-[#9ab18f] dark:text-[#102014]">
                 {itemCount}
               </span>
             )}
@@ -130,7 +130,7 @@ export function NavBar({ brandName }: { brandName: string }) {
 
           <Link
             href="/book"
-            className="hidden items-center justify-center rounded-full bg-[#8B6914] px-5 py-2.5 text-sm font-medium text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] md:flex"
+            className="hidden items-center justify-center rounded-full bg-[#3A4D39] px-5 py-2.5 text-sm font-medium text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#9ab18f] dark:text-[#102014] md:flex"
           >
             Book Now
           </Link>
@@ -139,7 +139,7 @@ export function NavBar({ brandName }: { brandName: string }) {
 
       {isMobileMenuOpen && (
         <div className="mx-auto mt-3 max-w-7xl px-1 md:hidden">
-          <div className="rounded-2xl border border-[#c8a03c]/30 bg-[rgba(245,240,234,0.88)] p-2 shadow-lg backdrop-blur-xl dark:border-[#d4a847]/30 dark:bg-[rgba(26,16,8,0.88)]">
+          <div className="rounded-2xl border border-[rgba(58,77,57,0.22)] bg-[rgba(247,247,242,0.88)] p-2 shadow-lg backdrop-blur-xl dark:border-[rgba(154,177,143,0.2)] dark:bg-[rgba(15,24,18,0.88)]">
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.label}
@@ -148,7 +148,7 @@ export function NavBar({ brandName }: { brandName: string }) {
                 className={cn(
                   'block rounded-xl px-4 py-3 text-sm font-medium transition-colors',
                   pathname === item.href
-                    ? 'bg-[rgba(240,210,140,0.25)] dark:bg-[rgba(212,168,71,0.16)] text-[#8B6914] dark:text-[#F0D080]'
+                    ? 'bg-[rgba(154,177,143,0.2)] dark:bg-[rgba(108,139,103,0.16)] text-[#3A4D39] dark:text-[#d7e0d0]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
                 )}
               >

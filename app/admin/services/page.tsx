@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency } from '@/lib/format';
-import type { BookingService } from '@/lib/types';
+import type { BookingService, BookingServiceType } from '@/lib/types';
 
 type ServiceFormState = {
   id: string | null;
@@ -12,6 +12,7 @@ type ServiceFormState = {
   description: string;
   durationMinutes: string;
   price: string;
+  serviceType: BookingServiceType;
   active: boolean;
 };
 
@@ -22,6 +23,7 @@ const INITIAL_FORM: ServiceFormState = {
   description: '',
   durationMinutes: '60',
   price: '',
+  serviceType: 'makeup',
   active: true,
 };
 
@@ -69,6 +71,7 @@ export default function AdminServicesPage() {
           description: form.description,
           durationMinutes: form.durationMinutes,
           price: form.price,
+          serviceType: form.serviceType,
           active: form.active,
         }),
       });
@@ -117,6 +120,10 @@ export default function AdminServicesPage() {
             <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value, slug: current.slug === '' || current.slug === toSlug(current.name) ? toSlug(event.target.value) : current.slug }))} placeholder="Service name" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
             <input value={form.slug} onChange={(event) => setForm((current) => ({ ...current, slug: toSlug(event.target.value) }))} placeholder="service-slug" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
             <textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} placeholder="Describe the service" className="min-h-28 w-full rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" />
+            <select value={form.serviceType} onChange={(event) => setForm((current) => ({ ...current, serviceType: event.target.value as BookingServiceType }))} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none" required>
+              <option value="makeup" className="bg-[#140d05] text-white">Makeup</option>
+              <option value="content" className="bg-[#140d05] text-white">Content</option>
+            </select>
             <div className="grid grid-cols-2 gap-3">
               <input value={form.durationMinutes} onChange={(event) => setForm((current) => ({ ...current, durationMinutes: event.target.value }))} type="number" min="15" step="15" placeholder="Duration" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
               <input value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} type="number" min="0" step="0.01" placeholder="Price" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
@@ -137,6 +144,7 @@ export default function AdminServicesPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45">
                     <span>{service.slug}</span>
+                    <span>{service.serviceType}</span>
                     <span className={`rounded-full px-2 py-1 tracking-[0.18em] ${service.active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/8 text-white/55'}`}>{service.active ? 'Active' : 'Hidden'}</span>
                   </div>
                   <h2 className="mt-3 font-serif text-3xl text-[#F7E7C1]">{service.name}</h2>
@@ -147,7 +155,7 @@ export default function AdminServicesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setForm({ id: service.id, name: service.name, slug: service.slug, description: service.description ?? '', durationMinutes: String(service.durationMinutes), price: String(service.price), active: service.active ?? true })} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10">Edit</button>
+                  <button type="button" onClick={() => setForm({ id: service.id, name: service.name, slug: service.slug, description: service.description ?? '', durationMinutes: String(service.durationMinutes), price: String(service.price), serviceType: service.serviceType, active: service.active ?? true })} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10">Edit</button>
                   <button type="button" onClick={() => void handleDelete(service.id)} className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/20">Archive / Delete</button>
                 </div>
               </div>

@@ -108,13 +108,13 @@ export default function Home() {
             {
               title: 'Makeup Artistry',
               description: 'Editorial glam, bridal, and personal artistry tailored to your unique features.',
-              href: '/book?category=makeup',
+              href: '/book?type=makeup',
               img: 'makeup_brushes.png',
             },
             {
               title: 'Content Creation',
               description: 'Professional vertical video, brand photography, and social storytelling.',
-              href: '/book?category=content',
+              href: '/book?type=content',
               img: 'content_studio.png',
             },
 

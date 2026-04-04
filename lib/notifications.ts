@@ -172,7 +172,7 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
         ['Skin conditions or allergies', payload.makeupIntake.skinConditionsOrAllergies],
         ['Will you need lashes included?', payload.makeupIntake.lashesPreference],
         ['Have you had your makeup done professionally before?', payload.makeupIntake.hadProfessionalMakeupBefore],
-        ['If yes, anything you liked or didn’t like?', payload.makeupIntake.priorExperienceNotes ?? 'Not provided'],
+        ["If yes, anything you liked or didn't like?", payload.makeupIntake.priorExperienceNotes ?? 'Not provided'],
         ['Any product preferences or restrictions?', payload.makeupIntake.productPreferencesOrRestrictions ?? 'Not provided'],
       ]
     : [];
@@ -269,3 +269,4 @@ export async function sendOrderStatusUpdateEmail(payload: OrderStatusEmailPayloa
     replyTo: payload.supportEmail,
   });
 }
+

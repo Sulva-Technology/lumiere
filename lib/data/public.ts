@@ -207,7 +207,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from('booking_services')
-    .select('id, slug, name, description, duration_minutes, price')
+    .select('id, slug, name, description, duration_minutes, price, service_type')
     .eq('active', true)
     .order('price');
 
@@ -220,6 +220,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
     description: service.description,
     durationMinutes: service.duration_minutes,
     price: normalizeMoney(service.price),
+    serviceType: service.service_type,
   }));
 }
 
@@ -368,7 +369,7 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
   const [slot, services] = await Promise.all([getAvailableSlot(input), getBookingServices()]);
   const service = services.find((item) => item.id === input.serviceId);
   if (!service) throw new Error('Selected service is unavailable.');
-  const isMakeupService = service.slug.includes('makeup');
+  const isMakeupService = service.serviceType === 'makeup';
 
   if (isMakeupService && !input.makeupIntake) {
     throw new Error('Complete the makeup booking form before continuing.');
