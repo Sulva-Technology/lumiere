@@ -76,9 +76,12 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
       >
         <div className="flex h-20 items-center justify-between border-b border-[#6d4a13]/35 px-4 sm:px-6 dark:border-[#d4a847]/15">
           {(!isCollapsed || isMobileSidebarOpen) && (
-             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-serif text-[1.85rem] uppercase tracking-[0.18em] text-[#F0D080]">
-               {brandName}
-             </motion.span>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0 pr-3">
+              <p className="truncate font-serif text-xl uppercase tracking-[0.12em] text-[#F0D080] sm:text-2xl">
+                {brandName}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.24em] text-white/35">Admin Console</p>
+            </motion.div>
           )}
 
           <div className="flex items-center gap-2">
