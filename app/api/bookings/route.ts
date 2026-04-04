@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     const session = await createBookingCheckout(input);
     return NextResponse.json({ data: session, error: null, meta: null }, { status: 201 });
   } catch (error) {
+    console.error('Booking failed:', error);
     logEvent('warn', 'booking.create_failed', {
       ip,
       reason: error instanceof Error ? error.message : 'unknown',
