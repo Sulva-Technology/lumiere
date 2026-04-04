@@ -252,7 +252,7 @@ export async function getAvailability(stylistId?: string, serviceId?: string): P
   const supabase = createSupabaseAdminClient();
   let query = supabase
     .from('booking_availability')
-    .select('id, stylist_id, service_id, starts_at, ends_at, is_available')
+    .select('id, stylist_id, service_id, starts_at, ends_at, is_available, bookings(id, status)')
     .eq('is_available', true)
     .gte('starts_at', nowIso())
     .order('starts_at')
@@ -276,7 +276,13 @@ export async function getAvailability(stylistId?: string, serviceId?: string): P
   const blockedIds = new Set((reservations ?? []).map((item) => item.availability_id));
 
   return (data ?? [])
-    .filter((slot) => !blockedIds.has(slot.id))
+    .filter((slot) => {
+      const hasConfirmedBooking = Array.isArray(slot.bookings)
+        ? slot.bookings.some((booking) => ['confirmed', 'completed', 'refunded'].includes(booking.status))
+        : false;
+
+      return !blockedIds.has(slot.id) && !hasConfirmedBooking;
+    })
     .map((slot) => ({
       id: slot.id,
       stylistId: slot.stylist_id,
@@ -339,7 +345,7 @@ async function getAvailableSlot(input: Pick<CreateBookingInput, 'availabilityId'
   const supabase = createSupabaseAdminClient();
   const { data: slot, error: slotError } = await supabase
     .from('booking_availability')
-    .select('id, starts_at, ends_at, is_available, stylist_id, service_id')
+    .select('id, starts_at, ends_at, is_available, stylist_id, service_id, bookings(id, status)')
     .eq('id', input.availabilityId)
     .eq('is_available', true)
     .maybeSingle();
@@ -347,6 +353,14 @@ async function getAvailableSlot(input: Pick<CreateBookingInput, 'availabilityId'
   if (slotError) throw slotError;
   if (!slot || slot.stylist_id !== input.stylistId || slot.service_id !== input.serviceId) {
     throw new Error('That appointment time is no longer available.');
+  }
+
+  const hasConfirmedBooking = Array.isArray(slot.bookings)
+    ? slot.bookings.some((booking) => ['confirmed', 'completed', 'refunded'].includes(booking.status))
+    : false;
+
+  if (hasConfirmedBooking) {
+    throw new Error('That appointment time has already been booked.');
   }
 
   const { data: activeReservation } = await supabase
