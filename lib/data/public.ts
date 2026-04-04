@@ -43,6 +43,15 @@ function normalizeIntakePayload(value: unknown): MakeupBookingIntake | null {
   return Object.keys(value as Record<string, unknown>).length > 0 ? (value as MakeupBookingIntake) : null;
 }
 
+function isMissingColumnError(error: unknown, columnName: string) {
+  const message =
+    error && typeof error === 'object' && typeof (error as { message?: unknown }).message === 'string'
+      ? (error as { message: string }).message
+      : '';
+
+  return message.includes(`Could not find the '${columnName}' column`) || message.includes(`column "${columnName}" does not exist`);
+}
+
 function mapReservation(row: any): BookingReservation {
   return {
     id: row.id,
@@ -391,22 +400,35 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
 
   const normalizedIntake = isMakeupService && input.makeupIntake ? input.makeupIntake : null;
 
-  const { data: reservation, error: reservationError } = await supabase
+  const reservationPayload = {
+    availability_id: input.availabilityId,
+    stylist_id: input.stylistId,
+    service_id: input.serviceId,
+    full_name: input.fullName,
+    email: input.email,
+    phone: input.phone,
+    notes: input.notes ?? null,
+    intake_payload: normalizedIntake,
+    reservation_status: 'pending_payment',
+    expires_at: expiresIn(15),
+  };
+
+  let reservationResult = await supabase
     .from('booking_reservations')
-    .insert({
-      availability_id: input.availabilityId,
-      stylist_id: input.stylistId,
-      service_id: input.serviceId,
-      full_name: input.fullName,
-      email: input.email,
-      phone: input.phone,
-      notes: input.notes ?? null,
-      intake_payload: normalizedIntake,
-      reservation_status: 'pending_payment',
-      expires_at: expiresIn(15),
-    })
+    .insert(reservationPayload)
     .select('*')
     .single();
+
+  if (reservationResult.error && isMissingColumnError(reservationResult.error, 'intake_payload')) {
+    const { intake_payload: _intakePayload, ...fallbackReservationPayload } = reservationPayload;
+    reservationResult = await supabase
+      .from('booking_reservations')
+      .insert(fallbackReservationPayload)
+      .select('*')
+      .single();
+  }
+
+  const { data: reservation, error: reservationError } = reservationResult;
 
   if (reservationError) throw reservationError;
 
@@ -523,26 +545,39 @@ export async function finalizePaidBooking(paymentId: string, providerReference?:
 
   const reservationIntake = normalizeIntakePayload(reservation.intake_payload);
 
-  const { data: booking, error: bookingError } = await supabase
+  const bookingPayload = {
+    booking_reference: bookingReference,
+    customer_id: customer?.id ?? null,
+    stylist_id: reservation.stylist_id,
+    service_id: reservation.service_id,
+    availability_id: reservation.availability_id,
+    full_name: reservation.full_name,
+    email: reservation.email,
+    phone: reservation.phone,
+    notes: reservation.notes ?? null,
+    intake_payload: reservationIntake ?? {},
+    starts_at: reservationAvailability?.starts_at,
+    ends_at: reservationAvailability?.ends_at,
+    status: 'confirmed',
+    payment_status: 'paid',
+  };
+
+  let bookingResult = await supabase
     .from('bookings')
-    .insert({
-      booking_reference: bookingReference,
-      customer_id: customer?.id ?? null,
-      stylist_id: reservation.stylist_id,
-      service_id: reservation.service_id,
-      availability_id: reservation.availability_id,
-      full_name: reservation.full_name,
-      email: reservation.email,
-      phone: reservation.phone,
-      notes: reservation.notes ?? null,
-      intake_payload: reservationIntake ?? {},
-      starts_at: reservationAvailability?.starts_at,
-      ends_at: reservationAvailability?.ends_at,
-      status: 'confirmed',
-      payment_status: 'paid',
-    })
+    .insert(bookingPayload)
     .select('id')
     .single();
+
+  if (bookingResult.error && isMissingColumnError(bookingResult.error, 'intake_payload')) {
+    const { intake_payload: _intakePayload, ...fallbackBookingPayload } = bookingPayload;
+    bookingResult = await supabase
+      .from('bookings')
+      .insert(fallbackBookingPayload)
+      .select('id')
+      .single();
+  }
+
+  const { data: booking, error: bookingError } = bookingResult;
 
   if (bookingError) {
     if ((bookingError as { code?: string }).code !== '23505') throw bookingError;
