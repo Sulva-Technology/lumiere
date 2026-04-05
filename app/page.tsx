@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import HomeClient from './home-client';
 import { getStoreSettings } from '@/lib/data/admin';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Home',
   description: 'The definitive studio for high-end makeup artistry and professional digital content creation. Experience the new standard in creative storytelling.',
