@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 
-const founderIntro = 'My name is Damilola. I’m a creative based in Arizona.I’ve always been drawn to creating whether it’s through visuals, beauty, or storytelling.';
+const founderIntro = 'My name is Damilola. I\'m a creative based in Arizona.I\'ve always been drawn to creating whether it\'s through visuals, beauty, or storytelling.';
 const founderMission = 'I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.';
-const founderClose = 'I’d love to be a part of your story and help bring your vision to life.';
+const founderClose = 'I\'d love to be a part of your story and help bring your vision to life.';
 
 export default function AboutPage() {
   return (
@@ -44,19 +44,6 @@ export default function AboutPage() {
               </div>
             </Glass>
           </motion.div>
-        </section>
-
-        <section className="grid gap-6 md:grid-cols-3">
-          {[
-            { title: 'Founder-led artistry', body: 'Every client experience is shaped with a personal eye for beauty, confidence, and detail.' },
-            { title: 'Two clear journeys', body: 'Shop beauty essentials or book a service crafted for makeup artistry and creator-ready results.' },
-            { title: 'Made to feel elevated', body: 'The goal is simple: help every client feel polished, visible, and fully aligned with their vision.' },
-          ].map((item) => (
-            <Glass key={item.title} level="medium" className="p-8">
-              <h2 className="font-serif text-2xl text-[var(--text-primary)]">{item.title}</h2>
-              <p className="mt-3 text-[var(--text-secondary)]">{item.body}</p>
-            </Glass>
-          ))}
         </section>
       </div>
     </main>

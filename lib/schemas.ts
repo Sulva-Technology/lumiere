@@ -151,4 +151,5 @@ export const storeSettingsSchema = z.object({
   supportPhone: z.string().trim().max(40).optional().or(z.literal('')),
   bookingContactEmail: z.string().email().optional().or(z.literal('')),
   announcementBar: z.string().trim().max(280).optional().or(z.literal('')),
+  homeFavoritesEnabled: z.boolean().optional(),
 });

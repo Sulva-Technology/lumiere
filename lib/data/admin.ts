@@ -608,7 +608,7 @@ export async function getStoreSettings() {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from('store_settings')
-    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar')
+    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled')
     .order('created_at')
     .limit(1)
     .maybeSingle();
@@ -623,12 +623,14 @@ export async function updateStoreSettings(input: {
   supportPhone?: string;
   bookingContactEmail?: string;
   announcementBar?: string;
+  homeFavoritesEnabled?: boolean;
 }) {
   const supabase = createSupabaseAdminClient();
   const current = await getStoreSettings();
   const supportPhone = input.supportPhone?.trim() ? input.supportPhone.trim() : null;
   const bookingContactEmail = input.bookingContactEmail?.trim() ? input.bookingContactEmail.trim() : null;
   const announcementBar = input.announcementBar?.trim() ? input.announcementBar.trim() : null;
+  const homeFavoritesEnabled = input.homeFavoritesEnabled ?? true;
 
   if (!current) {
     const { data, error } = await supabase
@@ -639,6 +641,7 @@ export async function updateStoreSettings(input: {
         support_phone: supportPhone,
         booking_contact_email: bookingContactEmail,
         announcement_bar: announcementBar,
+        home_favorites_enabled: homeFavoritesEnabled,
       })
       .select()
       .single();
@@ -655,6 +658,7 @@ export async function updateStoreSettings(input: {
       support_phone: supportPhone,
       booking_contact_email: bookingContactEmail,
       announcement_bar: announcementBar,
+      home_favorites_enabled: homeFavoritesEnabled,
     })
     .eq('id', current.id)
     .select()
@@ -693,7 +697,7 @@ export async function updateOrderStatus(orderId: string, input: { paymentStatus?
     data.fulfillment_status === input.fulfillmentStatus;
 
   if (didFulfillmentChange) {
-      try {
+    try {
       const settings = await getStoreSettings();
       await sendOrderStatusUpdateEmail({
         storeName: settings?.store_name?.trim() || 'itzlolabeauty',

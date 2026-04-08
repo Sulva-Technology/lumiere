@@ -11,7 +11,7 @@ export function Footer({ brandName }: { brandName: string }) {
 
   return (
     <footer className="relative z-10 mt-auto border-t border-[rgba(58,77,57,0.16)] bg-[rgba(247,247,242,0.62)] backdrop-blur-xl dark:border-[rgba(154,177,143,0.12)] dark:bg-[rgba(15,24,18,0.62)]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <div className="max-w-xl space-y-4">
           <div className="flex items-center gap-4">
             <div className="relative h-14 w-14 overflow-hidden rounded-full border border-[rgba(58,77,57,0.16)] bg-white/80">
@@ -38,30 +38,6 @@ export function Footer({ brandName }: { brandName: string }) {
             </Link>
             <Link href="/book" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
               Book
-            </Link>
-            <Link href="/track-order" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Track Order
-            </Link>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="mb-4 font-serif text-lg text-[var(--text-primary)]">Support</h4>
-          <div className="flex flex-col gap-3">
-            <Link href="/faq" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              FAQ
-            </Link>
-            <Link href="/shipping-returns" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Shipping & Returns
-            </Link>
-            <Link href="/contact" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Contact
-            </Link>
-            <Link href="/privacy-policy" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Terms of Service
             </Link>
           </div>
         </div>

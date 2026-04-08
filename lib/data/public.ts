@@ -681,13 +681,14 @@ export async function getPublicStoreSettings() {
     supportPhone: '+1 (555) 123-4567',
     bookingContactEmail: 'ogunjobiniyiola906@gmail.com',
     announcementBar: null,
+    homeFavoritesEnabled: true,
   };
 
   try {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from('store_settings')
-      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar')
+      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled')
       .order('created_at')
       .limit(1)
       .maybeSingle();
@@ -700,6 +701,7 @@ export async function getPublicStoreSettings() {
       supportPhone: data?.support_phone?.trim() || fallback.supportPhone,
       bookingContactEmail: data?.booking_contact_email?.trim() || fallback.bookingContactEmail,
       announcementBar: data?.announcement_bar?.trim() || fallback.announcementBar,
+      homeFavoritesEnabled: data?.home_favorites_enabled ?? fallback.homeFavoritesEnabled,
     };
   } catch {
     return fallback;
