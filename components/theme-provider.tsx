@@ -18,18 +18,14 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'light';
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    if (storedTheme) return storedTheme;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
+  const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const initialTheme = storedTheme ?? (mediaQuery.matches ? 'dark' : 'light');
 
+    setTheme(initialTheme);
     applyTheme(initialTheme);
 
     const handleSystemThemeChange = (event: MediaQueryListEvent) => {

@@ -31,5 +31,21 @@ export function getErrorMessage(error: unknown, fallback: string) {
     return error.message;
   }
 
+  if (error && typeof error === 'object') {
+    const record = error as Record<string, unknown>;
+
+    if (typeof record.message === 'string' && record.message.trim()) {
+      return record.message;
+    }
+
+    const parts = [record.error_description, record.details, record.hint]
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      .map((value) => value.trim());
+
+    if (parts.length > 0) {
+      return parts.join(' ');
+    }
+  }
+
   return fallback;
 }

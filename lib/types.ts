@@ -298,3 +298,22 @@ export interface AuthenticatedAdminUser {
   email: string;
   role: 'admin' | 'manager' | 'staff';
 }
+
+export interface HomeShopSectionItem {
+  title: string;
+  description: string;
+}
+
+export interface StoreSettings {
+  id?: string;
+  store_name: string;
+  support_email: string;
+  support_phone: string | null;
+  booking_contact_email: string | null;
+  announcement_bar: string | null;
+  home_favorites_enabled: boolean;
+  home_shop_section_title: string | null;
+  home_shop_section_link_label: string | null;
+  home_shop_section_link_href: string | null;
+  home_shop_section_items: HomeShopSectionItem[];
+}

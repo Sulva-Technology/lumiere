@@ -5,16 +5,22 @@ import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { ProductListItem } from '@/lib/types';
+import type { ProductListItem, StoreSettings } from '@/lib/types';
+import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 const headlineWords = 'Shop. Book the Session.'.split(' ');
 
 type HomeClientProps = {
   favoriteItems: Array<Pick<ProductListItem, 'id' | 'slug' | 'name'>>;
-  showFavorites: boolean;
+  settings: StoreSettings | null;
 };
 
-export default function Home({ favoriteItems, showFavorites }: HomeClientProps) {
+export default function Home({ favoriteItems, settings }: HomeClientProps) {
+  const resolvedSettings = applyStoreSettingsDefaults(settings);
+  const shopSectionTitle = resolvedSettings.home_shop_section_title || 'Shop';
+  const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label || 'Shop Collection';
+  const shopSectionLinkHref = resolvedSettings.home_shop_section_link_href || '/shop';
+  const shopSectionItems = resolvedSettings.home_shop_section_items;
   return (
     <div className="flex flex-col gap-24">
       <section className="relative mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -150,24 +156,22 @@ export default function Home({ favoriteItems, showFavorites }: HomeClientProps) 
           transition={{ duration: 0.8 }}
           className="mb-10 flex items-end justify-between"
         >
-          <h2 className="font-serif text-3xl md:text-4xl">Shop</h2>
-          <Link href="/shop" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
-            Shop Collection <ArrowRight size={16} />
+          <h2 className="font-serif text-3xl md:text-4xl">{shopSectionTitle}</h2>
+          <Link href={shopSectionLinkHref} className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
+            {shopSectionLinkLabel} <ArrowRight size={16} />
           </Link>
         </motion.div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Beauty Led by Vision</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">Every product and appointment is curated to help clients feel confident, seen, and ready for the moment in front of them.</p>
-          </Glass>
-          <Glass level="medium" className="p-8">
-            <h3 className="font-serif text-2xl">Founder Guided Experience</h3>
-            <p className="mt-2 text-[var(--text-secondary)]">Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.</p>
-          </Glass>
+          {shopSectionItems.map((item, index) => (
+            <Glass key={`${item.title}-${index}`} level="medium" className="p-8">
+              <h3 className="font-serif text-2xl">{item.title}</h3>
+              <p className="mt-2 text-[var(--text-secondary)]">{item.description}</p>
+            </Glass>
+          ))}
         </div>
 
-        {showFavorites && (
+        {resolvedSettings.home_favorites_enabled && (
           <Glass level="medium" className="mt-6 p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>

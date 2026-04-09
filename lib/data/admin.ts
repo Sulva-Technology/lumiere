@@ -2,7 +2,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
-import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, PaymentRecord, ProductDetail } from '@/lib/types';
+import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
+import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -13,6 +14,20 @@ function money(value: number | string | null | undefined) {
 function relationFirst<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
+}
+
+function normalizeHomeShopSectionItems(value: unknown): HomeShopSectionItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const title = typeof item.title === 'string' ? item.title.trim() : '';
+      const description = typeof item.description === 'string' ? item.description.trim() : '';
+      if (!title || !description) return null;
+      return { title, description };
+    })
+    .filter((item): item is HomeShopSectionItem => Boolean(item));
 }
 
 function mapPayment(row: any): PaymentRecord {
@@ -604,17 +619,22 @@ export async function deleteAdminProduct(productId: string, actorUserId?: string
   return { mode: 'deleted' as const };
 }
 
-export async function getStoreSettings() {
+export async function getStoreSettings(): Promise<StoreSettings | null> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from('store_settings')
-    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled')
+    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
     .order('created_at')
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+
+  return applyStoreSettingsDefaults({
+    ...data,
+    home_shop_section_items: normalizeHomeShopSectionItems(data.home_shop_section_items),
+  });
 }
 
 export async function updateStoreSettings(input: {
@@ -624,6 +644,10 @@ export async function updateStoreSettings(input: {
   bookingContactEmail?: string;
   announcementBar?: string;
   homeFavoritesEnabled?: boolean;
+  homeShopSectionTitle?: string;
+  homeShopSectionLinkLabel?: string;
+  homeShopSectionLinkHref?: string;
+  homeShopSectionItems?: HomeShopSectionItem[];
 }) {
   const supabase = createSupabaseAdminClient();
   const current = await getStoreSettings();
@@ -631,6 +655,10 @@ export async function updateStoreSettings(input: {
   const bookingContactEmail = input.bookingContactEmail?.trim() ? input.bookingContactEmail.trim() : null;
   const announcementBar = input.announcementBar?.trim() ? input.announcementBar.trim() : null;
   const homeFavoritesEnabled = input.homeFavoritesEnabled ?? true;
+  const homeShopSectionTitle = input.homeShopSectionTitle?.trim() ? input.homeShopSectionTitle.trim() : null;
+  const homeShopSectionLinkLabel = input.homeShopSectionLinkLabel?.trim() ? input.homeShopSectionLinkLabel.trim() : null;
+  const homeShopSectionLinkHref = input.homeShopSectionLinkHref?.trim() ? input.homeShopSectionLinkHref.trim() : null;
+  const homeShopSectionItems = normalizeHomeShopSectionItems(input.homeShopSectionItems);
 
   if (!current) {
     const { data, error } = await supabase
@@ -642,12 +670,20 @@ export async function updateStoreSettings(input: {
         booking_contact_email: bookingContactEmail,
         announcement_bar: announcementBar,
         home_favorites_enabled: homeFavoritesEnabled,
+        home_favorites_enabled: homeFavoritesEnabled,
+        home_shop_section_title: homeShopSectionTitle,
+        home_shop_section_link_label: homeShopSectionLinkLabel,
+        home_shop_section_link_href: homeShopSectionLinkHref,
+        home_shop_section_items: homeShopSectionItems,
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return applyStoreSettingsDefaults({
+      ...data,
+      home_shop_section_items: normalizeHomeShopSectionItems(data.home_shop_section_items),
+    });
   }
 
   const { data, error } = await supabase
@@ -659,13 +695,21 @@ export async function updateStoreSettings(input: {
       booking_contact_email: bookingContactEmail,
       announcement_bar: announcementBar,
       home_favorites_enabled: homeFavoritesEnabled,
+      home_favorites_enabled: homeFavoritesEnabled,
+      home_shop_section_title: homeShopSectionTitle,
+      home_shop_section_link_label: homeShopSectionLinkLabel,
+      home_shop_section_link_href: homeShopSectionLinkHref,
+      home_shop_section_items: homeShopSectionItems,
     })
     .eq('id', current.id)
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+  return applyStoreSettingsDefaults({
+    ...data,
+    home_shop_section_items: normalizeHomeShopSectionItems(data.home_shop_section_items),
+  });
 }
 
 export async function updateOrderStatus(orderId: string, input: { paymentStatus?: string; fulfillmentStatus?: string }) {

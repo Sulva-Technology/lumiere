@@ -5,6 +5,10 @@ const makeupSkinTypes = ['Oily', 'Dry', 'Combination', 'Normal', 'Not sure'] as 
 const makeupLashesPreferences = ['Yes', 'No', "I'll bring my own"] as const;
 const makeupHistoryAnswers = ['Yes', 'No'] as const;
 const bookingServiceTypes = ['makeup', 'content'] as const;
+const homeShopSectionItemSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  description: z.string().trim().min(1).max(500),
+});
 
 export const cartLineInputSchema = z.object({
   variantId: z.string().uuid(),
@@ -152,4 +156,8 @@ export const storeSettingsSchema = z.object({
   bookingContactEmail: z.string().email().optional().or(z.literal('')),
   announcementBar: z.string().trim().max(280).optional().or(z.literal('')),
   homeFavoritesEnabled: z.boolean().optional(),
+  homeShopSectionTitle: z.string().trim().max(160).optional().or(z.literal('')),
+  homeShopSectionLinkLabel: z.string().trim().max(120).optional().or(z.literal('')),
+  homeShopSectionLinkHref: z.string().trim().max(240).optional().or(z.literal('')),
+  homeShopSectionItems: z.array(homeShopSectionItemSchema).max(12).optional().default([]),
 });

@@ -1,6 +1,51 @@
 import type { NextRequest, NextResponse } from 'next/server';
 import { getAbsoluteUrl, getConfiguredSiteOrigin, getOriginFromHeaders } from '@/lib/site';
 
+function normalizeOrigin(origin: string) {
+  return origin.replace(/\/$/, '').toLowerCase();
+}
+
+function withAlternateWww(origin: string) {
+  try {
+    const url = new URL(origin);
+    const normalized = normalizeOrigin(url.origin);
+    const hostname = url.hostname.toLowerCase();
+
+    if (hostname === 'localhost' || hostname.startsWith('127.')) {
+      return [normalized];
+    }
+
+    const alternate = new URL(url.origin);
+    alternate.hostname = hostname.startsWith('www.') ? hostname.slice(4) : `www.${hostname}`;
+
+    return Array.from(new Set([normalized, normalizeOrigin(alternate.origin)]));
+  } catch {
+    return [normalizeOrigin(origin)];
+  }
+}
+
+function getAllowedOrigins(request: NextRequest | Request) {
+  const requestOrigin = getOriginFromHeaders(request.headers);
+  const configuredOrigin = getConfiguredSiteOrigin();
+  const origins = new Set<string>();
+
+  for (const origin of [
+    configuredOrigin,
+    requestOrigin,
+    getAbsoluteUrl('/').replace(/\/$/, ''),
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ]) {
+    if (!origin) continue;
+
+    for (const candidate of withAlternateWww(origin)) {
+      origins.add(candidate);
+    }
+  }
+
+  return origins;
+}
+
 export function getClientIp(request: NextRequest | Request) {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown';
@@ -37,17 +82,9 @@ export function assertTrustedOrigin(request: NextRequest | Request) {
   const origin = request.headers.get('origin');
   if (!origin) return;
 
-  const requestOrigin = getOriginFromHeaders(request.headers);
-  const configuredOrigin = getConfiguredSiteOrigin();
-  const allowedOrigins = new Set([
-    configuredOrigin,
-    requestOrigin,
-    getAbsoluteUrl('/').replace(/\/$/, ''),
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-  ].filter((value): value is string => Boolean(value)));
-
-  if (!allowedOrigins.has(origin)) {
+  const normalizedOrigin = normalizeOrigin(origin);
+  const allowedOrigins = getAllowedOrigins(request);
+  if (!allowedOrigins.has(normalizedOrigin)) {
     throw new Error('Untrusted request origin.');
   }
 }
