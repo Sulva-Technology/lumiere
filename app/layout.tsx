@@ -93,7 +93,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <CartProvider>
             <div className="noise-overlay" />
             <AmbientBackground />
-            <AppShell brandName={store.storeName}>{children}</AppShell>
+            <AppShell
+              brandName={store.storeName}
+              supportEmail={store.supportEmail}
+              supportPhone={store.supportPhone}
+              bookingContactEmail={store.bookingContactEmail}
+            >
+              {children}
+            </AppShell>
           </CartProvider>
         </ThemeProvider>
       </body>

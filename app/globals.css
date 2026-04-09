@@ -102,6 +102,14 @@
       transform 180ms ease;
   }
 
+  a,
+  button,
+  [role='button'],
+  input[type='submit'],
+  input[type='button'] {
+    cursor: pointer;
+  }
+
   input,
   textarea,
   select {
@@ -184,3 +192,4 @@
 .dark .noise-overlay {
   opacity: 0.05;
 }
+

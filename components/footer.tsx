@@ -3,49 +3,117 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ArrowRight } from 'lucide-react';
 
-export function Footer({ brandName }: { brandName: string }) {
+type FooterProps = {
+  brandName: string;
+  supportEmail?: string;
+  supportPhone?: string | null;
+  bookingContactEmail?: string;
+};
+
+export function Footer({ brandName, supportEmail, supportPhone, bookingContactEmail }: FooterProps) {
   const pathname = usePathname();
 
   if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <footer className="relative z-10 mt-auto border-t border-[rgba(58,77,57,0.16)] bg-[rgba(247,247,242,0.62)] backdrop-blur-xl dark:border-[rgba(154,177,143,0.12)] dark:bg-[rgba(15,24,18,0.62)]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <div className="max-w-xl space-y-4">
+    <footer className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(58,77,57,0.16)] bg-[linear-gradient(180deg,rgba(231,237,225,0.94)_0%,rgba(219,228,214,0.96)_100%)] backdrop-blur-xl dark:border-[rgba(154,177,143,0.12)] dark:bg-[rgba(15,24,18,0.72)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(139,105,20,0.45)] to-transparent" />
+
+      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-14 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)_minmax(0,0.9fr)] lg:gap-16 lg:py-16">
+        <div className="max-w-2xl">
           <div className="flex items-center gap-4">
-            <div className="relative h-14 w-14 overflow-hidden rounded-full border border-[rgba(58,77,57,0.16)] bg-white/80">
-              <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="56px" />
+            <div className="relative h-16 w-16 overflow-hidden rounded-full border border-[rgba(58,77,57,0.16)] bg-white/80 shadow-[0_12px_40px_rgba(16,24,16,0.08)]">
+              <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="64px" />
             </div>
-            <span className="font-serif text-2xl tracking-widest uppercase text-[var(--text-primary)]">{brandName}</span>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.34em] text-[var(--text-accent)]">Beauty Studio</p>
+              <span className="font-serif text-2xl tracking-[0.14em] uppercase text-[var(--text-primary)] sm:text-3xl">{brandName}</span>
+            </div>
           </div>
-          <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
+
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-[var(--text-secondary)] sm:text-lg">
             itzlolabeauty brings together beauty essentials, makeup artistry, and creator-ready sessions in one polished studio experience.
           </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/book"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#8B6914] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_34px_rgba(139,105,20,0.18)] transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
+            >
+              Book Your Session <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[rgba(58,77,57,0.18)] bg-white/40 px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[#8B6914] hover:text-[#8B6914] dark:border-[rgba(154,177,143,0.12)] dark:bg-transparent dark:hover:border-[#D4A847] dark:hover:text-[#D4A847]"
+            >
+              Shop Essentials
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-4 border-t border-[rgba(58,77,57,0.12)] pt-6 text-sm text-[var(--text-secondary)] sm:grid-cols-3 dark:border-[rgba(154,177,143,0.12)]">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--text-accent)]">Support</p>
+              <p className="mt-2 break-words text-[var(--text-primary)]">{supportEmail || 'hello@itzlolabeauty.com'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--text-accent)]">Bookings</p>
+              <p className="mt-2 break-words text-[var(--text-primary)]">{bookingContactEmail || supportEmail || 'hello@itzlolabeauty.com'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--text-accent)]">Phone</p>
+              <p className="mt-2 text-[var(--text-primary)]">{supportPhone || 'Available by request'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="md:justify-self-center">
+          <h4 className="mb-4 font-serif text-lg text-[var(--text-primary)]">Explore</h4>
+          <div className="flex flex-col gap-3">
+            <Link href="/" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Home
+            </Link>
+            <Link href="/shop" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Shop
+            </Link>
+            <Link href="/book" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Book
+            </Link>
+            <Link href="/contact" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Contact
+            </Link>
+            <Link href="/track-order" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Track Order
+            </Link>
+          </div>
         </div>
 
         <div>
-          <h4 className="mb-4 font-serif text-lg text-[var(--text-primary)]">Explore</h4>
+          <h4 className="mb-4 font-serif text-lg text-[var(--text-primary)]">Information</h4>
           <div className="flex flex-col gap-3">
-            <Link href="/" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Home
+            <Link href="/faq" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              FAQ
             </Link>
-            <Link href="/shop" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Shop
+            <Link href="/shipping-returns" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Shipping & Returns
             </Link>
-            <Link href="/about" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              About
+            <Link href="/privacy-policy" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Privacy Policy
             </Link>
-            <Link href="/book" className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
-              Book
+            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+              Terms of Service
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl border-t border-[rgba(58,77,57,0.16)] px-6 py-6 dark:border-[rgba(154,177,143,0.12)]">
-        <p className="text-sm text-[var(--text-secondary)]">Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)]">
+        <p>Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
+        <p className="text-xs uppercase tracking-[0.22em]">Shop beauty. Book confidently.</p>
       </div>
     </footer>
   );
 }
+
+
