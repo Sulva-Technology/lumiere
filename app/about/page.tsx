@@ -22,7 +22,6 @@ export default function AboutPage() {
               itzlolabeauty
             </div>
             <div className="space-y-5">
-              <h1 className="font-serif text-5xl leading-tight text-[var(--text-primary)] md:text-7xl">Beauty, storytelling, and a studio shaped by intention.</h1>
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderIntro}</p>
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderMission}</p>
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderClose}</p>
