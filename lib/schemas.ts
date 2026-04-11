@@ -155,6 +155,7 @@ export const storeSettingsSchema = z.object({
   supportPhone: z.string().trim().max(40).optional().or(z.literal('')),
   bookingContactEmail: z.string().email().optional().or(z.literal('')),
   announcementBar: z.string().trim().max(280).optional().or(z.literal('')),
+  homeFavoritesEnabled: z.boolean().optional(),
   homeShopSectionTitle: z.string().trim().max(160).optional().or(z.literal('')),
   homeShopSectionLinkLabel: z.string().trim().max(120).optional().or(z.literal('')),
   homeShopSectionLinkHref: z.string().trim().max(240).optional().or(z.literal('')),

@@ -43,6 +43,7 @@ export default function AdminSettingsPage() {
           supportPhone: settings.support_phone,
           bookingContactEmail: settings.booking_contact_email,
           announcementBar: settings.announcement_bar,
+          homeFavoritesEnabled: settings.home_favorites_enabled,
           homeShopSectionTitle: settings.home_shop_section_title,
           homeShopSectionLinkLabel: settings.home_shop_section_link_label,
           homeShopSectionLinkHref: settings.home_shop_section_link_href,
@@ -115,6 +116,15 @@ export default function AdminSettingsPage() {
         <input value={settings.support_phone ?? ''} onChange={(event) => setSettings({ ...settings, support_phone: event.target.value })} className="w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" placeholder="Support phone" />
         <input value={settings.booking_contact_email ?? ''} onChange={(event) => setSettings({ ...settings, booking_contact_email: event.target.value })} className="w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" placeholder="Booking contact email" />
         <textarea value={settings.announcement_bar ?? ''} onChange={(event) => setSettings({ ...settings, announcement_bar: event.target.value })} className="min-h-28 w-full rounded-3xl bg-white/40 px-5 py-4 outline-none dark:bg-black/40" placeholder="Announcement bar text" />
+        <label className="flex items-center justify-between gap-4 rounded-3xl border border-black/10 bg-white/50 px-5 py-4 text-sm text-[var(--text-primary)] dark:border-white/10 dark:bg-black/40">
+          <span>Show favorite items on home</span>
+          <input
+            type="checkbox"
+            checked={settings.home_favorites_enabled}
+            onChange={(event) => setSettings({ ...settings, home_favorites_enabled: event.target.checked })}
+            className="h-4 w-4"
+          />
+        </label>
         <div className="space-y-4 rounded-3xl border border-black/10 p-5 dark:border-white/10">
           <div>
             <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Homepage Shop Section</h2>
@@ -156,4 +166,3 @@ export default function AdminSettingsPage() {
     </Glass>
   );
 }
-

@@ -5,18 +5,22 @@ import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { StoreSettings } from '@/lib/types';
+import type { ProductListItem, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 const headlineWords = 'Shop. Book the Session.'.split(' ');
 
-export default function Home({ settings }: { settings: StoreSettings | null }) {
+type HomeClientProps = {
+  favoriteItems: Array<Pick<ProductListItem, 'id' | 'slug' | 'name'>>;
+  settings: StoreSettings | null;
+};
+
+export default function Home({ favoriteItems, settings }: HomeClientProps) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
   const shopSectionTitle = resolvedSettings.home_shop_section_title || 'Shop';
   const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label || 'Shop Collection';
   const shopSectionLinkHref = resolvedSettings.home_shop_section_link_href || '/shop';
   const shopSectionItems = resolvedSettings.home_shop_section_items;
-
   return (
     <div className="flex flex-col gap-24">
       <section className="relative mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -28,7 +32,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
           >
             <Image
               src="/images/home.jpeg"
-
               alt="Content Creation Studio"
               fill
               className="object-cover"
@@ -36,7 +39,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
               priority
             />
           </motion.div>
-
 
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#F5F0EA]/90 via-transparent to-transparent dark:from-[#1A1008]/90" />
 
@@ -69,7 +71,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
                 className="mb-8 hidden max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:block sm:text-lg md:text-xl"
               >
                 Discover premium makeup essentials or reserve a polished studio service built around makeup artistry and creator-ready content.
-
               </motion.p>
 
               <motion.div
@@ -84,12 +85,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
                 >
                   Book your Glam
                 </Link>
-                {/* <Link
-                  href="/shop"
-                  className="w-full rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-90 sm:w-auto"
-                >
-                  Shop
-                </Link> */}
               </motion.div>
             </Glass>
           </div>
@@ -124,7 +119,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
               href: '/book?type=content',
               img: 'content.jpeg',
             },
-
           ].map((cat, index) => (
             <motion.div
               key={cat.title}
@@ -137,7 +131,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
                 <Glass level="medium" className="relative flex aspect-[16/9] flex-col justify-end p-6 transition-transform duration-500 group-hover:scale-[1.02]">
                   <Image
                     src={`/images/${cat.img}`}
-
                     alt={cat.title}
                     fill
                     className="object-cover opacity-60 transition-opacity duration-500 group-hover:opacity-80 dark:opacity-40 dark:group-hover:opacity-60"
@@ -177,6 +170,35 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
             </Glass>
           ))}
         </div>
+
+        {resolvedSettings.home_favorites_enabled && (
+          <Glass level="medium" className="mt-6 p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="font-serif text-2xl">Favorite items</h3>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">Quick links to the products you want everyone to see.</p>
+              </div>
+              <Link href="/shop" className="text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80">
+                View all products
+              </Link>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {favoriteItems.length > 0 ? (
+                favoriteItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/product/${item.slug}`}
+                    className="rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm text-[var(--text-primary)] transition-colors hover:border-[#8B6914] hover:text-[#8B6914] dark:border-white/10 dark:bg-white/5"
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              ) : (
+                <span className="text-sm text-[var(--text-secondary)]">Feature products in the admin to show them here.</span>
+              )}
+            </div>
+          </Glass>
+        )}
       </section>
 
       <section className="mx-auto mb-24 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -202,7 +224,6 @@ export default function Home({ settings }: { settings: StoreSettings | null }) {
           </div>
         </Glass>
       </section>
-
     </div>
   );
 }

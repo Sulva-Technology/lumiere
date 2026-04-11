@@ -716,13 +716,18 @@ export async function getPublicStoreSettings() {
     supportPhone: '+1 (555) 123-4567',
     bookingContactEmail: 'ogunjobiniyiola906@gmail.com',
     announcementBar: null,
+    homeFavoritesEnabled: true,
+    homeShopSectionTitle: 'Shop',
+    homeShopSectionLinkLabel: 'Shop Collection',
+    homeShopSectionLinkHref: '/shop',
+    homeShopSectionItems: [],
   };
 
   try {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from('store_settings')
-      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar')
+      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
       .order('created_at')
       .limit(1)
       .maybeSingle();
@@ -735,6 +740,11 @@ export async function getPublicStoreSettings() {
       supportPhone: data?.support_phone?.trim() || fallback.supportPhone,
       bookingContactEmail: data?.booking_contact_email?.trim() || fallback.bookingContactEmail,
       announcementBar: data?.announcement_bar?.trim() || fallback.announcementBar,
+      homeFavoritesEnabled: data?.home_favorites_enabled ?? fallback.homeFavoritesEnabled,
+      homeShopSectionTitle: data?.home_shop_section_title?.trim() || fallback.homeShopSectionTitle,
+      homeShopSectionLinkLabel: data?.home_shop_section_link_label?.trim() || fallback.homeShopSectionLinkLabel,
+      homeShopSectionLinkHref: data?.home_shop_section_link_href?.trim() || fallback.homeShopSectionLinkHref,
+      homeShopSectionItems: Array.isArray(data?.home_shop_section_items) ? data.home_shop_section_items : fallback.homeShopSectionItems,
     };
   } catch {
     return fallback;

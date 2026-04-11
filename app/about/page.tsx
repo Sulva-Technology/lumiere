@@ -5,23 +5,23 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 
-const founderIntro = 'My name is Damilola. I’m a creative based in Arizona.I’ve always been drawn to creating whether it’s through visuals, beauty, or storytelling.';
+const founderIntro = 'My name is Damilola. I\'m a creative based in Arizona.I\'ve always been drawn to creating whether it\'s through visuals, beauty, or storytelling.';
 const founderMission = 'I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.';
-const founderClose = 'I’d love to be a part of your story and help bring your vision to life.';
+const founderClose = 'I\'d love to be a part of your story and help bring your vision to life.';
 
 export default function AboutPage() {
   return (
     <main className="min-h-screen px-6 pb-24 pt-32">
       <div className="mx-auto flex max-w-7xl flex-col gap-20">
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="space-y-8">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="space-y-6">
             <div className="inline-flex items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/50 px-4 py-2 text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)] dark:bg-black/20">
               <div className="relative h-10 w-10 overflow-hidden rounded-full">
                 <Image src="/images/logo.jpeg" alt="itzlolabeauty logo" fill className="object-cover" sizes="40px" />
               </div>
               itzlolabeauty
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderIntro}</p>
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderMission}</p>
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderClose}</p>
@@ -43,19 +43,6 @@ export default function AboutPage() {
               </div>
             </Glass>
           </motion.div>
-        </section>
-
-        <section className="grid gap-6 md:grid-cols-3">
-          {[
-            { title: 'Founder-led artistry', body: 'Every client experience is shaped with a personal eye for beauty, confidence, and detail.' },
-            { title: 'Two clear journeys', body: 'Shop beauty essentials or book a service crafted for makeup artistry and creator-ready results.' },
-            { title: 'Made to feel elevated', body: 'The goal is simple: help every client feel polished, visible, and fully aligned with their vision.' },
-          ].map((item) => (
-            <Glass key={item.title} level="medium" className="p-8">
-              <h2 className="font-serif text-2xl text-[var(--text-primary)]">{item.title}</h2>
-              <p className="mt-3 text-[var(--text-secondary)]">{item.body}</p>
-            </Glass>
-          ))}
         </section>
       </div>
     </main>
