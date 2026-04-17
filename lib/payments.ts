@@ -25,6 +25,18 @@ function cents(amount: number) {
   return Math.round(amount * 100);
 }
 
+function toStripeImageUrl(imageUrl: string | null | undefined, origin: string) {
+  if (!imageUrl) return null;
+
+  try {
+    const resolved = new URL(imageUrl, origin);
+    if (resolved.protocol !== 'https:') return null;
+    return resolved.toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function getAppOrigin() {
   const hdrs = await headers();
   return getOriginFromHeaders(hdrs) || getOptionalEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000');
@@ -39,18 +51,21 @@ export async function createHostedCheckoutSession(input: HostedCheckoutInput) {
     customer_email: input.email,
     success_url: `${origin}${input.successPath}`,
     cancel_url: `${origin}${input.cancelPath}`,
-    line_items: input.lines.map((line) => ({
-      quantity: line.quantity,
-      price_data: {
-        currency: 'usd',
-        unit_amount: cents(line.amount),
-        product_data: {
-          name: line.name,
-          description: line.description,
-          images: line.imageUrl ? [line.imageUrl] : [],
+    line_items: input.lines.map((line) => {
+      const imageUrl = toStripeImageUrl(line.imageUrl, origin);
+      return {
+        quantity: line.quantity,
+        price_data: {
+          currency: 'usd',
+          unit_amount: cents(line.amount),
+          product_data: {
+            name: line.name,
+            description: line.description,
+            ...(imageUrl ? { images: [imageUrl] } : {}),
+          },
         },
-      },
-    })),
+      };
+    }),
     metadata: input.metadata,
   });
 
