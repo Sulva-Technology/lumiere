@@ -103,8 +103,8 @@ async function sendMail(payload: MailPayload) {
 
 export async function sendAdminCustomEmail(payload: AdminCustomEmailPayload) {
   const html = `
-    <div style="background:#120b05;padding:32px;font-family:Arial,sans-serif;color:#f8f1dd;">
-      <div style="border:1px solid #6d4a13;border-radius:20px;background:#1a1108;padding:24px;">
+    <div style="background:#0c1510;padding:32px;font-family:Arial,sans-serif;color:#eef2ea;">
+      <div style="border:1px solid rgba(154,177,143,0.22);border-radius:20px;background:#16211a;padding:24px;">
         <p style="margin:0;white-space:pre-wrap;line-height:1.7;">${escapeHtml(payload.message)}</p>
       </div>
     </div>
@@ -123,43 +123,43 @@ export async function sendOrderConfirmationEmails(payload: OrderEmailPayload) {
     .map(
       (item) => `
         <tr>
-          <td style="padding:12px 0;border-bottom:1px solid #2b1d0b;color:#f8f1dd;">${escapeHtml(item.productName)} <span style="color:#c7b38c;">(${escapeHtml(item.variantTitle)})</span></td>
-          <td style="padding:12px 0;border-bottom:1px solid #2b1d0b;color:#c7b38c;text-align:center;">${item.quantity}</td>
-          <td style="padding:12px 0;border-bottom:1px solid #2b1d0b;color:#f0d080;text-align:right;">${formatCurrency(item.lineTotal)}</td>
+          <td style="padding:12px 0;border-bottom:1px solid rgba(154,177,143,0.14);color:#eef2ea;">${escapeHtml(item.productName)} <span style="color:#b8c8b4;">(${escapeHtml(item.variantTitle)})</span></td>
+          <td style="padding:12px 0;border-bottom:1px solid rgba(154,177,143,0.14);color:#b8c8b4;text-align:center;">${item.quantity}</td>
+          <td style="padding:12px 0;border-bottom:1px solid rgba(154,177,143,0.14);color:#d7e0d0;text-align:right;">${formatCurrency(item.lineTotal)}</td>
         </tr>
       `
     )
     .join('');
 
   const customerHtml = `
-    <div style="background:#120b05;padding:32px;font-family:Georgia,serif;color:#f8f1dd;">
-      <h1 style="margin:0 0 12px;font-size:32px;color:#f0d080;">${escapeHtml(payload.storeName)}</h1>
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#dbc8a6;">Your order is confirmed and we are preparing it now.</p>
-      <div style="padding:20px;border:1px solid #6d4a13;border-radius:20px;background:#1a1108;">
+    <div style="background:#0c1510;padding:32px;font-family:Georgia,serif;color:#eef2ea;">
+      <h1 style="margin:0 0 12px;font-size:32px;color:#eef2ea;">${escapeHtml(payload.storeName)}</h1>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#c9d5c3;">Your order is confirmed and we are preparing it now.</p>
+      <div style="padding:20px;border:1px solid rgba(154,177,143,0.2);border-radius:20px;background:#16211a;">
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.customerName)},</p>
-        <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#dbc8a6;">Thank you for shopping with us. Your order <strong>${escapeHtml(payload.orderNumber)}</strong> has been paid successfully.</p>
+        <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#c9d5c3;">Thank you for shopping with us. Your order <strong>${escapeHtml(payload.orderNumber)}</strong> has been paid successfully.</p>
         <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;">
           <thead>
             <tr>
-              <th style="padding-bottom:12px;text-align:left;color:#c7b38c;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;">Item</th>
-              <th style="padding-bottom:12px;text-align:center;color:#c7b38c;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;">Qty</th>
-              <th style="padding-bottom:12px;text-align:right;color:#c7b38c;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;">Total</th>
+              <th style="padding-bottom:12px;text-align:left;color:#9ab18f;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;">Item</th>
+              <th style="padding-bottom:12px;text-align:center;color:#9ab18f;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;">Qty</th>
+              <th style="padding-bottom:12px;text-align:right;color:#9ab18f;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;">Total</th>
             </tr>
           </thead>
           <tbody>${itemsMarkup}</tbody>
         </table>
-        <div style="margin-top:18px;font-family:Arial,sans-serif;color:#dbc8a6;">
+        <div style="margin-top:18px;font-family:Arial,sans-serif;color:#c9d5c3;">
           <p style="margin:0 0 6px;">Subtotal: ${formatCurrency(payload.subtotal)}</p>
           <p style="margin:0 0 6px;">Shipping: ${formatCurrency(payload.shipping)}</p>
-          <p style="margin:12px 0 0;font-size:18px;color:#f0d080;"><strong>Total: ${formatCurrency(payload.total)}</strong></p>
+          <p style="margin:12px 0 0;font-size:18px;color:#eef2ea;"><strong>Total: ${formatCurrency(payload.total)}</strong></p>
         </div>
       </div>
-      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#c7b38c;">Need help? Reply to this email or contact ${escapeHtml(payload.supportEmail)}.</p>
+      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#9ab18f;">Need help? Reply to this email or contact ${escapeHtml(payload.supportEmail)}.</p>
     </div>
   `;
 
   const internalHtml = `
-    <div style="font-family:Arial,sans-serif;padding:24px;background:#fffaf1;color:#20160b;">
+    <div style="font-family:Arial,sans-serif;padding:24px;background:#eef2ea;color:#16301c;">
       <h2 style="margin-top:0;">New paid order</h2>
       <p><strong>Order:</strong> ${escapeHtml(payload.orderNumber)}</p>
       <p><strong>Customer:</strong> ${escapeHtml(payload.customerName)} (${escapeHtml(payload.customerEmail)})</p>
@@ -207,7 +207,7 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
   const makeupMarkup =
     makeupRows.length > 0
       ? `
-        <div style="margin-top:18px;padding-top:18px;border-top:1px solid #e7dcc8;">
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid rgba(154,177,143,0.18);">
           <h3 style="margin:0 0 12px;font-size:16px;">Makeup intake</h3>
           ${makeupRows
             .map(
@@ -220,23 +220,23 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       : '';
 
   const customerHtml = `
-    <div style="background:#120b05;padding:32px;font-family:Georgia,serif;color:#f8f1dd;">
-      <h1 style="margin:0 0 12px;font-size:32px;color:#f0d080;">${escapeHtml(payload.storeName)}</h1>
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#dbc8a6;">Your appointment is confirmed.</p>
-      <div style="padding:20px;border:1px solid #6d4a13;border-radius:20px;background:#1a1108;">
+    <div style="background:#0c1510;padding:32px;font-family:Georgia,serif;color:#eef2ea;">
+      <h1 style="margin:0 0 12px;font-size:32px;color:#eef2ea;">${escapeHtml(payload.storeName)}</h1>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#c9d5c3;">Your appointment is confirmed.</p>
+      <div style="padding:20px;border:1px solid rgba(154,177,143,0.2);border-radius:20px;background:#16211a;">
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.fullName)},</p>
-        <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#dbc8a6;">Your booking <strong>${escapeHtml(payload.bookingReference)}</strong> is confirmed.</p>
+        <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#c9d5c3;">Your booking <strong>${escapeHtml(payload.bookingReference)}</strong> is confirmed.</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Service: ${escapeHtml(payload.serviceName)}</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Artist: ${escapeHtml(payload.stylistName)}</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Date: ${formatDateTime(payload.startsAt)}</p>
         <p style="margin:0;font-family:Arial,sans-serif;">Phone: ${escapeHtml(payload.phone)}</p>
       </div>
-      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#c7b38c;">Need to update your appointment? Reply to this email or contact ${escapeHtml(payload.bookingContactEmail)}.</p>
+      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#9ab18f;">Need to update your appointment? Reply to this email or contact ${escapeHtml(payload.bookingContactEmail)}.</p>
     </div>
   `;
 
   const internalHtml = `
-    <div style="font-family:Arial,sans-serif;padding:24px;background:#fffaf1;color:#20160b;">
+    <div style="font-family:Arial,sans-serif;padding:24px;background:#eef2ea;color:#16301c;">
       <h2 style="margin-top:0;">New booking confirmed</h2>
       <p><strong>Reference:</strong> ${escapeHtml(payload.bookingReference)}</p>
       <p><strong>Client:</strong> ${escapeHtml(payload.fullName)} (${escapeHtml(payload.email)})</p>
@@ -277,15 +277,15 @@ export async function sendOrderStatusUpdateEmail(payload: OrderStatusEmailPayloa
           : 'has been updated';
 
   const customerHtml = `
-    <div style="background:#120b05;padding:32px;font-family:Georgia,serif;color:#f8f1dd;">
-      <h1 style="margin:0 0 12px;font-size:32px;color:#f0d080;">${escapeHtml(payload.storeName)}</h1>
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#dbc8a6;">Your order status has changed.</p>
-      <div style="padding:20px;border:1px solid #6d4a13;border-radius:20px;background:#1a1108;">
+    <div style="background:#0c1510;padding:32px;font-family:Georgia,serif;color:#eef2ea;">
+      <h1 style="margin:0 0 12px;font-size:32px;color:#eef2ea;">${escapeHtml(payload.storeName)}</h1>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#c9d5c3;">Your order status has changed.</p>
+      <div style="padding:20px;border:1px solid rgba(154,177,143,0.2);border-radius:20px;background:#16211a;">
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.customerName)},</p>
-        <p style="margin:0 0 12px;font-family:Arial,sans-serif;color:#dbc8a6;">Order <strong>${escapeHtml(payload.orderNumber)}</strong> ${statusLabel}.</p>
-        <p style="margin:0;font-family:Arial,sans-serif;color:#f0d080;text-transform:uppercase;letter-spacing:0.14em;">${payload.fulfillmentStatus}</p>
+        <p style="margin:0 0 12px;font-family:Arial,sans-serif;color:#c9d5c3;">Order <strong>${escapeHtml(payload.orderNumber)}</strong> ${statusLabel}.</p>
+        <p style="margin:0;font-family:Arial,sans-serif;color:#9ab18f;text-transform:uppercase;letter-spacing:0.14em;">${payload.fulfillmentStatus}</p>
       </div>
-      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#c7b38c;">Questions? Reply to this email or contact ${escapeHtml(payload.supportEmail)}.</p>
+      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#9ab18f;">Questions? Reply to this email or contact ${escapeHtml(payload.supportEmail)}.</p>
     </div>
   `;
 

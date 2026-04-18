@@ -1,22 +1,22 @@
 import { cn } from '@/lib/utils';
 
 const STATUS_TONES: Record<string, string> = {
-  paid: 'bg-emerald-500/15 text-emerald-300',
-  processing: 'bg-sky-500/15 text-sky-300',
-  confirmed: 'bg-sky-500/15 text-sky-300',
-  delivered: 'bg-emerald-500/15 text-emerald-300',
-  shipped: 'bg-violet-500/15 text-violet-300',
-  pending: 'bg-amber-500/15 text-amber-300',
-  pending_payment: 'bg-amber-500/15 text-amber-300',
-  authorized: 'bg-amber-500/15 text-amber-300',
-  reserved: 'bg-amber-500/15 text-amber-300',
-  refunded: 'bg-fuchsia-500/15 text-fuchsia-300',
-  cancelled: 'bg-white/10 text-white/60',
-  expired: 'bg-white/10 text-white/60',
-  payment_failed: 'bg-red-500/15 text-red-300',
-  failed: 'bg-red-500/15 text-red-300',
-  unfulfilled: 'bg-white/10 text-white/60',
-  completed: 'bg-emerald-500/15 text-emerald-300',
+  paid: 'border border-emerald-300/20 bg-emerald-400/12 text-emerald-100',
+  processing: 'border border-sky-300/20 bg-sky-400/12 text-sky-100',
+  confirmed: 'border border-sky-300/20 bg-sky-400/12 text-sky-100',
+  delivered: 'border border-emerald-300/20 bg-emerald-400/12 text-emerald-100',
+  shipped: 'border border-violet-300/20 bg-violet-400/12 text-violet-100',
+  pending: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
+  pending_payment: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
+  authorized: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
+  reserved: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
+  refunded: 'border border-fuchsia-300/20 bg-fuchsia-400/12 text-fuchsia-100',
+  cancelled: 'border border-white/10 bg-white/6 text-white/65',
+  expired: 'border border-white/10 bg-white/6 text-white/65',
+  payment_failed: 'border border-rose-300/20 bg-rose-400/12 text-rose-100',
+  failed: 'border border-rose-300/20 bg-rose-400/12 text-rose-100',
+  unfulfilled: 'border border-white/10 bg-white/6 text-white/65',
+  completed: 'border border-emerald-300/20 bg-emerald-400/12 text-emerald-100',
 };
 
 type AdminStatusBadgeProps = {

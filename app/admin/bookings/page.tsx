@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, CreditCard, Mail, UserRound } from 'lucide-react';
+import { CalendarDays, CreditCard, Mail, Trash2, UserRound } from 'lucide-react';
 
+import { ActionIconButton } from '@/components/admin/action-icon-button';
 import { AdminStatusBadge } from '@/components/admin/status-badge';
 import { TruncatedText } from '@/components/admin/truncated-text';
 import { Glass } from '@/components/ui/glass';
@@ -13,6 +14,7 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [emailingId, setEmailingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -60,12 +62,34 @@ export default function AdminBookingsPage() {
     }
   }
 
+  async function removeRow(booking: AdminBookingRow) {
+    const label = booking.entryType === 'booking' ? 'delete this booking' : 'delete this payment hold';
+    if (!window.confirm(`Are you sure you want to ${label}?`)) return;
+
+    setRemovingId(booking.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/bookings/${booking.id}?entryType=${booking.entryType}`, {
+        method: 'DELETE',
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to delete booking row.');
+
+      setBookings((current) => current.filter((item) => item.id !== booking.id));
+    } catch (removeError) {
+      setError(removeError instanceof Error ? removeError.message : 'Unable to delete booking row.');
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <p className="text-xs uppercase tracking-[0.28em] text-[#D4A847]">Operations</p>
-        <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Bookings</h1>
-        <p className="mt-2 text-sm text-white/60">See confirmed appointments and unresolved payment holds in one clean operations queue.</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-[#9ab18f]">Operations</p>
+        <h1 className="mt-2 font-serif text-4xl text-[#eef2ea]">Bookings</h1>
+        <p className="mt-2 text-sm text-[#d7e0d0]/75">See confirmed appointments and unresolved payment holds in one clean operations queue.</p>
       </div>
 
       {error && (
@@ -74,67 +98,67 @@ export default function AdminBookingsPage() {
         </Glass>
       )}
 
-      <Glass level="medium" className="overflow-hidden border border-[#6d4a13]/35 bg-[#1a1108] p-0">
+      <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
         {bookings.length > 0 ? (
           bookings.map((booking) => (
             <div
               key={`${booking.entryType}-${booking.id}`}
-              className="border-b border-[#6d4a13]/18 px-5 py-5 last:border-b-0"
+              className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0"
             >
-              <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(220px,0.9fr)] xl:items-start xl:gap-6 xl:px-1">
+              <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(240px,0.95fr)] xl:items-start xl:gap-5 xl:px-1">
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Reference</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Reference</p>
                   <div className="mt-2">
-                    <TruncatedText value={booking.bookingReference ?? booking.reservationId ?? 'Pending'} className="font-medium leading-8 text-white" mono />
+                    <TruncatedText value={booking.bookingReference ?? booking.reservationId ?? 'Pending'} className="font-medium leading-8 text-[#eef2ea]" mono />
                   </div>
-                  <div className="mt-3 inline-flex rounded-full border border-[#6d4a13]/45 bg-[#20150a] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#F0D080]">
+                  <div className="mt-3 inline-flex rounded-full border border-[rgba(154,177,143,0.16)] bg-[rgba(108,139,103,0.14)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#d7e0d0]">
                     {booking.entryType === 'booking' ? 'Confirmed Booking' : 'Payment Hold'}
                   </div>
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Client</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Client</p>
                   <div className="mt-2 space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 rounded-full bg-[rgba(212,168,71,0.12)] p-2 text-[#D4A847]">
+                      <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.18)] p-2 text-[#d7e0d0]">
                         <UserRound size={14} />
                       </div>
                       <div className="min-w-0">
-                        <TruncatedText value={booking.clientName} className="text-lg font-medium text-white" />
-                        <TruncatedText value={booking.stylistName} className="text-sm text-white/55" />
+                        <TruncatedText value={booking.clientName} className="text-lg font-medium text-[#eef2ea]" />
+                        <TruncatedText value={booking.stylistName} className="text-sm text-[#d7e0d0]/62" />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Service</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Service</p>
                   <div className="mt-2">
-                    <TruncatedText value={booking.serviceName} className="text-base text-white/85" />
+                    <TruncatedText value={booking.serviceName} className="text-base text-[#eef2ea]/90" />
                   </div>
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">When / Hold</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">When / Hold</p>
                   <div className="mt-2 flex items-start gap-3">
-                    <div className="mt-0.5 rounded-full bg-white/5 p-2 text-white/60">
+                    <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.12)] p-2 text-[#d7e0d0]/80">
                       <CalendarDays size={14} />
                     </div>
-                    <p className="text-sm leading-6 text-white/70">{formatDateTime(booking.startsAt)}</p>
+                    <p className="text-sm leading-6 text-[#d7e0d0]/75">{formatDateTime(booking.startsAt)}</p>
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px] xl:grid-cols-1">
-                  <div className="min-w-0 rounded-3xl border border-[#6d4a13]/30 bg-[#171008] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Payment</p>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_170px] xl:grid-cols-1">
+                  <div className="min-w-0 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.5)] p-4">
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Payment</p>
                     <div className="mt-3 flex items-start gap-3">
-                      <div className="mt-0.5 rounded-full bg-white/5 p-2 text-white/60">
+                      <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.12)] p-2 text-[#d7e0d0]/80">
                         <CreditCard size={14} />
                       </div>
                       <div className="min-w-0">
                         <AdminStatusBadge status={booking.paymentStatus} className="max-w-full" />
                         <div className="mt-1">
-                          <TruncatedText value={booking.paymentReference} fallback="Awaiting reference" className="text-xs leading-5 text-white/45" mono />
+                          <TruncatedText value={booking.paymentReference} fallback="Awaiting reference" className="text-xs leading-5 text-[#d7e0d0]/48" mono />
                         </div>
                       </div>
                     </div>
@@ -144,32 +168,55 @@ export default function AdminBookingsPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Action</p>
-                    <div className="mt-3">
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Action</p>
+                    <div className="mt-3 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.42)] p-3">
                       {booking.entryType === 'booking' ? (
-                        <div className="flex items-center gap-2">
+                        <>
                           <select
                             value={booking.status}
                             onChange={(event) => updateStatus(booking.id, event.target.value)}
-                            className="min-w-0 flex-1 rounded-full border border-[#6d4a13]/50 bg-[#140d05] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D4A847]"
+                            className="w-full rounded-2xl border border-[rgba(154,177,143,0.16)] bg-[rgba(108,139,103,0.08)] px-4 py-3 text-sm text-[#eef2ea] outline-none transition-colors focus:border-[rgba(154,177,143,0.34)]"
                           >
                             <option value="confirmed">Confirmed</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                             <option value="refunded">Refunded</option>
                           </select>
-                          <button
-                            type="button"
-                            onClick={() => resendEmail(booking.id)}
-                            disabled={emailingId === booking.id || booking.paymentStatus !== 'paid'}
-                            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#6d4a13]/45 bg-[#140d05] text-[#F0D080] transition-colors hover:bg-[#20150a] disabled:opacity-50"
-                            title={booking.paymentStatus === 'paid' ? 'Resend booking email' : 'Only paid bookings can resend confirmation emails'}
+                          <div className="mt-3 flex items-center gap-2">
+                            <ActionIconButton
+                              title={booking.paymentStatus === 'paid' ? 'Resend booking email' : 'Only paid bookings can resend confirmation emails'}
+                              onClick={() => resendEmail(booking.id)}
+                              disabled={emailingId === booking.id || booking.paymentStatus !== 'paid'}
+                            >
+                              <Mail size={16} />
+                            </ActionIconButton>
+                            <ActionIconButton
+                              title="Delete booking"
+                              onClick={() => removeRow(booking)}
+                              disabled={removingId === booking.id}
+                              variant="danger"
+                            >
+                              <Trash2 size={16} />
+                            </ActionIconButton>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <ActionIconButton
+                            title="Payment hold cannot resend confirmation email yet"
+                            disabled
                           >
                             <Mail size={16} />
-                          </button>
+                          </ActionIconButton>
+                          <ActionIconButton
+                            title="Delete payment hold"
+                            onClick={() => removeRow(booking)}
+                            disabled={removingId === booking.id}
+                            variant="danger"
+                          >
+                            <Trash2 size={16} />
+                          </ActionIconButton>
                         </div>
-                      ) : (
-                        <span className="inline-flex rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/55">Monitor</span>
                       )}
                     </div>
                   </div>

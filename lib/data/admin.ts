@@ -777,6 +777,86 @@ export async function updateBookingStatus(bookingId: string, status: string) {
   return data;
 }
 
+async function restockInventoryForOrder(orderId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: items, error } = await supabase.from('order_items').select('variant_id, quantity').eq('order_id', orderId);
+  if (error) throw error;
+
+  for (const item of items ?? []) {
+    if (!item.variant_id) continue;
+    const { data: variant } = await supabase.from('product_variants').select('stock_quantity').eq('id', item.variant_id).maybeSingle();
+    if (!variant) continue;
+
+    await supabase
+      .from('product_variants')
+      .update({ stock_quantity: variant.stock_quantity + item.quantity })
+      .eq('id', item.variant_id);
+  }
+}
+
+export async function deleteAdminOrder(orderId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('id, payment_status')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!order) throw new Error('Order not found.');
+
+  if (order.payment_status === 'paid') {
+    await restockInventoryForOrder(orderId);
+  }
+
+  const { error: deleteError } = await supabase.from('orders').delete().eq('id', orderId);
+  if (deleteError) throw deleteError;
+
+  return { ok: true };
+}
+
+export async function deleteAdminBookingRow(bookingId: string, entryType: 'booking' | 'reservation') {
+  const supabase = createSupabaseAdminClient();
+
+  if (entryType === 'reservation') {
+    const { error } = await supabase.from('booking_reservations').delete().eq('id', bookingId);
+    if (error) throw error;
+    return { ok: true };
+  }
+
+  const { data: booking, error: bookingError } = await supabase
+    .from('bookings')
+    .select('id, availability_id')
+    .eq('id', bookingId)
+    .maybeSingle();
+
+  if (bookingError) throw bookingError;
+  if (!booking) throw new Error('Booking not found.');
+
+  if (booking.availability_id) {
+    await supabase.from('booking_availability').update({ is_available: true }).eq('id', booking.availability_id);
+  }
+
+  const { error } = await supabase.from('bookings').delete().eq('id', bookingId);
+  if (error) throw error;
+
+  return { ok: true };
+}
+
+export async function deleteAdminCustomer(customerId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from('customers').delete().eq('id', customerId);
+  if (error) throw error;
+  return { ok: true };
+}
+
+export async function deleteAdminPayment(paymentId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from('payments').delete().eq('id', paymentId);
+  if (error) throw error;
+  return { ok: true };
+}
+
 export async function resendOrderConfirmationEmail(orderId: string) {
   const supabase = createSupabaseAdminClient();
   const { data: order, error } = await supabase

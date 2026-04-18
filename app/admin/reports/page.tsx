@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 
+import { ActionIconButton } from '@/components/admin/action-icon-button';
 import { AdminStatusBadge } from '@/components/admin/status-badge';
 import { TruncatedText } from '@/components/admin/truncated-text';
 import { Glass } from '@/components/ui/glass';
@@ -11,6 +13,7 @@ import type { PaymentRecord } from '@/lib/types';
 export default function AdminReportsPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -27,12 +30,30 @@ export default function AdminReportsPage() {
     void load();
   }, []);
 
+  async function deletePayment(payment: PaymentRecord) {
+    if (!window.confirm('Are you sure you want to delete this payment record?')) return;
+
+    setRemovingId(payment.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/payments/${payment.id}`, { method: 'DELETE' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to delete payment.');
+      setPayments((current) => current.filter((item) => item.id !== payment.id));
+    } catch (removeError) {
+      setError(removeError instanceof Error ? removeError.message : 'Unable to delete payment.');
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <p className="text-xs uppercase tracking-[0.28em] text-[#D4A847]">Operations</p>
-        <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Payments & Reconciliation</h1>
-        <p className="mt-2 text-sm text-white/60">Track pending, paid, failed, cancelled, and expired payment records from one queue.</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-[#9ab18f]">Operations</p>
+        <h1 className="mt-2 font-serif text-4xl text-[#eef2ea]">Payments & Reconciliation</h1>
+        <p className="mt-2 text-sm text-[#d7e0d0]/75">Track pending, paid, failed, cancelled, and expired payment records from one queue.</p>
       </div>
 
       {error && (
@@ -41,54 +62,65 @@ export default function AdminReportsPage() {
         </Glass>
       )}
 
-      <Glass level="medium" className="overflow-hidden border border-[#6d4a13]/35 bg-[#1a1108] p-0">
-        <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(90px,0.7fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-5 border-b border-[#6d4a13]/25 px-6 py-5 text-xs uppercase tracking-[0.24em] text-white/40 xl:grid">
+      <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
+        <div className="hidden grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,0.78fr)_minmax(90px,0.68fr)_minmax(0,1.2fr)_minmax(0,0.95fr)_72px] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:grid">
           <span>Payment</span>
           <span>Target</span>
           <span>Status</span>
           <span>Amount</span>
           <span>Reference</span>
           <span>Updated</span>
+          <span className="text-right">Delete</span>
         </div>
 
         {payments.length > 0 ? (
           payments.map((payment) => (
-            <div key={payment.id} className="border-b border-[#6d4a13]/18 px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(90px,0.7fr)_minmax(0,1.35fr)_minmax(0,1fr)] xl:items-center xl:gap-5 xl:px-6">
+            <div key={payment.id} className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,0.78fr)_minmax(90px,0.68fr)_minmax(0,1.2fr)_minmax(0,0.95fr)_72px] xl:items-center xl:gap-5 xl:px-6">
               <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Payment</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Payment</p>
                 <div className="mt-1 xl:mt-0">
-                  <TruncatedText value={payment.id} className="font-medium text-white" mono />
+                  <TruncatedText value={payment.id} className="font-medium text-[#eef2ea]" mono />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Target</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Target</p>
                 <div className="mt-1 space-y-1 xl:mt-0">
-                  <p className="text-white/80">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
-                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-white/45" mono />
+                  <p className="text-[#eef2ea]/85">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
+                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-[#d7e0d0]/48" mono />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Status</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Status</p>
                 <div className="mt-1 xl:mt-0">
                   <AdminStatusBadge status={payment.status} />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Amount</p>
-                <p className="mt-1 font-medium text-[#F0D080] xl:mt-0">{formatCurrency(payment.amount)}</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Amount</p>
+                <p className="mt-1 font-medium text-[#d7e0d0] xl:mt-0">{formatCurrency(payment.amount)}</p>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Reference</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Reference</p>
                 <div className="mt-1 space-y-1 xl:mt-0">
-                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-white/65" mono />
+                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-[#d7e0d0]/68" mono />
                   {payment.sessionReference && payment.sessionReference !== payment.providerReference ? (
-                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-white/40" mono />
+                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-[#d7e0d0]/44" mono />
                   ) : null}
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Updated</p>
-                <p className="mt-1 text-sm text-white/65 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Updated</p>
+                <p className="mt-1 text-sm text-[#d7e0d0]/68 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
+              </div>
+              <div className="mt-4 flex justify-end xl:mt-0">
+                <ActionIconButton
+                  title="Delete payment record"
+                  onClick={() => deletePayment(payment)}
+                  disabled={removingId === payment.id}
+                  variant="danger"
+                >
+                  <Trash2 size={16} />
+                </ActionIconButton>
               </div>
             </div>
           ))
