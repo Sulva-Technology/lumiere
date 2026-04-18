@@ -3,6 +3,7 @@ import { createHostedCheckoutSession } from '@/lib/payments';
 import { sendBookingConfirmationEmails } from '@/lib/notifications';
 import { createAuditLog } from '@/lib/data/audit';
 import { syncRecurringAvailabilityRules } from '@/lib/data/availability';
+import { logEvent } from '@/lib/observability';
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -432,6 +433,14 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
 
   if (reservationError) throw reservationError;
 
+  logEvent('info', 'booking.reservation_created', {
+    reservationId: reservation.id,
+    availabilityId: input.availabilityId,
+    stylistId: input.stylistId,
+    serviceId: input.serviceId,
+    email: input.email,
+  });
+
   const { data: payment, error: paymentError } = await supabase
     .from('payments')
     .insert({
@@ -452,6 +461,12 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
     .single();
 
   if (paymentError) throw paymentError;
+
+  logEvent('info', 'booking.payment_created', {
+    paymentId: payment.id,
+    reservationId: reservation.id,
+    amount: service.price,
+  });
 
   try {
     const session = await createHostedCheckoutSession({
@@ -483,6 +498,13 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
       })
       .eq('id', payment.id);
 
+    logEvent('info', 'booking.session_created', {
+      reservationId: reservation.id,
+      paymentId: payment.id,
+      sessionId: session.id,
+      livemode: session.livemode,
+    });
+
     await createAuditLog({
       action: 'booking.reservation_created',
       entityType: 'booking_reservation',
@@ -496,33 +518,76 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
       paymentId: payment.id,
     };
   } catch (error) {
+    logEvent('error', 'booking.session_create_failed', {
+      reservationId: reservation.id,
+      paymentId: payment.id,
+      reason: error instanceof Error ? error.message : 'Unable to start secure checkout.',
+    });
     await supabase.from('payments').update({ status: 'failed', failure_reason: error instanceof Error ? error.message : 'Unable to start secure checkout.' }).eq('id', payment.id);
     await supabase.from('booking_reservations').update({ reservation_status: 'cancelled' }).eq('id', reservation.id);
     throw error;
   }
 }
 
-export async function finalizePaidBooking(paymentId: string, providerReference?: string | null): Promise<BookingConfirmation | null> {
+export async function finalizePaidBooking(input: {
+  paymentId?: string | null;
+  providerReference?: string | null;
+  sessionReference?: string | null;
+  reservationId?: string | null;
+}): Promise<BookingConfirmation | null> {
   const supabase = createSupabaseAdminClient();
-  const { data: payment, error: paymentError } = await supabase
-    .from('payments')
-    .select('id, booking_id, reservation_id, status, paid_at')
-    .eq('id', paymentId)
-    .maybeSingle();
+  const payment = await findBookingPaymentRecord(supabase, input);
 
-  if (paymentError) throw paymentError;
-  if (!payment?.reservation_id) return null;
+  if (!payment?.reservation_id) {
+    logEvent('warn', 'booking.payment_not_found', {
+      paymentId: input.paymentId ?? null,
+      sessionReference: input.sessionReference ?? null,
+      providerReference: input.providerReference ?? null,
+      reservationId: input.reservationId ?? null,
+    });
+    return null;
+  }
+
+  const resolvedSessionReference = input.sessionReference ?? payment.session_reference ?? null;
+  const resolvedProviderReference = input.providerReference ?? payment.provider_reference ?? payment.id;
 
   if (payment.booking_id) {
+    await supabase
+      .from('payments')
+      .update({
+        status: 'paid',
+        paid_at: payment.paid_at ?? nowIso(),
+        session_reference: resolvedSessionReference,
+        provider_reference: resolvedProviderReference,
+        reconciliation_state: 'captured',
+      })
+      .eq('id', payment.id);
+
+    logEvent('info', 'booking.payment_already_captured', {
+      bookingId: payment.booking_id,
+      paymentId: payment.id,
+      sessionReference: resolvedSessionReference,
+      providerReference: resolvedProviderReference,
+    });
     const existing = await getBookingConfirmation(payment.booking_id);
     return existing;
   }
 
-  const { data: reservation, error: reservationError } = await supabase
+  let reservationResult = await supabase
     .from('booking_reservations')
-    .select('*, booking_availability(starts_at, ends_at), booking_services(name), stylists(name)')
+    .select('*, booking_availability(starts_at, ends_at), booking_services(name), stylists(name, email)')
     .eq('id', payment.reservation_id)
     .maybeSingle();
+
+  if (reservationResult.error && isMissingColumnError(reservationResult.error, 'email')) {
+    reservationResult = await supabase
+      .from('booking_reservations')
+      .select('*, booking_availability(starts_at, ends_at), booking_services(name), stylists(name)')
+      .eq('id', payment.reservation_id)
+      .maybeSingle();
+  }
+
+  const { data: reservation, error: reservationError } = reservationResult;
 
   if (reservationError) throw reservationError;
   if (!reservation) return null;
@@ -600,7 +665,8 @@ export async function finalizePaidBooking(paymentId: string, providerReference?:
       booking_id: booking.id,
       status: 'paid',
       paid_at: payment.paid_at ?? nowIso(),
-      provider_reference: providerReference ?? payment.id,
+      session_reference: resolvedSessionReference,
+      provider_reference: resolvedProviderReference,
       reconciliation_state: 'captured',
     })
     .eq('id', payment.id);
@@ -612,23 +678,39 @@ export async function finalizePaidBooking(paymentId: string, providerReference?:
     payload: { paymentId: payment.id, reservationId: reservation.id },
   });
 
+  logEvent('info', 'booking.payment_captured', {
+    bookingId: booking.id,
+    reservationId: reservation.id,
+    paymentId: payment.id,
+    sessionReference: resolvedSessionReference,
+    providerReference: resolvedProviderReference,
+  });
+
   try {
     const store = await getPublicStoreSettings();
+    const stylist = relationFirst(reservation.stylists) as { name?: string | null; email?: string | null } | null;
     await sendBookingConfirmationEmails({
       storeName: store.storeName,
       supportEmail: store.supportEmail,
       bookingContactEmail: store.bookingContactEmail,
+      stylistEmail: stylist?.email ?? null,
       fullName: reservation.full_name,
       email: reservation.email,
       bookingReference,
       serviceName: relationFirst(reservation.booking_services)?.name ?? 'Selected service',
-      stylistName: relationFirst(reservation.stylists)?.name ?? 'Lead Artist',
+      stylistName: stylist?.name ?? 'Lead Artist',
       startsAt: reservationAvailability?.starts_at ?? nowIso(),
       phone: reservation.phone,
       notes: reservation.notes ?? null,
       makeupIntake: reservationIntake,
     });
   } catch (notificationError) {
+    logEvent('error', 'booking.confirmation_email_failed', {
+      bookingId: booking.id,
+      reservationId: reservation.id,
+      paymentId: payment.id,
+      reason: notificationError instanceof Error ? notificationError.message : 'Unable to send booking email.',
+    });
     console.error('Booking confirmation email failed', notificationError);
   }
 
@@ -749,4 +831,37 @@ export async function getPublicStoreSettings() {
   } catch {
     return fallback;
   }
+}
+
+type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+type BookingPaymentLookup = {
+  paymentId?: string | null;
+  sessionReference?: string | null;
+  providerReference?: string | null;
+  reservationId?: string | null;
+};
+
+async function findBookingPaymentRecord(supabase: AdminClient, lookup: BookingPaymentLookup) {
+  const attempts: Array<{ column: 'id' | 'session_reference' | 'provider_reference' | 'reservation_id'; value?: string | null }> = [
+    { column: 'id', value: lookup.paymentId },
+    { column: 'session_reference', value: lookup.sessionReference },
+    { column: 'provider_reference', value: lookup.providerReference },
+    { column: 'reservation_id', value: lookup.reservationId },
+  ];
+
+  for (const attempt of attempts) {
+    if (!attempt.value) continue;
+
+    const { data, error } = await supabase
+      .from('payments')
+      .select('id, booking_id, reservation_id, status, paid_at, session_reference, provider_reference')
+      .eq(attempt.column, attempt.value)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return data;
+  }
+
+  return null;
 }

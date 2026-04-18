@@ -1,19 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, CreditCard, UserRound } from 'lucide-react';
+import { CalendarDays, CreditCard, Mail, UserRound } from 'lucide-react';
 
+import { AdminStatusBadge } from '@/components/admin/status-badge';
+import { TruncatedText } from '@/components/admin/truncated-text';
 import { Glass } from '@/components/ui/glass';
 import { formatDateTime } from '@/lib/format';
 import type { AdminBookingRow } from '@/lib/types';
 
-function prettifyStatus(value: string) {
-  return value.replace(/_/g, ' ');
-}
-
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [emailingId, setEmailingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -44,6 +43,23 @@ export default function AdminBookingsPage() {
     setBookings((current) => current.map((booking) => (booking.id === bookingId ? { ...booking, status } : booking)));
   }
 
+  async function resendEmail(bookingId: string) {
+    setEmailingId(bookingId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/bookings/${bookingId}/email`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to resend booking email.');
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : 'Unable to resend booking email.');
+    } finally {
+      setEmailingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5 pb-10">
       <div>
@@ -68,9 +84,9 @@ export default function AdminBookingsPage() {
               <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(220px,0.9fr)] xl:items-start xl:gap-6 xl:px-1">
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Reference</p>
-                  <p className="mt-2 break-words font-medium leading-8 text-white">
-                    {booking.bookingReference ?? booking.reservationId ?? 'Pending'}
-                  </p>
+                  <div className="mt-2">
+                    <TruncatedText value={booking.bookingReference ?? booking.reservationId ?? 'Pending'} className="font-medium leading-8 text-white" mono />
+                  </div>
                   <div className="mt-3 inline-flex rounded-full border border-[#6d4a13]/45 bg-[#20150a] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#F0D080]">
                     {booking.entryType === 'booking' ? 'Confirmed Booking' : 'Payment Hold'}
                   </div>
@@ -84,8 +100,8 @@ export default function AdminBookingsPage() {
                         <UserRound size={14} />
                       </div>
                       <div className="min-w-0">
-                        <p className="break-words text-lg font-medium text-white">{booking.clientName}</p>
-                        <p className="text-sm text-white/55">{booking.stylistName}</p>
+                        <TruncatedText value={booking.clientName} className="text-lg font-medium text-white" />
+                        <TruncatedText value={booking.stylistName} className="text-sm text-white/55" />
                       </div>
                     </div>
                   </div>
@@ -93,7 +109,9 @@ export default function AdminBookingsPage() {
 
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Service</p>
-                  <p className="mt-2 break-words text-base text-white/85">{booking.serviceName}</p>
+                  <div className="mt-2">
+                    <TruncatedText value={booking.serviceName} className="text-base text-white/85" />
+                  </div>
                 </div>
 
                 <div className="min-w-0">
@@ -114,14 +132,14 @@ export default function AdminBookingsPage() {
                         <CreditCard size={14} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium capitalize text-white/85">{prettifyStatus(booking.paymentStatus)}</p>
-                        <p className="mt-1 break-all text-xs leading-5 text-white/45">{booking.paymentReference ?? 'Awaiting reference'}</p>
+                        <AdminStatusBadge status={booking.paymentStatus} className="max-w-full" />
+                        <div className="mt-1">
+                          <TruncatedText value={booking.paymentReference} fallback="Awaiting reference" className="text-xs leading-5 text-white/45" mono />
+                        </div>
                       </div>
                     </div>
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/55">
-                        {prettifyStatus(booking.status)}
-                      </span>
+                      <AdminStatusBadge status={booking.status} className="text-[10px]" />
                     </div>
                   </div>
 
@@ -129,16 +147,27 @@ export default function AdminBookingsPage() {
                     <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Action</p>
                     <div className="mt-3">
                       {booking.entryType === 'booking' ? (
-                        <select
-                          value={booking.status}
-                          onChange={(event) => updateStatus(booking.id, event.target.value)}
-                          className="w-full rounded-full border border-[#6d4a13]/50 bg-[#140d05] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D4A847]"
-                        >
-                          <option value="confirmed">Confirmed</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                          <option value="refunded">Refunded</option>
-                        </select>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={booking.status}
+                            onChange={(event) => updateStatus(booking.id, event.target.value)}
+                            className="min-w-0 flex-1 rounded-full border border-[#6d4a13]/50 bg-[#140d05] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D4A847]"
+                          >
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="refunded">Refunded</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => resendEmail(booking.id)}
+                            disabled={emailingId === booking.id || booking.paymentStatus !== 'paid'}
+                            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#6d4a13]/45 bg-[#140d05] text-[#F0D080] transition-colors hover:bg-[#20150a] disabled:opacity-50"
+                            title={booking.paymentStatus === 'paid' ? 'Resend booking email' : 'Only paid bookings can resend confirmation emails'}
+                          >
+                            <Mail size={16} />
+                          </button>
+                        </div>
                       ) : (
                         <span className="inline-flex rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/55">Monitor</span>
                       )}

@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
+import { AdminStatusBadge } from '@/components/admin/status-badge';
+import { TruncatedText } from '@/components/admin/truncated-text';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import type { DashboardMetrics } from '@/lib/types';
@@ -29,7 +32,13 @@ export default function AdminDashboard() {
   }
 
   if (!metrics) {
-    return <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-40 animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" />)}</div>;
+    return (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-40 animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" />
+        ))}
+      </div>
+    );
   }
 
   const cards = [
@@ -57,14 +66,19 @@ export default function AdminDashboard() {
             {metrics.recentOrders.length > 0 ? (
               metrics.recentOrders.map((order) => (
                 <div key={order.id} className="flex items-start justify-between gap-4 rounded-2xl bg-white/10 p-4 dark:bg-black/10">
-                  <div>
-                    <p className="font-medium text-[#1A1008] dark:text-white">{order.orderNumber}</p>
-                    <p className="text-sm text-[var(--text-secondary)]">{order.customerName} · {order.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <TruncatedText value={order.orderNumber} className="font-medium text-[#1A1008] dark:text-white" mono />
+                    <div className="mt-1 space-y-1">
+                      <TruncatedText value={order.customerName} className="text-sm text-[var(--text-secondary)]" />
+                      <TruncatedText value={order.email} className="text-xs text-[var(--text-secondary)]" />
+                    </div>
                     <p className="text-xs text-[var(--text-secondary)]">{formatDateTime(order.createdAt)}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="min-w-[96px] text-right">
                     <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(order.total)}</p>
-                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">{order.fulfillmentStatus}</p>
+                    <div className="mt-2 flex justify-end">
+                      <AdminStatusBadge status={order.fulfillmentStatus} className="text-[10px]" />
+                    </div>
                   </div>
                 </div>
               ))

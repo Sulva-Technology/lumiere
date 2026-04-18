@@ -1,5 +1,5 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { sendOrderStatusUpdateEmail } from '@/lib/notifications';
+import { sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmationEmails, sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
 import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
@@ -775,6 +775,100 @@ export async function updateBookingStatus(bookingId: string, status: string) {
   }
 
   return data;
+}
+
+export async function resendOrderConfirmationEmail(orderId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('id, order_number, email, payment_status, subtotal, shipping_total, total, customers(full_name), order_items(product_name, variant_title, quantity, line_total)')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!order) throw new Error('Order not found.');
+  if (order.payment_status !== 'paid') throw new Error('Only paid orders can resend confirmation emails.');
+
+  const settings = await getStoreSettings();
+  await sendOrderConfirmationEmails({
+    storeName: settings?.store_name?.trim() || 'itzlolabeauty',
+    supportEmail: settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
+    customerName: relationFirst(order.customers)?.full_name ?? 'there',
+    customerEmail: order.email,
+    orderNumber: order.order_number,
+    subtotal: money(order.subtotal),
+    shipping: money(order.shipping_total),
+    total: money(order.total),
+    items: (order.order_items ?? []).map((item) => ({
+      productName: item.product_name,
+      variantTitle: item.variant_title,
+      quantity: item.quantity,
+      lineTotal: money(item.line_total),
+    })),
+  });
+
+  return { ok: true };
+}
+
+export async function resendBookingConfirmationEmail(bookingId: string) {
+  const supabase = createSupabaseAdminClient();
+  let bookingResult = await supabase
+    .from('bookings')
+    .select('id, booking_reference, full_name, email, phone, notes, starts_at, payment_status, intake_payload, stylists(name, email), booking_services(name)')
+    .eq('id', bookingId)
+    .maybeSingle();
+
+  if (bookingResult.error && bookingResult.error.message.includes('email')) {
+    bookingResult = await supabase
+      .from('bookings')
+      .select('id, booking_reference, full_name, email, phone, notes, starts_at, payment_status, intake_payload, stylists(name), booking_services(name)')
+      .eq('id', bookingId)
+      .maybeSingle();
+  }
+
+  const { data: booking, error } = bookingResult;
+
+  if (error) throw error;
+  if (!booking) throw new Error('Booking not found.');
+  if (booking.payment_status !== 'paid') throw new Error('Only paid bookings can resend confirmation emails.');
+
+  const settings = await getStoreSettings();
+  const stylist = relationFirst(booking.stylists) as { name?: string | null; email?: string | null } | null;
+
+  await sendBookingConfirmationEmails({
+    storeName: settings?.store_name?.trim() || 'itzlolabeauty',
+    supportEmail: settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
+    bookingContactEmail: settings?.booking_contact_email?.trim() || settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
+    stylistEmail: stylist?.email ?? null,
+    fullName: booking.full_name,
+    email: booking.email,
+    bookingReference: booking.booking_reference,
+    serviceName: relationFirst(booking.booking_services)?.name ?? 'Selected service',
+    stylistName: stylist?.name ?? 'Lead Artist',
+    startsAt: booking.starts_at,
+    phone: booking.phone,
+    notes: booking.notes,
+    makeupIntake: booking.intake_payload ?? null,
+  });
+
+  return { ok: true };
+}
+
+export async function sendAdminEmail(input: {
+  to: string[];
+  subject: string;
+  message: string;
+  replyTo?: string;
+}) {
+  const settings = await getStoreSettings();
+  await sendAdminCustomEmail({
+    to: input.to,
+    subject: input.subject,
+    message: input.message,
+    replyTo: input.replyTo?.trim() || settings?.support_email?.trim() || undefined,
+  });
+
+  return { ok: true };
 }
 
 export async function getAvailabilityAdminRows() {

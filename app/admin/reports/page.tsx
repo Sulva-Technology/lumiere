@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { AdminStatusBadge } from '@/components/admin/status-badge';
+import { TruncatedText } from '@/components/admin/truncated-text';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import type { PaymentRecord } from '@/lib/types';
@@ -40,7 +42,7 @@ export default function AdminReportsPage() {
       )}
 
       <Glass level="medium" className="overflow-hidden border border-[#6d4a13]/35 bg-[#1a1108] p-0">
-        <div className="hidden grid-cols-[1fr_0.9fr_0.8fr_0.8fr_1.2fr_1.2fr] gap-6 border-b border-[#6d4a13]/25 px-6 py-5 text-xs uppercase tracking-[0.24em] text-white/40 xl:grid">
+        <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(90px,0.7fr)_minmax(0,1.35fr)_minmax(0,1fr)] gap-5 border-b border-[#6d4a13]/25 px-6 py-5 text-xs uppercase tracking-[0.24em] text-white/40 xl:grid">
           <span>Payment</span>
           <span>Target</span>
           <span>Status</span>
@@ -51,30 +53,40 @@ export default function AdminReportsPage() {
 
         {payments.length > 0 ? (
           payments.map((payment) => (
-            <div key={payment.id} className="border-b border-[#6d4a13]/18 px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[1fr_0.9fr_0.8fr_0.8fr_1.2fr_1.2fr] xl:items-center xl:gap-6 xl:px-6">
-              <div>
+            <div key={payment.id} className="border-b border-[#6d4a13]/18 px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(90px,0.7fr)_minmax(0,1.35fr)_minmax(0,1fr)] xl:items-center xl:gap-5 xl:px-6">
+              <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Payment</p>
-                <p className="mt-1 break-all font-medium text-white xl:mt-0">{payment.id}</p>
+                <div className="mt-1 xl:mt-0">
+                  <TruncatedText value={payment.id} className="font-medium text-white" mono />
+                </div>
               </div>
-              <div className="mt-4 xl:mt-0">
+              <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Target</p>
-                <p className="mt-1 text-white/80 xl:mt-0">
-                  {payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}
-                </p>
+                <div className="mt-1 space-y-1 xl:mt-0">
+                  <p className="text-white/80">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
+                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-white/45" mono />
+                </div>
               </div>
-              <div className="mt-4 xl:mt-0">
+              <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Status</p>
-                <p className="mt-1 text-white/80 xl:mt-0">{payment.status}</p>
+                <div className="mt-1 xl:mt-0">
+                  <AdminStatusBadge status={payment.status} />
+                </div>
               </div>
-              <div className="mt-4 xl:mt-0">
+              <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Amount</p>
                 <p className="mt-1 font-medium text-[#F0D080] xl:mt-0">{formatCurrency(payment.amount)}</p>
               </div>
-              <div className="mt-4 xl:mt-0">
+              <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Reference</p>
-                <p className="mt-1 break-all text-sm text-white/65 xl:mt-0">{payment.providerReference ?? payment.sessionReference ?? 'Pending assignment'}</p>
+                <div className="mt-1 space-y-1 xl:mt-0">
+                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-white/65" mono />
+                  {payment.sessionReference && payment.sessionReference !== payment.providerReference ? (
+                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-white/40" mono />
+                  ) : null}
+                </div>
               </div>
-              <div className="mt-4 xl:mt-0">
+              <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Updated</p>
                 <p className="mt-1 text-sm text-white/65 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
               </div>

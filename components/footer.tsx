@@ -7,12 +7,9 @@ import { ArrowRight } from 'lucide-react';
 
 type FooterProps = {
   brandName: string;
-  supportEmail?: string;
-  supportPhone?: string | null;
-  bookingContactEmail?: string;
 };
 
-export function Footer({ brandName, supportEmail, supportPhone, bookingContactEmail }: FooterProps) {
+export function Footer({ brandName }: FooterProps) {
   const pathname = usePathname();
 
   if (pathname?.startsWith('/admin')) return null;
@@ -33,7 +30,7 @@ export function Footer({ brandName, supportEmail, supportPhone, bookingContactEm
             </div>
           </div>
 
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-[var(--text-secondary)] sm:text-lg">
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-[#496052] dark:text-[var(--text-secondary)] sm:text-lg">
             itzlolabeauty brings together beauty essentials, makeup artistry, and creator-ready sessions in one polished studio experience.
           </p>
 
@@ -51,64 +48,49 @@ export function Footer({ brandName, supportEmail, supportPhone, bookingContactEm
               Shop Essentials
             </Link>
           </div>
-
-          <div className="mt-8 grid gap-4 border-t border-[rgba(58,77,57,0.12)] pt-6 text-sm text-[var(--text-secondary)] sm:grid-cols-3 dark:border-[rgba(154,177,143,0.12)]">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--text-accent)]">Support</p>
-              <p className="mt-2 break-words text-[var(--text-primary)]">{supportEmail || 'hello@itzlolabeauty.com'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--text-accent)]">Bookings</p>
-              <p className="mt-2 break-words text-[var(--text-primary)]">{bookingContactEmail || supportEmail || 'hello@itzlolabeauty.com'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--text-accent)]">Phone</p>
-              <p className="mt-2 text-[var(--text-primary)]">{supportPhone || 'Available by request'}</p>
-            </div>
-          </div>
         </div>
 
         <div className="md:justify-self-center">
-          <h4 className="mb-4 font-serif text-lg text-[var(--text-primary)]">Explore</h4>
+          <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Explore</h4>
           <div className="flex flex-col gap-3">
-            <Link href="/" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Home
             </Link>
-            <Link href="/shop" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/shop" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Shop
             </Link>
-            <Link href="/book" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/book" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Book
             </Link>
-            <Link href="/contact" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/contact" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Contact
             </Link>
-            <Link href="/track-order" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/track-order" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Track Order
             </Link>
           </div>
         </div>
 
         <div>
-          <h4 className="mb-4 font-serif text-lg text-[var(--text-primary)]">Information</h4>
+          <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
           <div className="flex flex-col gap-3">
-            <Link href="/faq" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               FAQ
             </Link>
-            <Link href="/shipping-returns" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/shipping-returns" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Shipping & Returns
             </Link>
-            <Link href="/privacy-policy" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/privacy-policy" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Privacy Policy
             </Link>
-            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[var(--text-secondary)] transition-colors hover:text-[#3A4D39] dark:hover:text-[#9ab18f]">
+            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Terms of Service
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)]">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[#496052] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)] dark:text-[var(--text-secondary)]">
         <p>Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
         <p className="text-xs uppercase tracking-[0.22em]">Shop beauty. Book confidently.</p>
       </div>

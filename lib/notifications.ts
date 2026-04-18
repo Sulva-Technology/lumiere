@@ -9,6 +9,13 @@ type MailPayload = {
   replyTo?: string;
 };
 
+type AdminCustomEmailPayload = {
+  to: string | string[];
+  subject: string;
+  message: string;
+  replyTo?: string;
+};
+
 type OrderEmailPayload = {
   storeName: string;
   supportEmail: string;
@@ -30,6 +37,7 @@ type BookingEmailPayload = {
   storeName: string;
   supportEmail: string;
   bookingContactEmail: string;
+  stylistEmail?: string | null;
   fullName: string;
   email: string;
   bookingReference: string;
@@ -89,6 +97,23 @@ async function sendMail(payload: MailPayload) {
     to: payload.to,
     subject: payload.subject,
     html: payload.html,
+    replyTo: payload.replyTo,
+  });
+}
+
+export async function sendAdminCustomEmail(payload: AdminCustomEmailPayload) {
+  const html = `
+    <div style="background:#120b05;padding:32px;font-family:Arial,sans-serif;color:#f8f1dd;">
+      <div style="border:1px solid #6d4a13;border-radius:20px;background:#1a1108;padding:24px;">
+        <p style="margin:0;white-space:pre-wrap;line-height:1.7;">${escapeHtml(payload.message)}</p>
+      </div>
+    </div>
+  `;
+
+  await sendMail({
+    to: payload.to,
+    subject: payload.subject,
+    html,
     replyTo: payload.replyTo,
   });
 }
@@ -160,7 +185,9 @@ export async function sendOrderConfirmationEmails(payload: OrderEmailPayload) {
 }
 
 export async function sendBookingConfirmationEmails(payload: BookingEmailPayload) {
-  const internalRecipient = payload.bookingContactEmail || payload.supportEmail;
+  const internalRecipients = Array.from(
+    new Set([payload.stylistEmail, payload.bookingContactEmail, payload.supportEmail].filter(Boolean))
+  ).filter((recipient): recipient is string => Boolean(recipient) && recipient !== payload.email);
   const makeupRows = payload.makeupIntake
     ? [
         ['Appointment Date & Time Needed', payload.makeupIntake.appointmentDateTimeNeeded],
@@ -229,9 +256,9 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
     replyTo: payload.bookingContactEmail || payload.supportEmail,
   });
 
-  if (internalRecipient && internalRecipient !== payload.email) {
+  if (internalRecipients.length > 0) {
     await sendMail({
-      to: internalRecipient,
+      to: internalRecipients,
       subject: `New booking confirmed: ${payload.bookingReference}`,
       html: internalHtml,
       replyTo: payload.email,

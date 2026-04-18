@@ -19,6 +19,7 @@ import {
   Store,
   Clock,
   WandSparkles,
+  Mail,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -32,6 +33,7 @@ const ADMIN_LINKS = [
   { name: 'Services', href: '/admin/services', icon: WandSparkles },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Payments', href: '/admin/reports', icon: BarChart },
+  { name: 'Emails', href: '/admin/emails', icon: Mail },
   { name: 'Availability', href: '/admin/availability', icon: Clock },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 

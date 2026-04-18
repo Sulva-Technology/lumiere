@@ -3,6 +3,7 @@ import { createHostedCheckoutSession } from '@/lib/payments';
 import { getPublicStoreSettings, validateCartLines } from '@/lib/data/public';
 import { createAuditLog } from '@/lib/data/audit';
 import { sendOrderConfirmationEmails } from '@/lib/notifications';
+import { logEvent } from '@/lib/observability';
 import type { CheckoutSummary, CreateCheckoutSessionInput, CreateCheckoutSessionResult } from '@/lib/types';
 
 function nowIso() {
@@ -21,6 +22,39 @@ function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
   if (typeof value === 'string') return Number(value);
   return 0;
+}
+
+type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+type OrderPaymentLookup = {
+  paymentId?: string | null;
+  sessionReference?: string | null;
+  providerReference?: string | null;
+  orderId?: string | null;
+};
+
+async function findOrderPaymentRecord(supabase: AdminClient, lookup: OrderPaymentLookup) {
+  const attempts: Array<{ column: 'id' | 'session_reference' | 'provider_reference' | 'order_id'; value?: string | null }> = [
+    { column: 'id', value: lookup.paymentId },
+    { column: 'session_reference', value: lookup.sessionReference },
+    { column: 'provider_reference', value: lookup.providerReference },
+    { column: 'order_id', value: lookup.orderId },
+  ];
+
+  for (const attempt of attempts) {
+    if (!attempt.value) continue;
+
+    const { data, error } = await supabase
+      .from('payments')
+      .select('id, order_id, status, paid_at, session_reference, provider_reference')
+      .eq(attempt.column, attempt.value)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return data;
+  }
+
+  return null;
 }
 
 export async function buildCheckoutSummary(lines: CreateCheckoutSessionInput['lines']): Promise<CheckoutSummary> {
@@ -92,6 +126,14 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
 
   if (orderError) throw orderError;
 
+  logEvent('info', 'checkout.order_created', {
+    orderId: order.id,
+    orderNumber,
+    email: input.email,
+    total: summary.total,
+    itemsCount: summary.lines.length,
+  });
+
   const lineItems = summary.lines.map((line) => ({
     order_id: order.id,
     product_id: line.productId,
@@ -127,6 +169,13 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
 
   if (paymentError) throw paymentError;
 
+  logEvent('info', 'checkout.payment_created', {
+    paymentId: payment.id,
+    orderId: order.id,
+    amount: summary.total,
+    currency: summary.currency,
+  });
+
   try {
     const session = await createHostedCheckoutSession({
       email: input.email,
@@ -157,16 +206,32 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
       ],
     });
 
-    const { error: updatePaymentError } = await supabase
-      .from('payments')
-      .update({
-        session_reference: session.id,
-        provider_reference: session.id,
-        idempotency_key: session.id,
-      })
-      .eq('id', payment.id);
+    const [{ error: updatePaymentError }, { error: updateOrderError }] = await Promise.all([
+      supabase
+        .from('payments')
+        .update({
+          session_reference: session.id,
+          provider_reference: session.id,
+          idempotency_key: session.id,
+        })
+        .eq('id', payment.id),
+      supabase
+        .from('orders')
+        .update({
+          stripe_checkout_session_id: session.id,
+        })
+        .eq('id', order.id),
+    ]);
 
     if (updatePaymentError) throw updatePaymentError;
+    if (updateOrderError) throw updateOrderError;
+
+    logEvent('info', 'checkout.session_created', {
+      orderId: order.id,
+      paymentId: payment.id,
+      sessionId: session.id,
+      livemode: session.livemode,
+    });
 
     return {
       checkoutUrl: session.url!,
@@ -174,6 +239,12 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
       paymentId: payment.id,
     };
   } catch (error) {
+    logEvent('error', 'checkout.session_create_failed', {
+      orderId: order.id,
+      paymentId: payment.id,
+      reason: error instanceof Error ? error.message : 'Unable to start checkout.',
+    });
+
     await supabase
       .from('payments')
       .update({
@@ -205,17 +276,24 @@ async function decrementInventoryForOrder(orderId: string) {
   }
 }
 
-export async function finalizePaidOrder(paymentId: string, providerReference?: string | null) {
+export async function finalizePaidOrder(input: {
+  paymentId?: string | null;
+  providerReference?: string | null;
+  sessionReference?: string | null;
+  orderId?: string | null;
+}) {
   const supabase = createSupabaseAdminClient();
-  const { data: payment, error: paymentError } = await supabase
-    .from('payments')
-    .select('id, order_id, status, paid_at')
-    .eq('id', paymentId)
-    .maybeSingle();
+  const payment = await findOrderPaymentRecord(supabase, input);
 
-  if (paymentError) throw paymentError;
-  if (!payment?.order_id) return;
-  if (payment.status === 'paid') return;
+  if (!payment?.order_id) {
+    logEvent('warn', 'checkout.order_payment_not_found', {
+      paymentId: input.paymentId ?? null,
+      sessionReference: input.sessionReference ?? null,
+      providerReference: input.providerReference ?? null,
+      orderId: input.orderId ?? null,
+    });
+    return;
+  }
 
   const { data: order, error: orderError } = await supabase
     .from('orders')
@@ -225,25 +303,40 @@ export async function finalizePaidOrder(paymentId: string, providerReference?: s
 
   if (orderError) throw orderError;
 
-  await supabase
-    .from('payments')
-    .update({
-      status: 'paid',
-      paid_at: payment.paid_at ?? nowIso(),
-      provider_reference: providerReference ?? payment.id,
-      reconciliation_state: 'captured',
-    })
-    .eq('id', payment.id)
-    .neq('status', 'paid');
+  const resolvedSessionReference = input.sessionReference ?? payment.session_reference ?? null;
+  const resolvedProviderReference = input.providerReference ?? payment.provider_reference ?? payment.id;
 
   await supabase
     .from('orders')
     .update({
       payment_status: 'paid',
       fulfillment_status: 'processing',
+      stripe_checkout_session_id: resolvedSessionReference,
+      stripe_payment_intent_id: resolvedProviderReference,
     })
-    .eq('id', order.id)
-    .neq('payment_status', 'paid');
+    .eq('id', order.id);
+
+  if (payment.status === 'paid') {
+    logEvent('info', 'checkout.order_payment_already_captured', {
+      orderId: order.id,
+      paymentId: payment.id,
+      sessionReference: resolvedSessionReference,
+      providerReference: resolvedProviderReference,
+    });
+    return;
+  }
+
+  await supabase
+    .from('payments')
+    .update({
+      status: 'paid',
+      paid_at: payment.paid_at ?? nowIso(),
+      session_reference: resolvedSessionReference,
+      provider_reference: resolvedProviderReference,
+      reconciliation_state: 'captured',
+    })
+    .eq('id', payment.id)
+    .neq('status', 'paid');
 
   await decrementInventoryForOrder(order.id);
   await createAuditLog({
@@ -251,6 +344,13 @@ export async function finalizePaidOrder(paymentId: string, providerReference?: s
     entityType: 'order',
     entityId: order.id,
     payload: { paymentId: payment.id },
+  });
+
+  logEvent('info', 'checkout.order_payment_captured', {
+    orderId: order.id,
+    paymentId: payment.id,
+    sessionReference: resolvedSessionReference,
+    providerReference: resolvedProviderReference,
   });
 
   try {
@@ -272,6 +372,11 @@ export async function finalizePaidOrder(paymentId: string, providerReference?: s
       })),
     });
   } catch (notificationError) {
+    logEvent('error', 'checkout.order_confirmation_email_failed', {
+      orderId: order.id,
+      paymentId: payment.id,
+      reason: notificationError instanceof Error ? notificationError.message : 'Unable to send order email.',
+    });
     console.error('Order confirmation email failed', notificationError);
   }
 }

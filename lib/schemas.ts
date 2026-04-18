@@ -161,3 +161,10 @@ export const storeSettingsSchema = z.object({
   homeShopSectionLinkHref: z.string().trim().max(240).optional().or(z.literal('')),
   homeShopSectionItems: z.array(homeShopSectionItemSchema).max(12).optional().default([]),
 });
+
+export const adminEmailSchema = z.object({
+  to: z.string().trim().min(3).max(1000),
+  subject: z.string().trim().min(1).max(180),
+  message: z.string().trim().min(1).max(10000),
+  replyTo: z.string().email().optional().or(z.literal('')),
+});

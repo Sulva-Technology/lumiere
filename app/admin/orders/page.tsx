@@ -1,26 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Mail } from 'lucide-react';
+import { AdminStatusBadge } from '@/components/admin/status-badge';
+import { TruncatedText } from '@/components/admin/truncated-text';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import type { AdminOrderRow } from '@/lib/types';
 
-function paymentTone(status: string) {
-  switch (status) {
-    case 'paid':
-      return 'bg-emerald-500/15 text-emerald-300';
-    case 'payment_failed':
-      return 'bg-red-500/15 text-red-300';
-    case 'cancelled':
-      return 'bg-white/10 text-white/55';
-    default:
-      return 'bg-amber-500/15 text-amber-300';
-  }
-}
-
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [emailingId, setEmailingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -55,6 +46,23 @@ export default function AdminOrdersPage() {
     );
   }
 
+  async function resendEmail(orderId: string) {
+    setEmailingId(orderId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/email`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to resend order email.');
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : 'Unable to resend order email.');
+    } finally {
+      setEmailingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5 pb-10">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -75,7 +83,7 @@ export default function AdminOrdersPage() {
       )}
 
       <Glass level="medium" className="overflow-hidden border border-[#6d4a13]/35 bg-[#1a1108] p-0">
-        <div className="hidden grid-cols-[1.2fr_1.9fr_1.35fr_0.55fr_0.85fr_0.9fr_1.1fr] gap-6 border-b border-[#6d4a13]/25 px-6 py-5 text-xs uppercase tracking-[0.24em] text-white/40 xl:grid">
+        <div className="hidden grid-cols-[minmax(0,1.05fr)_minmax(0,1.6fr)_minmax(0,1.1fr)_minmax(56px,0.4fr)_minmax(90px,0.6fr)_minmax(0,1fr)_minmax(180px,0.95fr)] gap-5 border-b border-[#6d4a13]/25 px-6 py-5 text-xs uppercase tracking-[0.24em] text-white/40 xl:grid">
           <span>Order</span>
           <span>Customer</span>
           <span>Created</span>
@@ -90,53 +98,72 @@ export default function AdminOrdersPage() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="border-b border-[#6d4a13]/18 px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[1.2fr_1.9fr_1.35fr_0.55fr_0.85fr_0.9fr_1.1fr] xl:items-center xl:gap-6 xl:px-6"
+                className="border-b border-[#6d4a13]/18 px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.6fr)_minmax(0,1.1fr)_minmax(56px,0.4fr)_minmax(90px,0.6fr)_minmax(0,1fr)_minmax(180px,0.95fr)] xl:items-center xl:gap-5 xl:px-6"
               >
-                <div className="mb-4 xl:mb-0">
+                <div className="mb-4 min-w-0 xl:mb-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Order</p>
-                  <p className="mt-1 font-semibold text-white xl:mt-0">{order.orderNumber}</p>
+                  <div className="mt-1 xl:mt-0">
+                    <TruncatedText value={order.orderNumber} className="font-semibold text-white" mono />
+                  </div>
                 </div>
 
-                <div className="mb-4 xl:mb-0">
+                <div className="mb-4 min-w-0 xl:mb-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Customer</p>
-                  <p className="mt-1 text-lg text-white xl:mt-0">{order.customerName}</p>
-                  <p className="mt-1 break-all text-sm text-white/50">{order.email}</p>
+                  <div className="mt-1 space-y-1 xl:mt-0">
+                    <TruncatedText value={order.customerName} className="text-lg text-white" />
+                    <TruncatedText value={order.email} className="text-sm text-white/50" />
+                  </div>
                 </div>
 
-                <div className="mb-4 xl:mb-0">
+                <div className="mb-4 min-w-0 xl:mb-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Created</p>
                   <p className="mt-1 text-sm text-white/70 xl:mt-0">{formatDateTime(order.createdAt)}</p>
                 </div>
 
-                <div className="mb-4 xl:mb-0">
+                <div className="mb-4 min-w-0 xl:mb-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Items</p>
                   <p className="mt-1 text-white xl:mt-0">{order.itemsCount}</p>
                 </div>
 
-                <div className="mb-4 xl:mb-0">
+                <div className="mb-4 min-w-0 xl:mb-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Total</p>
                   <p className="mt-1 font-semibold text-[#F0D080] xl:mt-0">{formatCurrency(order.total)}</p>
                 </div>
 
-                <div className="mb-4 xl:mb-0">
+                <div className="mb-4 min-w-0 xl:mb-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Payment</p>
-                  <span className={`mt-1 inline-flex rounded-full px-3 py-1.5 text-xs font-medium uppercase tracking-[0.18em] xl:mt-0 ${paymentTone(order.paymentStatus)}`}>
-                    {order.paymentStatus}
-                  </span>
+                  <div className="mt-1 space-y-2 xl:mt-0">
+                    <AdminStatusBadge status={order.paymentStatus} />
+                    <div className="min-w-0">
+                      <TruncatedText value={order.paymentReference} className="text-xs text-white/45" mono />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-white/35 xl:hidden">Fulfillment</p>
-                  <select
-                    value={order.fulfillmentStatus}
-                    onChange={(event) => updateStatus(order.id, event.target.value)}
-                    className="mt-1 w-full rounded-full border border-[#6d4a13]/50 bg-[#140d05] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D4A847] xl:mt-0"
-                  >
-                    <option value="unfulfilled">Unfulfilled</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                  </select>
+                  <div className="mt-1 flex items-center gap-2 xl:mt-0">
+                    <select
+                      value={order.fulfillmentStatus}
+                      onChange={(event) => updateStatus(order.id, event.target.value)}
+                      className="min-w-0 flex-1 rounded-full border border-[#6d4a13]/50 bg-[#140d05] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D4A847]"
+                      title={order.fulfillmentStatus}
+                    >
+                      <option value="unfulfilled">Unfulfilled</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => resendEmail(order.id)}
+                      disabled={emailingId === order.id || order.paymentStatus !== 'paid'}
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#6d4a13]/45 bg-[#140d05] text-[#F0D080] transition-colors hover:bg-[#20150a] disabled:opacity-50"
+                      title={order.paymentStatus === 'paid' ? 'Resend order email' : 'Only paid orders can resend confirmation emails'}
+                    >
+                      <Mail size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
