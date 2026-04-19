@@ -125,7 +125,6 @@ export default function AdminBookingsPage() {
                       </div>
                       <div className="min-w-0">
                         <TruncatedText value={booking.clientName} className="text-lg font-medium text-[#eef2ea]" />
-                        <TruncatedText value={booking.stylistName} className="text-sm text-[#d7e0d0]/62" />
                       </div>
                     </div>
                   </div>

@@ -2,8 +2,12 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmationEmails, sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
+import { finalizePaidOrder } from '@/lib/data/checkout';
 import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
+import { finalizePaidBooking } from '@/lib/data/public';
+import { logEvent } from '@/lib/observability';
+import { getStripe } from '@/lib/stripe';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -855,6 +859,88 @@ export async function deleteAdminPayment(paymentId: string) {
   const { error } = await supabase.from('payments').delete().eq('id', paymentId);
   if (error) throw error;
   return { ok: true };
+}
+
+export async function reconcileAdminPayment(paymentId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: payment, error } = await supabase
+    .from('payments')
+    .select('id, order_id, booking_id, reservation_id, status, provider_reference, session_reference')
+    .eq('id', paymentId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!payment) throw new Error('Payment not found.');
+  if (payment.status === 'paid') {
+    return { ok: true, state: 'already_paid' as const };
+  }
+
+  const stripe = getStripe();
+  const checkoutSessionId =
+    payment.session_reference?.startsWith('cs_')
+      ? payment.session_reference
+      : payment.provider_reference?.startsWith('cs_')
+        ? payment.provider_reference
+        : null;
+  const paymentIntentId =
+    payment.provider_reference?.startsWith('pi_')
+      ? payment.provider_reference
+      : null;
+
+  let stripePaid = false;
+  let resolvedSessionId: string | null = checkoutSessionId;
+  let resolvedPaymentIntentId: string | null = paymentIntentId;
+
+  if (checkoutSessionId) {
+    const session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
+    resolvedSessionId = session.id;
+    resolvedPaymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : paymentIntentId;
+    stripePaid = session.payment_status === 'paid';
+
+    logEvent('info', 'admin.payment_reconcile_session_checked', {
+      paymentId,
+      sessionId: session.id,
+      livemode: session.livemode,
+      paymentStatus: session.payment_status,
+    });
+  } else if (paymentIntentId) {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    resolvedPaymentIntentId = paymentIntent.id;
+    stripePaid = paymentIntent.status === 'succeeded';
+
+    logEvent('info', 'admin.payment_reconcile_intent_checked', {
+      paymentId,
+      paymentIntentId: paymentIntent.id,
+      livemode: paymentIntent.livemode,
+      status: paymentIntent.status,
+    });
+  } else {
+    throw new Error('This payment has no Stripe checkout session or payment intent reference.');
+  }
+
+  if (!stripePaid) {
+    throw new Error('Stripe does not show this payment as paid yet.');
+  }
+
+  if (payment.reservation_id || payment.booking_id) {
+    await finalizePaidBooking({
+      paymentId: payment.id,
+      sessionReference: resolvedSessionId,
+      providerReference: resolvedPaymentIntentId,
+      reservationId: payment.reservation_id,
+    });
+  } else if (payment.order_id) {
+    await finalizePaidOrder({
+      paymentId: payment.id,
+      sessionReference: resolvedSessionId,
+      providerReference: resolvedPaymentIntentId,
+      orderId: payment.order_id,
+    });
+  } else {
+    throw new Error('Payment is not linked to an order or booking.');
+  }
+
+  return { ok: true, state: 'reconciled' as const };
 }
 
 export async function resendOrderConfirmationEmail(orderId: string) {

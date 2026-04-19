@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { CheckCheck, Trash2 } from 'lucide-react';
 
 import { ActionIconButton } from '@/components/admin/action-icon-button';
 import { AdminStatusBadge } from '@/components/admin/status-badge';
@@ -14,6 +14,7 @@ export default function AdminReportsPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [reconcilingId, setReconcilingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -48,6 +49,25 @@ export default function AdminReportsPage() {
     }
   }
 
+  async function reconcilePayment(payment: PaymentRecord) {
+    setReconcilingId(payment.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/payments/${payment.id}/reconcile`, { method: 'POST' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to reconcile payment.');
+
+      if (json.payment) {
+        setPayments((current) => current.map((item) => (item.id === payment.id ? json.payment : item)));
+      }
+    } catch (reconcileError) {
+      setError(reconcileError instanceof Error ? reconcileError.message : 'Unable to reconcile payment.');
+    } finally {
+      setReconcilingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5 pb-10">
       <div>
@@ -63,19 +83,19 @@ export default function AdminReportsPage() {
       )}
 
       <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
-        <div className="hidden grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,0.78fr)_minmax(90px,0.68fr)_minmax(0,1.2fr)_minmax(0,0.95fr)_72px] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:grid">
+        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_132px] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:grid">
           <span>Payment</span>
           <span>Target</span>
           <span>Status</span>
           <span>Amount</span>
           <span>Reference</span>
           <span>Updated</span>
-          <span className="text-right">Delete</span>
+          <span className="text-right">Actions</span>
         </div>
 
         {payments.length > 0 ? (
           payments.map((payment) => (
-            <div key={payment.id} className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,0.78fr)_minmax(90px,0.68fr)_minmax(0,1.2fr)_minmax(0,0.95fr)_72px] xl:items-center xl:gap-5 xl:px-6">
+            <div key={payment.id} className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_132px] xl:items-center xl:gap-5 xl:px-6">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Payment</p>
                 <div className="mt-1 xl:mt-0">
@@ -112,7 +132,14 @@ export default function AdminReportsPage() {
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Updated</p>
                 <p className="mt-1 text-sm text-[#d7e0d0]/68 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
               </div>
-              <div className="mt-4 flex justify-end xl:mt-0">
+              <div className="mt-4 flex justify-end gap-2 xl:mt-0">
+                <ActionIconButton
+                  title={payment.status === 'paid' ? 'Already confirmed' : 'Confirm from Stripe'}
+                  onClick={() => reconcilePayment(payment)}
+                  disabled={reconcilingId === payment.id || payment.status === 'paid'}
+                >
+                  <CheckCheck size={16} />
+                </ActionIconButton>
                 <ActionIconButton
                   title="Delete payment record"
                   onClick={() => deletePayment(payment)}
