@@ -591,20 +591,53 @@ export async function finalizePaidBooking(input: {
 
   if (reservationError) throw reservationError;
   if (!reservation) return null;
-  const reservationAvailability = relationFirst(reservation.booking_availability);
+  let reservationAvailability = relationFirst(reservation.booking_availability);
 
-  const { data: customer } = await supabase
-    .from('customers')
-    .upsert(
-      {
-        email: reservation.email,
-        full_name: reservation.full_name,
-        phone: reservation.phone,
-      },
-      { onConflict: 'email' }
-    )
-    .select('id')
-    .single();
+  if (!reservationAvailability && reservation.availability_id) {
+    const { data: availability, error: availabilityError } = await supabase
+      .from('booking_availability')
+      .select('starts_at, ends_at')
+      .eq('id', reservation.availability_id)
+      .maybeSingle();
+
+    if (availabilityError) throw availabilityError;
+    reservationAvailability = availability;
+  }
+
+  let customerId: string | null = null;
+
+  try {
+    const { data: customer } = await supabase
+      .from('customers')
+      .upsert(
+        {
+          email: reservation.email,
+          full_name: reservation.full_name,
+          phone: reservation.phone,
+        },
+        { onConflict: 'email' }
+      )
+      .select('id')
+      .single();
+
+    customerId = customer?.id ?? null;
+  } catch (customerError) {
+    logEvent('warn', 'booking.customer_upsert_failed', {
+      reservationId: reservation.id,
+      paymentId: payment.id,
+      reason: customerError instanceof Error ? customerError.message : 'customer_upsert_failed',
+    });
+
+    if (reservation.email) {
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', reservation.email)
+        .maybeSingle();
+
+      customerId = existingCustomer?.id ?? null;
+    }
+  }
 
   const bookingReference = `BKG-${Math.floor(Date.now() / 1000)}`;
 
@@ -612,7 +645,7 @@ export async function finalizePaidBooking(input: {
 
   const bookingPayload = {
     booking_reference: bookingReference,
-    customer_id: customer?.id ?? null,
+    customer_id: customerId,
     stylist_id: reservation.stylist_id,
     service_id: reservation.service_id,
     availability_id: reservation.availability_id,
@@ -648,6 +681,33 @@ export async function finalizePaidBooking(input: {
     if ((bookingError as { code?: string }).code !== '23505') throw bookingError;
     const { data: existing } = await supabase.from('bookings').select('id').eq('availability_id', reservation.availability_id).maybeSingle();
     if (!existing) throw bookingError;
+    await supabase
+      .from('booking_availability')
+      .update({ is_available: false })
+      .eq('id', reservation.availability_id);
+
+    await supabase.from('booking_reservations').update({ reservation_status: 'confirmed' }).eq('id', reservation.id);
+
+    await supabase
+      .from('payments')
+      .update({
+        booking_id: existing.id,
+        status: 'paid',
+        paid_at: payment.paid_at ?? nowIso(),
+        session_reference: resolvedSessionReference,
+        provider_reference: resolvedProviderReference,
+        reconciliation_state: 'captured',
+      })
+      .eq('id', payment.id);
+
+    logEvent('warn', 'booking.payment_attached_existing_booking', {
+      bookingId: existing.id,
+      reservationId: reservation.id,
+      paymentId: payment.id,
+      sessionReference: resolvedSessionReference,
+      providerReference: resolvedProviderReference,
+    });
+
     const existingConfirmation = await getBookingConfirmation(existing.id);
     return existingConfirmation;
   }

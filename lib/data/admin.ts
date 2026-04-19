@@ -981,8 +981,121 @@ export async function reconcileAdminPaymentWithFallback(paymentId: string) {
       reason: error instanceof Error ? error.message : 'stripe_reconcile_failed',
     });
 
-    return reconcileAdminPayment(paymentId, { force: true });
+    try {
+      return await reconcileAdminPayment(paymentId, { force: true });
+    } catch (forceError) {
+      logEvent('error', 'admin.payment_force_confirm_failed', {
+        paymentId,
+        reason: forceError instanceof Error ? forceError.message : 'force_confirm_failed',
+      });
+
+      return rescueAdminPayment(paymentId);
+    }
   }
+}
+
+async function rescueAdminPayment(paymentId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: payment, error } = await supabase
+    .from('payments')
+    .select('id, order_id, booking_id, reservation_id, status, provider_reference, session_reference, paid_at')
+    .eq('id', paymentId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!payment) throw new Error('Payment not found.');
+
+  const paidAt = payment.paid_at ?? new Date().toISOString();
+
+  if (payment.order_id) {
+    await supabase
+      .from('orders')
+      .update({
+        payment_status: 'paid',
+        fulfillment_status: 'processing',
+        stripe_checkout_session_id: payment.session_reference,
+        stripe_payment_intent_id: payment.provider_reference,
+      })
+      .eq('id', payment.order_id);
+
+    await supabase
+      .from('payments')
+      .update({
+        status: 'paid',
+        paid_at: paidAt,
+        reconciliation_state: 'manually_captured',
+      })
+      .eq('id', payment.id);
+
+    await resendOrderConfirmationEmail(payment.order_id);
+
+    return { ok: true, state: 'rescued' as const };
+  }
+
+  if (payment.booking_id) {
+    await supabase
+      .from('bookings')
+      .update({ payment_status: 'paid', status: 'confirmed' })
+      .eq('id', payment.booking_id);
+
+    await supabase
+      .from('payments')
+      .update({
+        status: 'paid',
+        paid_at: paidAt,
+        reconciliation_state: 'manually_captured',
+      })
+      .eq('id', payment.id);
+
+    await resendBookingConfirmationEmail(payment.booking_id);
+
+    return { ok: true, state: 'rescued' as const };
+  }
+
+  if (payment.reservation_id) {
+    const { data: reservation, error: reservationError } = await supabase
+      .from('booking_reservations')
+      .select('id, availability_id')
+      .eq('id', payment.reservation_id)
+      .maybeSingle();
+
+    if (reservationError) throw reservationError;
+
+    if (reservation?.availability_id) {
+      const { data: existingBooking, error: existingBookingError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('availability_id', reservation.availability_id)
+        .maybeSingle();
+
+      if (existingBookingError) throw existingBookingError;
+
+      if (existingBooking) {
+        await supabase
+          .from('bookings')
+          .update({ payment_status: 'paid', status: 'confirmed' })
+          .eq('id', existingBooking.id);
+
+        await supabase.from('booking_availability').update({ is_available: false }).eq('id', reservation.availability_id);
+        await supabase.from('booking_reservations').update({ reservation_status: 'confirmed' }).eq('id', reservation.id);
+        await supabase
+          .from('payments')
+          .update({
+            booking_id: existingBooking.id,
+            status: 'paid',
+            paid_at: paidAt,
+            reconciliation_state: 'manually_captured',
+          })
+          .eq('id', payment.id);
+
+        await resendBookingConfirmationEmail(existingBooking.id);
+
+        return { ok: true, state: 'rescued' as const };
+      }
+    }
+  }
+
+  throw new Error('Payment could not be auto-recovered. Check that the linked order or reservation still exists.');
 }
 
 export async function resendOrderConfirmationEmail(orderId: string) {
