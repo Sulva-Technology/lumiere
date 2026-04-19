@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCheck, Trash2 } from 'lucide-react';
+import { CheckCheck, ShieldCheck, Trash2 } from 'lucide-react';
 
 import { ActionIconButton } from '@/components/admin/action-icon-button';
 import { AdminStatusBadge } from '@/components/admin/status-badge';
@@ -15,6 +15,7 @@ export default function AdminReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [reconcilingId, setReconcilingId] = useState<string | null>(null);
+  const [forcingId, setForcingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -68,6 +69,33 @@ export default function AdminReportsPage() {
     }
   }
 
+  async function forceConfirmPayment(payment: PaymentRecord) {
+    if (!window.confirm('Force-confirm this payment and send the confirmation email? Use this only when you have verified the payment landed in Stripe.')) {
+      return;
+    }
+
+    setForcingId(payment.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/payments/${payment.id}/reconcile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force: true }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Unable to force confirm payment.');
+
+      if (json.payment) {
+        setPayments((current) => current.map((item) => (item.id === payment.id ? json.payment : item)));
+      }
+    } catch (forceError) {
+      setError(forceError instanceof Error ? forceError.message : 'Unable to force confirm payment.');
+    } finally {
+      setForcingId(null);
+    }
+  }
+
   return (
     <div className="space-y-5 pb-10">
       <div>
@@ -83,7 +111,7 @@ export default function AdminReportsPage() {
       )}
 
       <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
-        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_132px] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:grid">
+        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:grid">
           <span>Payment</span>
           <span>Target</span>
           <span>Status</span>
@@ -95,7 +123,7 @@ export default function AdminReportsPage() {
 
         {payments.length > 0 ? (
           payments.map((payment) => (
-            <div key={payment.id} className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_132px] xl:items-center xl:gap-5 xl:px-6">
+            <div key={payment.id} className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] xl:items-center xl:gap-5 xl:px-6">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Payment</p>
                 <div className="mt-1 xl:mt-0">
@@ -139,6 +167,13 @@ export default function AdminReportsPage() {
                   disabled={reconcilingId === payment.id || payment.status === 'paid'}
                 >
                   <CheckCheck size={16} />
+                </ActionIconButton>
+                <ActionIconButton
+                  title={payment.status === 'paid' ? 'Already confirmed' : 'Force confirm manually'}
+                  onClick={() => forceConfirmPayment(payment)}
+                  disabled={forcingId === payment.id || payment.status === 'paid'}
+                >
+                  <ShieldCheck size={16} />
                 </ActionIconButton>
                 <ActionIconButton
                   title="Delete payment record"

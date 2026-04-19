@@ -861,7 +861,7 @@ export async function deleteAdminPayment(paymentId: string) {
   return { ok: true };
 }
 
-export async function reconcileAdminPayment(paymentId: string) {
+export async function reconcileAdminPayment(paymentId: string, options?: { force?: boolean }) {
   const supabase = createSupabaseAdminClient();
   const { data: payment, error } = await supabase
     .from('payments')
@@ -873,6 +873,35 @@ export async function reconcileAdminPayment(paymentId: string) {
   if (!payment) throw new Error('Payment not found.');
   if (payment.status === 'paid') {
     return { ok: true, state: 'already_paid' as const };
+  }
+
+  if (options?.force) {
+    if (payment.reservation_id || payment.booking_id) {
+      await finalizePaidBooking({
+        paymentId: payment.id,
+        sessionReference: payment.session_reference,
+        providerReference: payment.provider_reference,
+        reservationId: payment.reservation_id,
+      });
+    } else if (payment.order_id) {
+      await finalizePaidOrder({
+        paymentId: payment.id,
+        sessionReference: payment.session_reference,
+        providerReference: payment.provider_reference,
+        orderId: payment.order_id,
+      });
+    } else {
+      throw new Error('Payment is not linked to an order or booking.');
+    }
+
+    logEvent('warn', 'admin.payment_force_confirmed', {
+      paymentId,
+      orderId: payment.order_id,
+      bookingId: payment.booking_id,
+      reservationId: payment.reservation_id,
+    });
+
+    return { ok: true, state: 'force_confirmed' as const };
   }
 
   const stripe = getStripe();
