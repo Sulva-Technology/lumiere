@@ -972,6 +972,19 @@ export async function reconcileAdminPayment(paymentId: string, options?: { force
   return { ok: true, state: 'reconciled' as const };
 }
 
+export async function reconcileAdminPaymentWithFallback(paymentId: string) {
+  try {
+    return await reconcileAdminPayment(paymentId);
+  } catch (error) {
+    logEvent('warn', 'admin.payment_reconcile_fallback', {
+      paymentId,
+      reason: error instanceof Error ? error.message : 'stripe_reconcile_failed',
+    });
+
+    return reconcileAdminPayment(paymentId, { force: true });
+  }
+}
+
 export async function resendOrderConfirmationEmail(orderId: string) {
   const supabase = createSupabaseAdminClient();
   const { data: order, error } = await supabase

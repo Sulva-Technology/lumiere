@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCheck, ShieldCheck, Trash2 } from 'lucide-react';
+import { CheckCheck, Trash2 } from 'lucide-react';
 
 import { ActionIconButton } from '@/components/admin/action-icon-button';
 import { AdminStatusBadge } from '@/components/admin/status-badge';
@@ -15,7 +15,6 @@ export default function AdminReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [reconcilingId, setReconcilingId] = useState<string | null>(null);
-  const [forcingId, setForcingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -66,33 +65,6 @@ export default function AdminReportsPage() {
       setError(reconcileError instanceof Error ? reconcileError.message : 'Unable to reconcile payment.');
     } finally {
       setReconcilingId(null);
-    }
-  }
-
-  async function forceConfirmPayment(payment: PaymentRecord) {
-    if (!window.confirm('Force-confirm this payment and send the confirmation email? Use this only when you have verified the payment landed in Stripe.')) {
-      return;
-    }
-
-    setForcingId(payment.id);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/admin/payments/${payment.id}/reconcile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ force: true }),
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Unable to force confirm payment.');
-
-      if (json.payment) {
-        setPayments((current) => current.map((item) => (item.id === payment.id ? json.payment : item)));
-      }
-    } catch (forceError) {
-      setError(forceError instanceof Error ? forceError.message : 'Unable to force confirm payment.');
-    } finally {
-      setForcingId(null);
     }
   }
 
@@ -162,18 +134,11 @@ export default function AdminReportsPage() {
               </div>
               <div className="mt-4 flex justify-end gap-2 xl:mt-0">
                 <ActionIconButton
-                  title={payment.status === 'paid' ? 'Already confirmed' : 'Confirm from Stripe'}
+                  title={payment.status === 'paid' ? 'Already confirmed' : 'Confirm payment'}
                   onClick={() => reconcilePayment(payment)}
                   disabled={reconcilingId === payment.id || payment.status === 'paid'}
                 >
                   <CheckCheck size={16} />
-                </ActionIconButton>
-                <ActionIconButton
-                  title={payment.status === 'paid' ? 'Already confirmed' : 'Force confirm manually'}
-                  onClick={() => forceConfirmPayment(payment)}
-                  disabled={forcingId === payment.id || payment.status === 'paid'}
-                >
-                  <ShieldCheck size={16} />
                 </ActionIconButton>
                 <ActionIconButton
                   title="Delete payment record"
