@@ -5,17 +5,28 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 
+import { useTheme } from '@/components/theme-provider';
+
 type FooterProps = {
   brandName: string;
 };
 
 export function Footer({ brandName }: FooterProps) {
   const pathname = usePathname();
+  const { theme } = useTheme();
 
   if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <footer className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(58,77,57,0.16)] bg-[linear-gradient(180deg,rgba(231,237,225,0.94)_0%,rgba(219,228,214,0.96)_100%)] backdrop-blur-xl dark:border-[rgba(154,177,143,0.12)] dark:bg-[linear-gradient(180deg,rgba(18,41,28,0.96)_0%,rgba(12,29,20,0.98)_100%)]">
+    <footer
+      className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(58,77,57,0.16)] backdrop-blur-xl dark:border-[rgba(154,177,143,0.12)]"
+      style={{
+        background:
+          theme === 'dark'
+            ? 'linear-gradient(180deg, rgba(18,41,28,0.96) 0%, rgba(12,29,20,0.98) 100%)'
+            : 'linear-gradient(180deg, rgba(231,237,225,0.94) 0%, rgba(219,228,214,0.96) 100%)',
+      }}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(139,105,20,0.45)] to-transparent" />
 
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-14 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)_minmax(0,0.9fr)] lg:gap-16 lg:py-16">
