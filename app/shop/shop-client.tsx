@@ -42,9 +42,9 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
     <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
       <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Makeup Essentials</p>
-          <h1 className="mt-3 font-serif text-4xl md:text-5xl">The Makeup Edit</h1>
-          <p className="mt-4 max-w-2xl text-[var(--text-secondary)]">
+          <p className="text-xs uppercase tracking-[0.35em] text-text-secondary">Makeup Essentials</p>
+          <h1 className="mt-3 font-serif text-4xl text-heading-primary md:text-5xl">The Makeup Edit</h1>
+          <p className="mt-4 max-w-2xl text-text-secondary">
             Explore our curated selection of premium makeup artistry tools and complexion essentials, designed for the modern creator.
           </p>
 
@@ -52,7 +52,7 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
             <button
               onClick={() => router.push('/shop')}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                activeCategory === 'all' ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]' : 'glass-subtle'
+                activeCategory === 'all' ? 'bg-forest-950 text-white dark:bg-accent-gold dark:text-forest-950' : 'bg-black/5 text-text-secondary hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10'
               }`}
             >
               All
@@ -62,7 +62,7 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
                 key={category.id}
                 onClick={() => router.push(`/shop?category=${encodeURIComponent(category.slug)}`)}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  activeCategory === category.slug ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]' : 'glass-subtle'
+                  activeCategory === category.slug ? 'bg-forest-950 text-white dark:bg-accent-gold dark:text-forest-950' : 'bg-black/5 text-text-secondary hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10'
                 }`}
               >
                 {category.name}
@@ -80,13 +80,13 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
         </div>
       ) : error ? (
         <Glass level="heavy" className="p-8 text-center">
-          <p className="font-serif text-2xl text-[#1A1008] dark:text-white">Collection unavailable</p>
-          <p className="mt-2 text-[var(--text-secondary)]">{error}</p>
+          <p className="font-serif text-2xl text-heading-primary text-[#1A1008] dark:text-white">Collection unavailable</p>
+          <p className="mt-2 text-text-secondary">{error}</p>
         </Glass>
       ) : products.length === 0 ? (
         <Glass level="heavy" className="p-8 text-center">
-          <p className="font-serif text-2xl text-[#1A1008] dark:text-white">No products in this category yet</p>
-          <p className="mt-2 text-[var(--text-secondary)]">Try another category or come back as new beauty drops go live.</p>
+          <p className="font-serif text-2xl text-heading-primary text-[#1A1008] dark:text-white">No products in this category yet</p>
+          <p className="mt-2 text-text-secondary">Try another category or come back as new beauty drops go live.</p>
         </Glass>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -109,20 +109,20 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
                 </Link>
                 <div className="flex flex-1 flex-col justify-between p-5">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">{product.categoryName ?? 'Collection'}</p>
-                    <Link href={`/product/${product.slug}`} className="mt-2 block font-serif text-2xl text-[#1A1008] dark:text-white">
+                    <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">{product.categoryName ?? 'Collection'}</p>
+                    <Link href={`/product/${product.slug}`} className="mt-2 block font-serif text-2xl text-heading-primary">
                       {product.name}
                     </Link>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">{product.description}</p>
+                    <p className="mt-2 text-sm text-text-secondary">{product.description}</p>
                   </div>
                   <div className="mt-6 flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(product.price)}</p>
-                      <p className="text-xs text-[var(--text-secondary)]">{product.available ? 'In stock' : 'Sold out'}</p>
+                      <p className="font-medium text-accent-gold">{formatCurrency(product.price)}</p>
+                      <p className="text-xs text-text-secondary">{product.available ? 'In stock' : 'Sold out'}</p>
                     </div>
                     <Link
                       href={`/product/${product.slug}`}
-                      className="rounded-full bg-[#8B6914] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                      className="rounded-full bg-forest-950 px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-accent-gold dark:text-forest-950"
                     >
                       View Product
                     </Link>

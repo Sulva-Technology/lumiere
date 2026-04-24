@@ -14,7 +14,7 @@ type ContactInquiryFormProps = {
 };
 
 const fieldClassName =
-  'w-full rounded-[20px] border border-[rgba(58,77,57,0.12)] bg-white/80 px-4 py-3 text-[15px] outline-none placeholder:text-[rgba(22,48,28,0.52)] focus:border-[rgba(139,105,20,0.45)] focus:shadow-[0_0_0_4px_rgba(139,105,20,0.12)] dark:border-[rgba(154,177,143,0.16)] dark:bg-[rgba(12,21,16,0.72)] dark:placeholder:text-[rgba(255,255,255,0.45)]';
+  'w-full rounded-[20px] border border-border-soft bg-white/80 px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-secondary/50 focus:border-accent-gold/50 focus:shadow-[0_0_0_4px_rgba(139,105,20,0.12)] dark:border-white/10 dark:bg-white/5 dark:placeholder:text-white/40';
 
 export function ContactInquiryForm({ className, defaultServiceInterest }: ContactInquiryFormProps) {
   const resolvedInitialService = defaultServiceInterest?.trim() || 'General Inquiry';
@@ -77,13 +77,13 @@ export function ContactInquiryForm({ className, defaultServiceInterest }: Contac
     <form className={cn('space-y-4', className)} onSubmit={handleSubmit}>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="inquiry-name" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+          <label htmlFor="inquiry-name" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
             Name
           </label>
           <input id="inquiry-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className={fieldClassName} placeholder="Your full name" required />
         </div>
         <div className="space-y-2">
-          <label htmlFor="inquiry-email" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+          <label htmlFor="inquiry-email" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
             Email
           </label>
           <input id="inquiry-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={fieldClassName} placeholder="you@example.com" required />
@@ -92,13 +92,13 @@ export function ContactInquiryForm({ className, defaultServiceInterest }: Contac
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="inquiry-phone" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+          <label htmlFor="inquiry-phone" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
             Phone
           </label>
           <input id="inquiry-phone" value={phone} onChange={(event) => setPhone(event.target.value)} className={fieldClassName} placeholder="Best number to reach you" required />
         </div>
         <div className="space-y-2">
-          <label htmlFor="inquiry-date" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+          <label htmlFor="inquiry-date" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
             Event date
           </label>
           <input id="inquiry-date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} className={fieldClassName} />
@@ -107,7 +107,7 @@ export function ContactInquiryForm({ className, defaultServiceInterest }: Contac
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="inquiry-service" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+          <label htmlFor="inquiry-service" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
             Service interested in
           </label>
           <select id="inquiry-service" value={serviceInterest} onChange={(event) => setServiceInterest(event.target.value)} className={fieldClassName} required>
@@ -119,7 +119,7 @@ export function ContactInquiryForm({ className, defaultServiceInterest }: Contac
           </select>
         </div>
         <div className="space-y-2">
-          <label htmlFor="inquiry-location" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+          <label htmlFor="inquiry-location" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
             Location
           </label>
           <input id="inquiry-location" value={location} onChange={(event) => setLocation(event.target.value)} className={fieldClassName} placeholder="City, venue, or service location" required />
@@ -127,7 +127,7 @@ export function ContactInquiryForm({ className, defaultServiceInterest }: Contac
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="inquiry-message" className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--text-secondary)]">
+        <label htmlFor="inquiry-message" className="text-xs font-semibold uppercase tracking-[0.26em] text-text-secondary">
           Message
         </label>
         <textarea
@@ -156,7 +156,7 @@ export function ContactInquiryForm({ className, defaultServiceInterest }: Contac
       <button
         type="submit"
         disabled={status === 'submitting'}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] px-6 py-4 text-sm font-semibold text-white shadow-[0_20px_50px_rgba(139,105,20,0.22)] transition hover:translate-y-[-1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#D4A847] dark:text-[#1A1008]"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-forest-950 px-6 py-4 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-accent-gold dark:text-forest-950"
       >
         {status === 'submitting' ? (
           <>

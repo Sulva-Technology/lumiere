@@ -191,7 +191,7 @@ export default function Home({ settings, services }: HomeClientProps) {
             >
               <Link
                 href="/book"
-                className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-7 py-4 text-sm font-semibold text-white shadow-[0_22px_60px_rgba(139,105,20,0.28)] transition hover:translate-y-[-1px] hover:opacity-95 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                className="inline-flex items-center justify-center rounded-full bg-forest-950 px-7 py-4 text-sm font-semibold text-white shadow-xl transition hover:translate-y-[-1px] hover:opacity-95 dark:bg-accent-gold dark:text-forest-950"
               >
                 Book Your Glam
               </Link>
@@ -231,11 +231,11 @@ export default function Home({ settings, services }: HomeClientProps) {
           transition={{ duration: 0.7 }}
           className="max-w-3xl"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Featured Services</p>
-          <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Featured Services</p>
+          <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
             Compare services quickly, then book with confidence.
           </h2>
-          <p className="mt-5 text-lg leading-relaxed text-[var(--text-secondary)]">
+          <p className="mt-5 text-lg leading-relaxed text-text-secondary">
             Clear offers, starting prices, estimated timing, and the right next step for bridal, event, lesson, and content inquiries.
           </p>
         </motion.div>
@@ -251,30 +251,30 @@ export default function Home({ settings, services }: HomeClientProps) {
               className="flex h-full flex-col justify-between rounded-[28px] border border-[rgba(58,77,57,0.12)] bg-white/78 p-6 shadow-[0_22px_80px_rgba(43,49,38,0.06)] backdrop-blur-sm dark:border-[rgba(154,177,143,0.14)] dark:bg-[rgba(12,21,16,0.74)]"
             >
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(139,105,20,0.10)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8B6914] dark:bg-[rgba(212,168,71,0.12)] dark:text-[#F0D080]">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(139,105,20,0.10)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-gold dark:bg-[rgba(212,168,71,0.12)]">
                   <Sparkles size={14} />
                   Service
                 </div>
-                <h3 className="mt-5 font-serif text-3xl text-[var(--heading-primary)] dark:text-white">{service.name}</h3>
-                <p className="mt-3 leading-7 text-[var(--text-secondary)]">{service.description}</p>
+                <h3 className="mt-5 font-serif text-3xl text-heading-primary">{service.name}</h3>
+                <p className="mt-3 leading-7 text-text-secondary">{service.description}</p>
               </div>
 
-              <div className="mt-8 space-y-4 border-t border-[rgba(58,77,57,0.10)] pt-5 dark:border-[rgba(154,177,143,0.12)]">
+              <div className="mt-8 space-y-4 border-t border-border-soft pt-5">
                 <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-[var(--text-secondary)]">Starting at</span>
-                  <span className="font-semibold text-[var(--heading-primary)] dark:text-white">{service.startingPrice}</span>
+                  <span className="text-text-secondary">Starting at</span>
+                  <span className="font-semibold text-heading-primary">{service.startingPrice}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-[var(--text-secondary)]">Duration</span>
-                  <span className="font-semibold text-[var(--heading-primary)] dark:text-white">{service.duration}</span>
+                  <span className="text-text-secondary">Duration</span>
+                  <span className="font-semibold text-heading-primary">{service.duration}</span>
                 </div>
                 <div className="rounded-[20px] bg-[rgba(58,77,57,0.04)] p-4 dark:bg-[rgba(255,255,255,0.04)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--text-secondary)]">Best for</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-primary)] dark:text-white/88">{service.bestFor}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-secondary">Best for</p>
+                  <p className="mt-2 text-sm leading-6 text-text-primary">{service.bestFor}</p>
                 </div>
                 <Link
                   href={service.href}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-[#17301f] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-forest-950 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 dark:bg-accent-gold dark:text-forest-950"
                 >
                   {service.ctaLabel}
                 </Link>
@@ -293,11 +293,11 @@ export default function Home({ settings, services }: HomeClientProps) {
             transition={{ duration: 0.7 }}
             className="max-w-xl"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Portfolio Preview</p>
-            <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Portfolio Preview</p>
+            <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
               Beauty that holds up in person, on camera, and across the whole event.
             </h2>
-            <p className="mt-5 text-lg leading-relaxed text-[var(--text-secondary)]">
+            <p className="mt-5 text-lg leading-relaxed text-text-secondary">
               From soft glam to creator-ready content days, each look is shaped for the lighting, setting, and story around it.
             </p>
           </motion.div>
@@ -341,8 +341,8 @@ export default function Home({ settings, services }: HomeClientProps) {
           transition={{ duration: 0.7 }}
           className="max-w-3xl"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Why Book With Itz Lola Beauty</p>
-          <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Why Book With Itz Lola Beauty</p>
+          <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
             A warm experience with polished execution from inquiry to final look.
           </h2>
         </motion.div>
@@ -361,11 +361,11 @@ export default function Home({ settings, services }: HomeClientProps) {
                 transition={{ duration: 0.55, delay: index * 0.05 }}
                 className="rounded-[28px] border border-[rgba(58,77,57,0.12)] bg-white/76 p-7 shadow-[0_22px_80px_rgba(43,49,38,0.05)] dark:border-[rgba(154,177,143,0.14)] dark:bg-[rgba(12,21,16,0.72)]"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(139,105,20,0.10)] text-[#8B6914] dark:bg-[rgba(212,168,71,0.12)] dark:text-[#F0D080]">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(139,105,20,0.10)] text-accent-gold dark:bg-[rgba(212,168,71,0.12)]">
                   <Icon size={22} />
                 </div>
-                <h3 className="mt-5 font-serif text-3xl text-[var(--heading-primary)] dark:text-white">{reason.title}</h3>
-                <p className="mt-4 leading-7 text-[var(--text-secondary)]">{reason.description}</p>
+                <h3 className="mt-5 font-serif text-3xl text-heading-primary">{reason.title}</h3>
+                <p className="mt-4 leading-7 text-text-secondary">{reason.description}</p>
               </motion.article>
             );
           })}
@@ -381,8 +381,8 @@ export default function Home({ settings, services }: HomeClientProps) {
             transition={{ duration: 0.7 }}
             className="max-w-3xl"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Booking Process</p>
-            <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Booking Process</p>
+            <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
               A simple three-step path from interest to appointment confirmation.
             </h2>
           </motion.div>
@@ -397,9 +397,9 @@ export default function Home({ settings, services }: HomeClientProps) {
                 transition={{ duration: 0.55, delay: index * 0.06 }}
                 className="rounded-[28px] bg-white/72 p-6 dark:bg-[rgba(255,255,255,0.04)]"
               >
-                <p className="text-5xl font-serif text-[#8B6914] dark:text-[#F0D080]">0{index + 1}</p>
-                <h3 className="mt-4 font-serif text-3xl text-[var(--heading-primary)] dark:text-white">{step.title}</h3>
-                <p className="mt-3 leading-7 text-[var(--text-secondary)]">{step.description}</p>
+                <p className="text-5xl font-serif text-accent-gold">0{index + 1}</p>
+                <h3 className="mt-4 font-serif text-3xl text-heading-primary">{step.title}</h3>
+                <p className="mt-3 leading-7 text-text-secondary">{step.description}</p>
               </motion.article>
             ))}
           </div>
@@ -443,8 +443,8 @@ export default function Home({ settings, services }: HomeClientProps) {
           transition={{ duration: 0.7 }}
           className="max-w-3xl"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Testimonials</p>
-          <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Testimonials</p>
+          <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
             Clients come for the glam, and remember how cared for they felt.
           </h2>
         </motion.div>
@@ -459,15 +459,15 @@ export default function Home({ settings, services }: HomeClientProps) {
               transition={{ duration: 0.55, delay: index * 0.05 }}
               className="rounded-[28px] border border-[rgba(58,77,57,0.12)] bg-white/78 p-7 shadow-[0_20px_70px_rgba(43,49,38,0.05)] dark:border-[rgba(154,177,143,0.14)] dark:bg-[rgba(12,21,16,0.72)]"
             >
-              <div className="flex items-center gap-2 text-[#8B6914] dark:text-[#F0D080]">
+              <div className="flex items-center gap-2 text-accent-gold">
                 {Array.from({ length: 5 }).map((_, starIndex) => (
                   <Star key={starIndex} size={16} fill="currentColor" />
                 ))}
               </div>
-              <p className="mt-5 text-lg leading-8 text-[var(--heading-primary)] dark:text-white/90">&ldquo;{testimonial.quote}&rdquo;</p>
+              <p className="mt-5 text-lg leading-8 text-heading-primary dark:text-white/90">&ldquo;{testimonial.quote}&rdquo;</p>
               <footer className="mt-6">
-                <p className="font-semibold text-[var(--heading-primary)] dark:text-white">{testimonial.name}</p>
-                <p className="text-sm text-[var(--text-secondary)]">{testimonial.context}</p>
+                <p className="font-semibold text-heading-primary">{testimonial.name}</p>
+                <p className="text-sm text-text-secondary">{testimonial.context}</p>
               </footer>
             </motion.blockquote>
           ))}
@@ -483,16 +483,16 @@ export default function Home({ settings, services }: HomeClientProps) {
             transition={{ duration: 0.7 }}
             className="max-w-xl"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Policies Preview</p>
-            <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Policies Preview</p>
+            <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
               Clear, respectful policies that protect your date without feeling harsh.
             </h2>
-            <p className="mt-5 text-lg leading-relaxed text-[var(--text-secondary)]">
+            <p className="mt-5 text-lg leading-relaxed text-text-secondary">
               The essentials are easy to scan here, with the full policy page available for planning bridal or custom bookings in more detail.
             </p>
             <Link
               href="/policies"
-              className="mt-8 inline-flex items-center gap-2 rounded-full border border-[rgba(58,77,57,0.18)] px-6 py-3 text-sm font-semibold text-[var(--heading-primary)] transition hover:bg-black/5 dark:border-[rgba(154,177,143,0.18)] dark:text-white dark:hover:bg-white/5"
+              className="mt-8 inline-flex items-center gap-2 rounded-full border border-border-soft px-6 py-3 text-sm font-semibold text-heading-primary transition hover:bg-black/5 dark:text-white dark:hover:bg-white/5"
             >
               Read full policies
               <ArrowRight size={16} />
@@ -509,8 +509,8 @@ export default function Home({ settings, services }: HomeClientProps) {
                 transition={{ duration: 0.55, delay: index * 0.04 }}
                 className="rounded-[26px] border border-[rgba(58,77,57,0.12)] bg-white/78 p-6 shadow-[0_20px_70px_rgba(43,49,38,0.05)] dark:border-[rgba(154,177,143,0.14)] dark:bg-[rgba(12,21,16,0.72)]"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#8B6914] dark:text-[#F0D080]">{policy.title}</p>
-                <p className="mt-3 leading-7 text-[var(--text-secondary)]">{policy.summary}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-accent-gold">{policy.title}</p>
+                <p className="mt-3 leading-7 text-text-secondary">{policy.summary}</p>
               </motion.article>
             ))}
           </div>
@@ -525,8 +525,8 @@ export default function Home({ settings, services }: HomeClientProps) {
           transition={{ duration: 0.7 }}
           className="max-w-3xl"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">FAQ</p>
-          <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">FAQ</p>
+          <h2 className="mt-4 font-serif text-4xl text-heading-primary sm:text-5xl">
             The questions most clients ask before they reserve their date.
           </h2>
         </motion.div>
@@ -543,27 +543,27 @@ export default function Home({ settings, services }: HomeClientProps) {
             transition={{ duration: 0.7 }}
             className="rounded-[32px] border border-[rgba(58,77,57,0.12)] bg-[linear-gradient(135deg,rgba(248,241,233,0.98),rgba(241,236,229,0.94))] p-7 shadow-[0_25px_90px_rgba(52,42,30,0.08)] dark:border-[rgba(154,177,143,0.14)] dark:bg-[linear-gradient(135deg,rgba(21,30,24,0.96),rgba(11,18,15,0.98))]"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">Contact / Inquiry</p>
-            <h2 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] dark:text-white">Tell us about your date, your look, and what kind of support you need.</h2>
-            <p className="mt-5 text-lg leading-relaxed text-[var(--text-secondary)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-accent-gold">Contact / Inquiry</p>
+            <h2 className="mt-4 font-serif text-4xl text-heading-primary">Tell us about your date, your look, and what kind of support you need.</h2>
+            <p className="mt-5 text-lg leading-relaxed text-text-secondary">
               Bridal, event, content creation, and custom beauty requests can all start here. If you already know your service and want to move quickly, online booking is still available.
             </p>
 
             <div className="mt-8 space-y-4">
               {supportDetails.map((detail) => (
                 <div key={detail} className="flex items-start gap-3 rounded-[22px] bg-white/70 px-4 py-4 dark:bg-[rgba(255,255,255,0.04)]">
-                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(139,105,20,0.10)] text-[#8B6914] dark:bg-[rgba(212,168,71,0.12)] dark:text-[#F0D080]">
+                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(139,105,20,0.10)] text-accent-gold dark:bg-[rgba(212,168,71,0.12)]">
                     {detail.includes('Support') ? <Clock3 size={18} /> : <CalendarHeart size={18} />}
                   </div>
-                  <p className="text-sm leading-6 text-[var(--text-primary)] dark:text-white/88">{detail}</p>
+                  <p className="text-sm leading-6 text-text-primary dark:text-white/88">{detail}</p>
                 </div>
               ))}
 
               <div className="flex items-start gap-3 rounded-[22px] bg-white/70 px-4 py-4 dark:bg-[rgba(255,255,255,0.04)]">
-                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(139,105,20,0.10)] text-[#8B6914] dark:bg-[rgba(212,168,71,0.12)] dark:text-[#F0D080]">
+                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(139,105,20,0.10)] text-accent-gold dark:bg-[rgba(212,168,71,0.12)]">
                   <Camera size={18} />
                 </div>
-                <p className="text-sm leading-6 text-[var(--text-primary)] dark:text-white/88">
+                <p className="text-sm leading-6 text-text-primary dark:text-white/88">
                   Creator sessions, event glam, and bridal beauty all receive a tailored response based on date, location, and timing needs.
                 </p>
               </div>
@@ -572,13 +572,13 @@ export default function Home({ settings, services }: HomeClientProps) {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/book"
-                className="inline-flex items-center justify-center rounded-full bg-[#17301f] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                className="inline-flex items-center justify-center rounded-full bg-forest-950 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 dark:bg-accent-gold dark:text-forest-950"
               >
                 Book now
               </Link>
               <Link
                 href="/about"
-                className="inline-flex items-center justify-center rounded-full border border-[rgba(58,77,57,0.18)] px-6 py-3 text-sm font-semibold text-[var(--heading-primary)] transition hover:bg-black/5 dark:border-[rgba(154,177,143,0.18)] dark:text-white dark:hover:bg-white/5"
+                className="inline-flex items-center justify-center rounded-full border border-border-soft px-6 py-3 text-sm font-semibold text-heading-primary transition hover:bg-black/5 dark:text-white dark:hover:bg-white/5"
               >
                 Meet the artist
               </Link>

@@ -239,17 +239,348 @@ function BookingPageContent() {
   ];
 
   if (success) {
-    return <div className="mx-auto max-w-4xl px-4 py-20"><Glass level="heavy" className="p-10 text-center"><div className="mb-6 flex justify-center"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500"><Check size={40} /></div></div><h2 className="font-serif text-4xl text-[#1A1008] dark:text-white">Payment Received</h2><p className="mt-4 text-lg text-[var(--text-secondary)]">{statusMessage ?? 'Your appointment is being finalized. Confirmation details will follow shortly.'}</p>{reservation?.id && <p className="mt-6 text-sm text-[var(--text-secondary)]">Reference hold: {reservation.id}</p>}</Glass></div>;
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-20">
+        <Glass level="heavy" className="p-10 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500">
+              <Check size={40} />
+            </div>
+          </div>
+          <h2 className="font-serif text-4xl text-heading-primary">Payment Received</h2>
+          <p className="mt-4 text-lg text-text-secondary">
+            {statusMessage ?? 'Your appointment is being finalized. Confirmation details will follow shortly.'}
+          </p>
+          {reservation?.id && <p className="mt-6 text-sm text-text-secondary">Reference hold: {reservation.id}</p>}
+        </Glass>
+      </div>
+    );
   }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-      {statusMessage && <Glass level="medium" className="mb-6 p-4 text-sm text-[var(--text-secondary)]">{statusMessage}</Glass>}
-      <div className="mb-8 flex justify-between gap-2 sm:px-10">{steps.map((step) => <div key={step.key} className="flex flex-col items-center"><div className={`flex h-12 w-12 items-center justify-center rounded-full ${currentStep === step.key ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]' : 'bg-black/5 text-[var(--text-secondary)] dark:bg-white/5'}`}><step.icon size={20} /></div><span className="mt-3 hidden text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] sm:block">{step.label}</span></div>)}</div>
+      {statusMessage && <Glass level="medium" className="mb-6 p-4 text-sm text-text-secondary">{statusMessage}</Glass>}
+      <div className="mb-8 flex justify-between gap-2 sm:px-10">
+        {steps.map((step) => (
+          <div key={step.key} className="flex flex-col items-center">
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                currentStep === step.key
+                  ? 'bg-forest-950 text-white dark:bg-accent-gold dark:text-forest-950'
+                  : 'bg-black/5 text-text-secondary dark:bg-white/5'
+              }`}
+            >
+              <step.icon size={20} />
+            </div>
+            <span className="mt-3 hidden text-[10px] font-bold uppercase tracking-[0.2em] text-text-secondary sm:block">
+              {step.label}
+            </span>
+          </div>
+        ))}
+      </div>
       <AnimatePresence mode="wait">
-        {currentStep === 'service' && <motion.div key="service" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6"><header className="text-center"><h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Choose Your Service</h1><p className="mt-4 text-[var(--text-secondary)]">Start by choosing between makeup services and content services, then pick your time and continue to secure checkout.</p></header><div className="mx-auto flex max-w-md rounded-full bg-black/5 p-1 dark:bg-white/5">{TYPE_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => { setServiceType(option.value); setSelectedService(''); }} className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition ${serviceType === option.value ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]' : 'text-[var(--text-secondary)]'}`}><option.icon size={16} />{option.label}</button>)}</div><div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{filteredServices.map((service) => { const Icon = service.serviceType === 'content' ? Camera : Sparkles; return <button key={service.id} onClick={() => { setSelectedService(service.id); setCurrentStep('availability'); }} className={`rounded-3xl border p-6 text-left transition-all hover:scale-[1.02] ${selectedService === service.id ? 'border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]' : 'border-black/5 dark:border-white/5'}`}><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]">{service.serviceType}</p><h3 className="mt-3 font-serif text-2xl text-[#1A1008] dark:text-white">{service.name}</h3><p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{service.description}</p></div><Icon className="shrink-0 text-[#8B6914] opacity-40 dark:text-[#D4A847]" /></div><div className="mt-8 flex items-center justify-between border-t border-black/5 pt-4 dark:border-white/5"><p className="text-sm font-medium text-[var(--text-secondary)]">{service.durationMinutes} minutes</p><p className="font-serif text-2xl text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(service.price)}</p></div></button>; })}</div>{filteredServices.length === 0 && <Glass level="medium" className="p-8 text-center text-[var(--text-secondary)]">No {serviceType} services are active yet.</Glass>}</motion.div>}
-        {currentStep === 'availability' && <motion.div key="availability" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6"><header className="text-center"><h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Choose a Time</h1><p className="mt-4 text-[var(--text-secondary)]">Select a live opening for {selectedServiceDetail?.name}.</p></header><div className="mx-auto max-w-2xl">{availability.length > 0 ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{availability.map((slot) => <button key={slot.id} onClick={() => { setSelectedAvailability(slot.id); setCurrentStep('details'); }} className={`flex flex-col rounded-2xl border p-5 text-left transition-all hover:scale-[1.02] ${selectedAvailability === slot.id ? 'border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]' : 'border-black/5 bg-white/5 dark:border-white/5'}`}><div className="flex items-center gap-2 text-[var(--text-secondary)]"><Calendar size={14} /><span className="text-xs uppercase tracking-widest">{new Date(slot.startsAt).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span></div><div className="mt-3 flex items-center justify-between"><span className="font-serif text-2xl text-[#1A1008] dark:text-white">{new Date(slot.startsAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span><ChevronRight size={18} className="text-[#8B6914] dark:text-[#D4A847]" /></div></button>)}</div> : <Glass level="medium" className="p-12 text-center"><Clock size={32} className="mx-auto mb-4 text-[var(--text-secondary)] opacity-30" /><p className="text-[var(--text-secondary)]">No available appointments were found for the next few days.</p></Glass>}<button onClick={() => setCurrentStep('service')} className="mt-6 text-sm text-[var(--text-secondary)] underline underline-offset-4">Back to services</button></div></motion.div>}
-        {currentStep === 'details' && <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6"><header className="text-center"><h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">{isMakeupService ? 'Complete Your Makeup Booking Form' : 'Complete Your Booking'}</h1><p className="mt-4 text-[var(--text-secondary)]">We will hold your appointment briefly while you complete secure payment.</p></header><div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]"><Glass level="heavy" className="p-8"><form id="booking-form" onSubmit={handleSubmit} className="space-y-5"><div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Full Name</label><input value={fullName} onChange={(event) => setFullName(event.target.value)} required className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5" /></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Email Address</label><input value={email} onChange={(event) => setEmail(event.target.value)} required type="email" className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5" /></div></div><div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Phone Number</label><input value={phone} onChange={(event) => setPhone(event.target.value)} required className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5" /></div>{isMakeupService && <div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Appointment Date & Time Needed</label><input value={appointmentDateTimeNeeded} readOnly className="w-full rounded-2xl bg-black/5 px-5 py-3 text-[var(--text-secondary)] outline-none dark:bg-white/5" /></div>}</div>{isMakeupService ? <><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">What is the occasion?</label><input value={occasion} onChange={(event) => setOccasion(event.target.value)} required className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5" /></div><div className="space-y-3"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Do you have a reference/inspiration photo? (Please upload or describe your desired look)</label><label className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-[#8B6914]/30 bg-[#8B6914]/5 px-5 py-4 text-sm text-[var(--text-secondary)] dark:border-[#D4A847]/30 dark:bg-[#D4A847]/5"><UploadCloud size={18} className="text-[#8B6914] dark:text-[#D4A847]" />{uploadingReference ? 'Uploading inspiration photo...' : referenceImageUrl ? 'Replace inspiration photo' : 'Upload inspiration photo'}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleReferenceUpload(file); }} /></label>{referenceImageUrl && <div className="relative h-40 overflow-hidden rounded-2xl border border-black/5 dark:border-white/10"><Image src={referenceImageUrl} alt="Reference upload preview" fill className="object-cover" sizes="(min-width: 1024px) 30vw, 100vw" /></div>}<textarea value={referenceDescription} onChange={(event) => setReferenceDescription(event.target.value)} required className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" /></div><div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">What type of look are you going for?</label><select value={lookType} onChange={(event) => setLookType(event.target.value as MakeupLookType)} className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5">{LOOK_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">What is your skin type?</label><select value={skinType} onChange={(event) => setSkinType(event.target.value as MakeupSkinType)} className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5">{SKIN_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></div></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Do you have any skin conditions or allergies I should be aware of?</label><textarea value={skinConditionsOrAllergies} onChange={(event) => setSkinConditionsOrAllergies(event.target.value)} required className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" /></div><div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Will you need lashes included?</label><select value={lashesPreference} onChange={(event) => setLashesPreference(event.target.value as MakeupLashesPreference)} className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5">{LASH_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Have you had your makeup done professionally before? (Yes/No)</label><select value={hadProfessionalMakeupBefore} onChange={(event) => setHadProfessionalMakeupBefore(event.target.value as MakeupHistoryAnswer)} className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5">{HISTORY_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></div></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">If yes, anything you liked or did not like?</label><textarea value={priorExperienceNotes} onChange={(event) => setPriorExperienceNotes(event.target.value)} className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" /></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Any product preferences or restrictions? (Optional)</label><textarea value={productPreferencesOrRestrictions} onChange={(event) => setProductPreferencesOrRestrictions(event.target.value)} className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" /></div><div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Notes for Artist</label><textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" /></div></> : <div className="space-y-2"><label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Session Notes</label><textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5" /></div>}</form></Glass><div className="space-y-6"><Glass level="medium" className="p-6"><h3 className="font-serif text-xl text-[#1A1008] dark:text-white">Review Summary</h3><div className="mt-6 space-y-4 text-sm"><div className="flex justify-between"><span className="text-[var(--text-secondary)]">Service</span><span className="font-medium">{selectedServiceDetail?.name}</span></div><div className="flex justify-between"><span className="text-[var(--text-secondary)]">Artist</span><span className="font-medium">{selectedStylistDetail?.name}</span></div><div className="flex justify-between"><span className="text-[var(--text-secondary)]">Date & Time</span><span className="text-right font-medium">{appointmentDateTimeNeeded || '-'}</span></div>{isMakeupService && <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Occasion</span><span className="text-right font-medium">{occasion || '-'}</span></div>}<div className="border-t border-black/5 pt-4 dark:border-white/5"><div className="flex justify-between text-lg font-bold"><span className="text-[#1A1008] dark:text-white">Total</span><span className="text-[#8B6914] dark:text-[#F0D080]">{selectedServiceDetail ? formatCurrency(selectedServiceDetail.price) : '-'}</span></div></div></div></Glass><button form="booking-form" type="submit" disabled={saving || uploadingReference || !formReady} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-5 font-bold text-white transition-all hover:shadow-xl hover:shadow-[#8B6914]/20 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]">{saving ? 'Preparing secure checkout...' : 'Continue to secure checkout'}<ChevronRight size={20} /></button><button onClick={() => setCurrentStep('availability')} className="w-full text-sm text-[var(--text-secondary)]">Change time</button></div></div>{error && <p className="mt-4 text-center text-sm text-red-500">{error}</p>}</motion.div>}
+        {currentStep === 'service' && (
+          <motion.div key="service" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+            <header className="text-center">
+              <h1 className="font-serif text-4xl text-heading-primary">Choose Your Service</h1>
+              <p className="mt-4 text-text-secondary">
+                Start by choosing between makeup services and content services, then pick your time and continue to secure checkout.
+              </p>
+            </header>
+            <div className="mx-auto flex max-w-md rounded-full bg-black/5 p-1 dark:bg-white/5">
+              {TYPE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setServiceType(option.value);
+                    setSelectedService('');
+                  }}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition ${
+                    serviceType === option.value
+                      ? 'bg-forest-950 text-white dark:bg-accent-gold dark:text-forest-950'
+                      : 'text-text-secondary'
+                  }`}
+                >
+                  <option.icon size={16} />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {filteredServices.map((service) => {
+                const Icon = service.serviceType === 'content' ? Camera : Sparkles;
+                return (
+                  <button
+                    key={service.id}
+                    onClick={() => {
+                      setSelectedService(service.id);
+                      setCurrentStep('availability');
+                    }}
+                    className={`rounded-3xl border p-6 text-left transition-all hover:scale-[1.02] ${
+                      selectedService === service.id
+                        ? 'border-accent-gold bg-accent-gold/5 dark:border-accent-gold'
+                        : 'border-black/5 dark:border-white/5'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-text-secondary">{service.serviceType}</p>
+                        <h3 className="mt-3 font-serif text-2xl text-heading-primary">{service.name}</h3>
+                        <p className="mt-2 text-sm leading-relaxed text-text-secondary">{service.description}</p>
+                      </div>
+                      <Icon className="shrink-0 text-accent-gold opacity-40" />
+                    </div>
+                    <div className="mt-8 flex items-center justify-between border-t border-border-soft pt-4">
+                      <p className="text-sm font-medium text-text-secondary">{service.durationMinutes} minutes</p>
+                      <p className="font-serif text-2xl text-accent-gold">{formatCurrency(service.price)}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {filteredServices.length === 0 && (
+              <Glass level="medium" className="p-8 text-center text-text-secondary">
+                No {serviceType} services are active yet.
+              </Glass>
+            )}
+          </motion.div>
+        )}
+        {currentStep === 'availability' && (
+          <motion.div key="availability" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+            <header className="text-center">
+              <h1 className="font-serif text-4xl text-heading-primary">Choose a Time</h1>
+              <p className="mt-4 text-text-secondary">Select a live opening for {selectedServiceDetail?.name}.</p>
+            </header>
+            <div className="mx-auto max-w-2xl">
+              {availability.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {availability.map((slot) => (
+                    <button
+                      key={slot.id}
+                      onClick={() => {
+                        setSelectedAvailability(slot.id);
+                        setCurrentStep('details');
+                      }}
+                      className={`flex flex-col rounded-2xl border p-5 text-left transition-all hover:scale-[1.02] ${
+                        selectedAvailability === slot.id
+                          ? 'border-accent-gold bg-accent-gold/5 dark:border-accent-gold'
+                          : 'border-border-soft bg-white/5 dark:border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 text-text-secondary">
+                        <Calendar size={14} />
+                        <span className="text-xs uppercase tracking-widest">
+                          {new Date(slot.startsAt).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="font-serif text-2xl text-heading-primary">
+                          {new Date(slot.startsAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <ChevronRight size={18} className="text-accent-gold" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <Glass level="medium" className="p-12 text-center">
+                  <Clock size={32} className="mx-auto mb-4 text-text-secondary opacity-30" />
+                  <p className="text-text-secondary">No available appointments were found for the next few days.</p>
+                </Glass>
+              )}
+              <button onClick={() => setCurrentStep('service')} className="mt-6 text-sm text-text-secondary underline underline-offset-4">
+                Back to services
+              </button>
+            </div>
+          </motion.div>
+        )}
+        {currentStep === 'details' && (
+          <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+            <header className="text-center">
+              <h1 className="font-serif text-4xl text-heading-primary">
+                {isMakeupService ? 'Complete Your Makeup Intake' : 'Complete Your Booking'}
+              </h1>
+              <p className="mt-4 text-text-secondary">We will hold your appointment briefly while you complete secure payment.</p>
+            </header>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
+              <Glass level="heavy" className="p-8">
+                <form id="booking-form" onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Full Name</label>
+                      <input
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        required
+                        className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-primary outline-none dark:bg-white/5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Email Address</label>
+                      <input
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        required
+                        type="email"
+                        className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-primary outline-none dark:bg-white/5"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Phone Number</label>
+                      <input
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
+                        required
+                        className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-primary outline-none dark:bg-white/5"
+                      />
+                    </div>
+                    {isMakeupService && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Appointment Date & Time Needed</label>
+                        <input
+                          value={appointmentDateTimeNeeded}
+                          readOnly
+                          className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-secondary outline-none dark:bg-white/5"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {isMakeupService ? (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">What is the occasion?</label>
+                        <input
+                          value={occasion}
+                          onChange={(event) => setOccasion(event.target.value)}
+                          required
+                          className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-primary outline-none dark:bg-white/5"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">
+                          Do you have a reference/inspiration photo?
+                        </label>
+                        <label className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-accent-gold/30 bg-accent-gold/5 px-5 py-4 text-sm text-text-secondary">
+                          <UploadCloud size={18} className="text-accent-gold" />
+                          {uploadingReference ? 'Uploading...' : referenceImageUrl ? 'Replace photo' : 'Upload photo'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) void handleReferenceUpload(file);
+                            }}
+                          />
+                        </label>
+                        {referenceImageUrl && (
+                          <div className="relative h-40 overflow-hidden rounded-2xl border border-border-soft">
+                            <Image src={referenceImageUrl} alt="Reference preview" fill className="object-cover" />
+                          </div>
+                        )}
+                        <textarea
+                          placeholder="Describe your desired look or add specific notes about colors/styles..."
+                          value={referenceDescription}
+                          onChange={(event) => setReferenceDescription(event.target.value)}
+                          required
+                          className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 text-text-primary outline-none dark:bg-white/5"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Look Type</label>
+                          <select
+                            value={lookType}
+                            onChange={(event) => setLookType(event.target.value as MakeupLookType)}
+                            className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-primary outline-none dark:bg-white/5"
+                          >
+                            {LOOK_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Skin Type</label>
+                          <select
+                            value={skinType}
+                            onChange={(event) => setSkinType(event.target.value as MakeupSkinType)}
+                            className="w-full rounded-2xl bg-black/5 px-5 py-3 text-text-primary outline-none dark:bg-white/5"
+                          >
+                            {SKIN_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">
+                          Skin conditions or allergies?
+                        </label>
+                        <textarea
+                          value={skinConditionsOrAllergies}
+                          onChange={(event) => setSkinConditionsOrAllergies(event.target.value)}
+                          required
+                          className="min-h-[100px] w-full rounded-3xl bg-black/5 px-5 py-4 text-text-primary outline-none dark:bg-white/5"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Session Notes</label>
+                      <textarea
+                        value={notes}
+                        onChange={(event) => setNotes(event.target.value)}
+                        className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 text-text-primary outline-none dark:bg-white/5"
+                      />
+                    </div>
+                  )}
+                </form>
+              </Glass>
+
+              <div className="space-y-6">
+                <Glass level="medium" className="p-6">
+                  <h3 className="font-serif text-xl text-heading-primary">Review Summary</h3>
+                  <div className="mt-6 space-y-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Service</span>
+                      <span className="font-semibold text-heading-primary">{selectedServiceDetail?.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Date & Time</span>
+                      <span className="text-right font-semibold text-heading-primary">{appointmentDateTimeNeeded || '-'}</span>
+                    </div>
+                    <div className="border-t border-border-soft pt-4">
+                      <div className="flex justify-between text-lg font-bold">
+                        <span className="text-heading-primary">Total</span>
+                        <span className="text-accent-gold">{selectedServiceDetail ? formatCurrency(selectedServiceDetail.price) : '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Glass>
+                <button
+                  form="booking-form"
+                  type="submit"
+                  disabled={saving || uploadingReference || !formReady}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-forest-950 py-5 font-bold text-white shadow-xl transition-all hover:opacity-95 disabled:opacity-50 dark:bg-accent-gold dark:text-forest-950"
+                >
+                  {saving ? 'Preparing checkout...' : 'Continue to secure checkout'}
+                  <ChevronRight size={20} />
+                </button>
+                <button onClick={() => setCurrentStep('availability')} className="w-full text-sm text-text-secondary">
+                  Change time
+                </button>
+              </div>
+            </div>
+            {error && <p className="mt-4 text-center text-sm text-red-500">{error}</p>}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

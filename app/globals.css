@@ -19,6 +19,12 @@
   --color-moss-light: #9ab18f;
   --color-moss-base: #6c8b67;
   --color-moss-dark: #3A4D39;
+
+  /* Theme Tokens */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-heading-primary: var(--heading-primary);
+  --color-accent-gold: var(--accent-gold);
 }
 
 @layer base {
@@ -30,6 +36,7 @@
     --text-secondary: rgba(22, 48, 28, 0.78);
     --text-accent: #3A4D39;
     --heading-primary: #102014;
+    --accent-gold: #8B6914;
     --surface-primary: rgba(250, 252, 247, 0.84);
     --surface-elevated: rgba(244, 248, 241, 0.92);
     --border-soft: rgba(58, 77, 57, 0.16);
@@ -57,11 +64,13 @@
     --text-secondary: rgba(255, 255, 255, 0.8);
     --text-accent: #9ab18f;
     --heading-primary: #f4f8f1;
+    --accent-gold: #D4A847;
     --surface-primary: rgba(15, 24, 18, 0.84);
     --surface-elevated: rgba(22, 33, 26, 0.92);
     --border-soft: rgba(154, 177, 143, 0.16);
     --input-bg: rgba(10, 16, 12, 0.52);
     --shadow-soft: 0 24px 64px rgba(0, 0, 0, 0.34);
+
     
     /* Dark Mode Glass */
     --glass-heavy-bg: rgba(108, 139, 103, 0.18);

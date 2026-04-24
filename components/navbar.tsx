@@ -61,8 +61,9 @@ export function NavBar({ brandName }: { brandName: string }) {
                 className={cn(
                   'text-sm font-medium tracking-[0.01em] transition-colors',
                   isActivePath(pathname, item.href)
-                    ? 'text-[var(--text-primary)]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'text-heading-primary'
+                    : 'text-text-secondary hover:text-heading-primary',
+                  !scrolled && pathname === '/' && 'text-white/90 hover:text-white'
                 )}
               >
                 {item.label}
@@ -76,7 +77,7 @@ export function NavBar({ brandName }: { brandName: string }) {
                 <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[rgba(58,77,57,0.18)] bg-white/70 sm:h-10 sm:w-10">
                   <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
                 </div>
-                <span className="truncate font-serif text-[13px] tracking-[0.14em] uppercase text-[var(--text-primary)] min-[430px]:text-sm sm:text-base lg:text-lg">
+                <span className="truncate font-serif text-[13px] tracking-[0.14em] uppercase text-heading-primary min-[430px]:text-sm sm:text-base lg:text-lg">
                   <span className="min-[430px]:hidden">Itz Lola</span>
                   <span className="hidden min-[430px]:inline">{brandName}</span>
                 </span>
@@ -142,7 +143,7 @@ export function NavBar({ brandName }: { brandName: string }) {
 
             <Link
               href="/book"
-              className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#3A4D39] px-5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014] sm:px-6"
+              className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full bg-forest-950 px-5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 dark:bg-accent-gold dark:text-forest-950 sm:px-6"
             >
               Book Now
             </Link>
