@@ -40,6 +40,8 @@ export function NavBar({ brandName }: { brandName: string }) {
 
   if (pathname?.startsWith('/admin')) return null;
 
+  const themeLabel = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-3 py-3 transition-all duration-500 sm:px-6 sm:py-4">
       <div
@@ -50,8 +52,8 @@ export function NavBar({ brandName }: { brandName: string }) {
             : 'bg-transparent border-transparent'
         )}
       >
-        <div className="grid items-center gap-3 lg:grid-cols-[1fr_auto_1fr]">
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
+        <div className="flex items-center justify-between gap-3">
+          <nav className="hidden min-w-0 flex-1 items-center gap-5 lg:flex xl:gap-7">
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.label}
@@ -68,9 +70,9 @@ export function NavBar({ brandName }: { brandName: string }) {
             ))}
           </nav>
 
-          <div className="min-w-0">
-            <Link href="/" className="flex items-center lg:justify-center">
-              <div className="glass-subtle inline-flex max-w-full items-center gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-4 lg:px-5">
+          <div className="min-w-0 flex-1 lg:flex-none">
+            <Link href="/" className="flex items-center">
+              <div className="glass-subtle inline-flex max-w-[clamp(11rem,42vw,16rem)] items-center gap-2 rounded-full px-3 py-2 sm:max-w-[18rem] sm:gap-3 sm:px-4 lg:max-w-none lg:px-5">
                 <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[rgba(58,77,57,0.18)] bg-white/70 sm:h-10 sm:w-10">
                   <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
                 </div>
@@ -82,68 +84,69 @@ export function NavBar({ brandName }: { brandName: string }) {
             </Link>
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
+          <div className="flex flex-none items-center justify-end gap-2 sm:gap-3">
             <button
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="glass-subtle rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 lg:hidden"
+              className="glass-subtle flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5 lg:hidden"
               aria-label="Toggle navigation menu"
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-          <button
-            onClick={toggleTheme}
-            className="glass-subtle group relative hidden overflow-hidden rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 md:block"
-            aria-label="Toggle Theme"
-          >
-            <div className="relative h-5 w-5">
-              <motion.div
-                initial={false}
-                animate={{
-                  scale: theme === 'dark' ? 1 : 0,
-                  opacity: theme === 'dark' ? 1 : 0,
-                  rotate: theme === 'dark' ? 0 : -90,
-                }}
-                transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="absolute inset-0 text-[var(--text-accent)]"
-              >
-                <Moon size={20} />
-              </motion.div>
-              <motion.div
-                initial={false}
-                animate={{
-                  scale: theme === 'light' ? 1 : 0,
-                  opacity: theme === 'light' ? 1 : 0,
-                  rotate: theme === 'light' ? 0 : 90,
-                }}
-                transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="absolute inset-0 text-[var(--text-primary)]"
-              >
-                <Sun size={20} />
-              </motion.div>
-            </div>
-          </button>
+            <button
+              onClick={toggleTheme}
+              className="glass-subtle group relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+              aria-label={themeLabel}
+              title={themeLabel}
+            >
+              <div className="relative h-5 w-5">
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === 'dark' ? 1 : 0,
+                    opacity: theme === 'dark' ? 1 : 0,
+                    rotate: theme === 'dark' ? 0 : -90,
+                  }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  className="absolute inset-0 text-[var(--text-accent)]"
+                >
+                  <Moon size={20} />
+                </motion.div>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === 'light' ? 1 : 0,
+                    opacity: theme === 'light' ? 1 : 0,
+                    rotate: theme === 'light' ? 0 : 90,
+                  }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  className="absolute inset-0 text-[var(--text-primary)]"
+                >
+                  <Sun size={20} />
+                </motion.div>
+              </div>
+            </button>
 
-          <button
-            onClick={openCart}
-            className="glass-subtle relative hidden rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:block"
-            aria-label="Open cart"
-          >
-            <ShoppingBag size={20} className="text-[var(--text-primary)]" />
-            {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#3A4D39] px-1 text-[10px] font-semibold text-white dark:bg-[#9ab18f] dark:text-[#102014]">
-                {itemCount}
-              </span>
-            )}
-          </button>
+            <button
+              onClick={openCart}
+              className="glass-subtle relative hidden h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:flex"
+              aria-label="Open cart"
+            >
+              <ShoppingBag size={20} className="text-[var(--text-primary)]" />
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#3A4D39] px-1 text-[10px] font-semibold text-white dark:bg-[#9ab18f] dark:text-[#102014]">
+                  {itemCount}
+                </span>
+              )}
+            </button>
 
-          <Link
-            href="/book"
-            className="inline-flex items-center justify-center rounded-full bg-[#3A4D39] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014] sm:px-5"
-          >
-            Book Now
-          </Link>
-        </div>
+            <Link
+              href="/book"
+              className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#3A4D39] px-5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014] sm:px-6"
+            >
+              Book Now
+            </Link>
+          </div>
         </div>
       </div>
 

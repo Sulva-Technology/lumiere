@@ -15,6 +15,7 @@ const THEME_STORAGE_KEY = 'theme';
 function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle('dark', theme === 'dark');
   document.documentElement.style.colorScheme = theme;
+  document.documentElement.dataset.theme = theme;
 }
 
 function getInitialTheme(): Theme {
@@ -43,15 +44,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== THEME_STORAGE_KEY) return;
+      const nextTheme = event.newValue === 'dark' ? 'dark' : event.newValue === 'light' ? 'light' : null;
+      if (nextTheme) {
+        setTheme(nextTheme);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  useEffect(() => {
     applyTheme(theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => {
-      const newTheme = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-      return newTheme;
-    });
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
