@@ -44,49 +44,56 @@ export function NavBar({ brandName }: { brandName: string }) {
     <header className="fixed top-0 left-0 right-0 z-40 px-3 py-3 transition-all duration-500 sm:px-6 sm:py-4">
       <div
         className={cn(
-          'max-w-7xl mx-auto flex items-center justify-between rounded-full border px-3 py-2.5 transition-all duration-500 sm:px-6 sm:py-3',
+          'mx-auto max-w-7xl rounded-[32px] border px-3 py-2.5 transition-all duration-500 sm:px-5 sm:py-3',
           scrolled
             ? 'bg-[rgba(154,177,143,0.18)] dark:bg-[rgba(108,139,103,0.12)] backdrop-blur-2xl border-[rgba(58,77,57,0.22)] dark:border-[rgba(154,177,143,0.2)] shadow-lg'
             : 'bg-transparent border-transparent'
         )}
       >
-        <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                'text-sm font-medium tracking-wide transition-colors',
-                isActivePath(pathname, item.href)
-                  ? 'text-[var(--text-primary)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="grid items-center gap-3 lg:grid-cols-[1fr_auto_1fr]">
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
+            {NAV_LINKS.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  'text-sm font-medium tracking-[0.01em] transition-colors',
+                  isActivePath(pathname, item.href)
+                    ? 'text-[var(--text-primary)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
-        <div className="mx-auto flex min-w-0 flex-1 justify-center px-2 md:absolute md:left-1/2 md:w-auto md:-translate-x-1/2 md:px-0">
-          <Link href="/" className="flex items-center justify-center">
-            <div className="glass-subtle flex items-center gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-6">
-              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[rgba(58,77,57,0.18)] bg-white/70 sm:h-10 sm:w-10">
-                <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
+          <div className="min-w-0">
+            <Link href="/" className="flex items-center lg:justify-center">
+              <div className="glass-subtle inline-flex max-w-full items-center gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-4 lg:px-5">
+                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[rgba(58,77,57,0.18)] bg-white/70 sm:h-10 sm:w-10">
+                  <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
+                </div>
+                <span className="truncate font-serif text-[13px] tracking-[0.14em] uppercase text-[var(--text-primary)] min-[430px]:text-sm sm:text-base lg:text-lg">
+                  <span className="min-[430px]:hidden">Itz Lola</span>
+                  <span className="hidden min-[430px]:inline">{brandName}</span>
+                </span>
               </div>
-              <span className="hidden font-serif text-base tracking-[0.16em] uppercase text-[var(--text-primary)] sm:inline sm:text-lg">
-                {brandName}
-              </span>
-              <span className="font-serif text-sm tracking-[0.12em] uppercase text-[var(--text-primary)] sm:hidden">
-                itzlolabeauty
-              </span>
-            </div>
-          </Link>
-        </div>
+            </Link>
+          </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
+          <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="glass-subtle rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 lg:hidden"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
           <button
             onClick={toggleTheme}
-            className="glass-subtle group relative overflow-hidden rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            className="glass-subtle group relative hidden overflow-hidden rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 md:block"
             aria-label="Toggle Theme"
           >
             <div className="relative h-5 w-5">
@@ -119,7 +126,7 @@ export function NavBar({ brandName }: { brandName: string }) {
 
           <button
             onClick={openCart}
-            className="glass-subtle relative rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            className="glass-subtle relative hidden rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:block"
             aria-label="Open cart"
           >
             <ShoppingBag size={20} className="text-[var(--text-primary)]" />
@@ -132,23 +139,16 @@ export function NavBar({ brandName }: { brandName: string }) {
 
           <Link
             href="/book"
-            className="inline-flex items-center justify-center rounded-full bg-[#3A4D39] px-4 py-2.5 text-sm font-medium text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014] sm:px-5"
+            className="inline-flex items-center justify-center rounded-full bg-[#3A4D39] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014] sm:px-5"
           >
             Book Now
           </Link>
-
-          <button
-            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            className="glass-subtle rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 md:hidden"
-            aria-label="Toggle navigation menu"
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+        </div>
         </div>
       </div>
 
       {isMobileMenuOpen && (
-        <div className="mx-auto mt-3 max-w-7xl px-1 md:hidden">
+        <div className="mx-auto mt-3 max-w-7xl px-1 lg:hidden">
           <div className="rounded-2xl border border-[rgba(58,77,57,0.22)] bg-[rgba(247,247,242,0.88)] p-2 shadow-lg backdrop-blur-xl dark:border-[rgba(154,177,143,0.2)] dark:bg-[rgba(15,24,18,0.88)]">
             {NAV_LINKS.map((item) => (
               <Link

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Glass } from '@/components/ui/glass';
-import type { HomeShopSectionItem, StoreSettings } from '@/lib/types';
+import type { HomeShopSectionItem, HomeTestimonialItem, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults, createDefaultStoreSettings } from '@/lib/store-settings';
 
 type SettingsState = StoreSettings;
@@ -48,6 +48,7 @@ export default function AdminSettingsPage() {
           homeShopSectionLinkLabel: settings.home_shop_section_link_label,
           homeShopSectionLinkHref: settings.home_shop_section_link_href,
           homeShopSectionItems: settings.home_shop_section_items,
+          homepageTestimonials: settings.homepage_testimonials,
         }),
       });
       const json = await response.json();
@@ -107,6 +108,46 @@ export default function AdminSettingsPage() {
     });
   }
 
+  function updateTestimonial(index: number, patch: Partial<HomeTestimonialItem>) {
+    setSettings((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        homepage_testimonials: current.homepage_testimonials.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
+      };
+    });
+  }
+
+  function addTestimonial() {
+    setSettings((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        homepage_testimonials: [
+          ...current.homepage_testimonials,
+          {
+            quote: '',
+            name: '',
+            context: '',
+          },
+        ],
+      };
+    });
+  }
+
+  function removeTestimonial(index: number) {
+    setSettings((current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        homepage_testimonials: current.homepage_testimonials.filter((_, itemIndex) => itemIndex !== index),
+      };
+    });
+  }
+
   return (
     <Glass level="medium" className="max-w-4xl p-6">
       <h1 className="font-serif text-3xl text-[#1A1008] dark:text-[#F0D080]">Settings</h1>
@@ -156,6 +197,37 @@ export default function AdminSettingsPage() {
 
           <button type="button" onClick={addShopItem} className="rounded-full border border-black/10 px-5 py-3 text-sm font-medium transition-opacity hover:opacity-80 dark:border-white/10">
             Add Card
+          </button>
+        </div>
+        <div className="space-y-4 rounded-3xl border border-black/10 p-5 dark:border-white/10">
+          <div>
+            <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Homepage Testimonials</h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">Edit the testimonial cards shown in the trust section on the homepage.</p>
+          </div>
+
+          <div className="space-y-4">
+            {settings.homepage_testimonials.map((item, index) => (
+              <div key={index} className="space-y-3 rounded-3xl bg-white/20 p-4 dark:bg-black/20">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-medium text-[var(--text-secondary)]">Testimonial {index + 1}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeTestimonial(index)}
+                    disabled={settings.homepage_testimonials.length <= 1}
+                    className="rounded-full border border-black/10 px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <textarea value={item.quote} onChange={(event) => updateTestimonial(index, { quote: event.target.value })} className="min-h-32 w-full rounded-3xl bg-white/40 px-5 py-4 outline-none dark:bg-black/40" placeholder="Client quote" />
+                <input value={item.name} onChange={(event) => updateTestimonial(index, { name: event.target.value })} className="w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" placeholder="Client name" />
+                <input value={item.context} onChange={(event) => updateTestimonial(index, { context: event.target.value })} className="w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" placeholder="Context (example: Bridal client)" />
+              </div>
+            ))}
+          </div>
+
+          <button type="button" onClick={addTestimonial} className="rounded-full border border-black/10 px-5 py-3 text-sm font-medium transition-opacity hover:opacity-80 dark:border-white/10">
+            Add Testimonial
           </button>
         </div>
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

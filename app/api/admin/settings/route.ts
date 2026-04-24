@@ -20,6 +20,10 @@ export async function PUT(request: NextRequest) {
     const body = storeSettingsSchema.parse(await request.json());
     const settings = await updateStoreSettings(body);
     revalidatePath('/');
+    revalidatePath('/about');
+    revalidatePath('/contact');
+    revalidatePath('/faq');
+    revalidatePath('/policies');
     return NextResponse.json({ settings });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to save settings.' }, { status: 400 });

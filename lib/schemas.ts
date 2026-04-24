@@ -9,6 +9,11 @@ const homeShopSectionItemSchema = z.object({
   title: z.string().trim().min(1).max(120),
   description: z.string().trim().min(1).max(500),
 });
+const homeTestimonialItemSchema = z.object({
+  quote: z.string().trim().min(8).max(600),
+  name: z.string().trim().min(2).max(120),
+  context: z.string().trim().min(2).max(160),
+});
 
 export const cartLineInputSchema = z.object({
   variantId: z.string().uuid(),
@@ -170,6 +175,7 @@ export const storeSettingsSchema = z.object({
   homeShopSectionLinkLabel: z.string().trim().max(120).optional().or(z.literal('')),
   homeShopSectionLinkHref: z.string().trim().max(240).optional().or(z.literal('')),
   homeShopSectionItems: z.array(homeShopSectionItemSchema).max(12).optional().default([]),
+  homepageTestimonials: z.array(homeTestimonialItemSchema).max(12).optional().default([]),
 });
 
 export const adminEmailSchema = z.object({

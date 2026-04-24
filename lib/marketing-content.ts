@@ -87,27 +87,6 @@ export const portfolioCategories: PortfolioCategory[] = [
   },
 ] as const;
 
-export const testimonials = [
-  {
-    quote:
-      'My glam looked flawless in person and even better in photos. The whole appointment felt calm, polished, and worth every minute.',
-    name: 'Arielle M.',
-    context: 'Birthday glam client',
-  },
-  {
-    quote:
-      'I loved how clear the booking process was. I knew exactly what I was booking, what it would cost, and how to prepare.',
-    name: 'Nicole T.',
-    context: 'Event makeup client',
-  },
-  {
-    quote:
-      'Professional, warm, and reliable from inquiry to final look. I felt taken care of the entire time.',
-    name: 'Danielle R.',
-    context: 'Bridal inquiry client',
-  },
-] as const;
-
 export const policyPreviewItems: MarketingPolicyItem[] = [
   {
     title: 'Deposit policy',

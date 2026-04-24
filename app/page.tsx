@@ -26,6 +26,7 @@ export default async function HomePage() {
         home_shop_section_link_label: store.homeShopSectionLinkLabel,
         home_shop_section_link_href: store.homeShopSectionLinkHref,
         home_shop_section_items: store.homeShopSectionItems,
+        homepage_testimonials: store.homepageTestimonials,
       }}
       services={services}
     />

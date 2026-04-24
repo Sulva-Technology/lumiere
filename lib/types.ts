@@ -304,6 +304,12 @@ export interface HomeShopSectionItem {
   description: string;
 }
 
+export interface HomeTestimonialItem {
+  quote: string;
+  name: string;
+  context: string;
+}
+
 export interface StoreSettings {
   id?: string;
   store_name: string;
@@ -316,4 +322,5 @@ export interface StoreSettings {
   home_shop_section_link_label: string | null;
   home_shop_section_link_href: string | null;
   home_shop_section_items: HomeShopSectionItem[];
+  homepage_testimonials: HomeTestimonialItem[];
 }

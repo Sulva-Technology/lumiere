@@ -863,13 +863,14 @@ export async function getPublicStoreSettings() {
     homeShopSectionLinkLabel: 'Shop Collection',
     homeShopSectionLinkHref: '/shop',
     homeShopSectionItems: [],
+    homepageTestimonials: [],
   };
 
   try {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from('store_settings')
-      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
+      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items, homepage_testimonials')
       .order('created_at')
       .limit(1)
       .maybeSingle();
@@ -887,6 +888,7 @@ export async function getPublicStoreSettings() {
       homeShopSectionLinkLabel: data?.home_shop_section_link_label?.trim() || fallback.homeShopSectionLinkLabel,
       homeShopSectionLinkHref: data?.home_shop_section_link_href?.trim() || fallback.homeShopSectionLinkHref,
       homeShopSectionItems: Array.isArray(data?.home_shop_section_items) ? data.home_shop_section_items : fallback.homeShopSectionItems,
+      homepageTestimonials: Array.isArray(data?.homepage_testimonials) ? data.homepage_testimonials : fallback.homepageTestimonials,
     };
   } catch {
     return fallback;

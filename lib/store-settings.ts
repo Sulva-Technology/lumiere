@@ -1,4 +1,4 @@
-import type { HomeShopSectionItem, StoreSettings } from '@/lib/types';
+import type { HomeShopSectionItem, HomeTestimonialItem, StoreSettings } from '@/lib/types';
 
 export const defaultHomeShopSectionItems: HomeShopSectionItem[] = [
   {
@@ -8,6 +8,27 @@ export const defaultHomeShopSectionItems: HomeShopSectionItem[] = [
   {
     title: 'Founder Guided Experience',
     description: 'Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.',
+  },
+];
+
+export const defaultHomepageTestimonials: HomeTestimonialItem[] = [
+  {
+    quote:
+      'My glam looked flawless in person and even better in photos. The whole appointment felt calm, polished, and worth every minute.',
+    name: 'Arielle M.',
+    context: 'Birthday glam client',
+  },
+  {
+    quote:
+      'I loved how clear the booking process was. I knew exactly what I was booking, what it would cost, and how to prepare.',
+    name: 'Nicole T.',
+    context: 'Event makeup client',
+  },
+  {
+    quote:
+      'Professional, warm, and reliable from inquiry to final look. I felt taken care of the entire time.',
+    name: 'Danielle R.',
+    context: 'Bridal inquiry client',
   },
 ];
 
@@ -23,6 +44,7 @@ export function createDefaultStoreSettings(): StoreSettings {
     home_shop_section_link_label: 'Shop Collection',
     home_shop_section_link_href: '/shop',
     home_shop_section_items: defaultHomeShopSectionItems,
+    homepage_testimonials: defaultHomepageTestimonials,
   };
 }
 
@@ -42,5 +64,6 @@ export function applyStoreSettingsDefaults(settings: Partial<StoreSettings> | nu
     home_shop_section_link_label: settings?.home_shop_section_link_label?.trim() || defaults.home_shop_section_link_label,
     home_shop_section_link_href: settings?.home_shop_section_link_href?.trim() || defaults.home_shop_section_link_href,
     home_shop_section_items: settings?.home_shop_section_items?.length ? settings.home_shop_section_items : defaults.home_shop_section_items,
+    homepage_testimonials: settings?.homepage_testimonials?.length ? settings.homepage_testimonials : defaults.homepage_testimonials,
   };
 }

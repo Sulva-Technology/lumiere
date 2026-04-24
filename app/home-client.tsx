@@ -21,7 +21,6 @@ import {
   faqItems,
   policyPreviewItems,
   portfolioCategories,
-  testimonials,
   trustReasons,
 } from '@/lib/marketing-content';
 import { formatCurrency } from '@/lib/format';
@@ -39,6 +38,14 @@ function findServiceBySlug(services: BookingService[], slugs: string[]) {
 
 function formatDurationLabel(durationMinutes: number | null | undefined, fallback: string) {
   return durationMinutes ? `${durationMinutes} min` : fallback;
+}
+
+function createBookingHref(serviceType: 'makeup' | 'content', serviceSlug?: string) {
+  const params = new URLSearchParams({ type: serviceType });
+  if (serviceSlug) {
+    params.set('service', serviceSlug);
+  }
+  return `/book?${params.toString()}`;
 }
 
 export default function Home({ settings, services }: HomeClientProps) {
@@ -64,7 +71,7 @@ export default function Home({ settings, services }: HomeClientProps) {
       duration: formatDurationLabel(softGlam?.durationMinutes, '90 min'),
       bestFor: 'Engagement shoots, date nights, brunches, portraits, and confidence-boosting everyday glam.',
       ctaLabel: 'Book soft glam',
-      href: '/book?type=makeup',
+      href: createBookingHref('makeup', softGlam?.slug),
     },
     {
       name: 'Full Glam',
@@ -73,7 +80,7 @@ export default function Home({ settings, services }: HomeClientProps) {
       duration: formatDurationLabel(fullGlam?.durationMinutes, '120 min'),
       bestFor: 'Birthdays, luxury dinners, photoshoots, celebrations, and statement event makeup.',
       ctaLabel: 'Book full glam',
-      href: '/book?type=makeup',
+      href: createBookingHref('makeup', fullGlam?.slug),
     },
     {
       name: 'Birthday / Event Glam',
@@ -82,7 +89,7 @@ export default function Home({ settings, services }: HomeClientProps) {
       duration: formatDurationLabel(fullGlam?.durationMinutes, '120 min'),
       bestFor: 'Birthday dinners, graduations, galas, baby showers, and event nights where photos matter.',
       ctaLabel: 'Book event glam',
-      href: '/book?type=makeup',
+      href: createBookingHref('makeup', fullGlam?.slug),
     },
     {
       name: 'Bridal Preview',
@@ -127,11 +134,12 @@ export default function Home({ settings, services }: HomeClientProps) {
       duration: contentDurationLabel,
       bestFor: 'Brand shoots, creator sessions, campaign days, product content, and elevated social media visuals.',
       ctaLabel: 'Book content support',
-      href: '/book?type=content',
+      href: createBookingHref('content'),
     },
   ];
 
   const heroTags = ['Bridal Glam', 'Event Makeup', 'Content-Ready Looks'];
+  const testimonials = resolvedSettings.homepage_testimonials;
   const supportDetails = [
     `Booking contact: ${resolvedSettings.booking_contact_email || resolvedSettings.support_email || 'hello@itzlolabeauty.com'}`,
     `Support: ${resolvedSettings.support_phone || 'By confirmation message'}`,

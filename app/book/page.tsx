@@ -36,7 +36,9 @@ function BookingPageContent() {
   const canceled = searchParams.get('canceled') === '1';
   const reservationId = searchParams.get('reservation');
   const requestedType = searchParams.get('type') === 'content' ? 'content' : 'makeup';
+  const requestedServiceSlug = searchParams.get('service')?.trim().toLowerCase() ?? '';
   const cancelHandledRef = useRef(false);
+  const requestedServiceHandledRef = useRef(false);
 
   const [currentStep, setCurrentStep] = useState<Step>('service');
   const [serviceType, setServiceType] = useState<BookingServiceType>(requestedType);
@@ -89,6 +91,10 @@ function BookingPageContent() {
     setServiceType(requestedType);
   }, [requestedType]);
 
+  useEffect(() => {
+    requestedServiceHandledRef.current = false;
+  }, [requestedServiceSlug, requestedType]);
+
   const filteredServices = useMemo(() => services.filter((service) => service.serviceType === serviceType), [serviceType, services]);
   const selectedServiceDetail = useMemo(() => services.find((service) => service.id === selectedService) ?? null, [services, selectedService]);
   const selectedStylistDetail = useMemo(() => stylists.find((stylist) => stylist.id === selectedStylist) ?? null, [stylists, selectedStylist]);
@@ -121,6 +127,22 @@ function BookingPageContent() {
     }
     void loadAvailability();
   }, [selectedService, selectedStylist]);
+
+  useEffect(() => {
+    if (!requestedServiceSlug || requestedServiceHandledRef.current || services.length === 0) return;
+
+    const requestedService =
+      services.find((service) => service.slug.toLowerCase() === requestedServiceSlug && service.serviceType === requestedType) ??
+      services.find((service) => service.slug.toLowerCase() === requestedServiceSlug);
+
+    if (!requestedService) return;
+
+    requestedServiceHandledRef.current = true;
+    setServiceType(requestedService.serviceType);
+    setSelectedService(requestedService.id);
+    setSelectedAvailability('');
+    setCurrentStep('availability');
+  }, [requestedServiceSlug, requestedType, services]);
 
   useEffect(() => {
     async function syncReservationStatus() {
