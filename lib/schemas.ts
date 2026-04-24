@@ -61,6 +61,16 @@ export const cancelReservationSchema = z.object({
   reservationId: z.string().uuid(),
 });
 
+export const contactInquirySchema = z.object({
+  fullName: z.string().trim().min(2).max(120),
+  email: z.string().email(),
+  phone: z.string().trim().min(7).max(30),
+  eventDate: z.string().trim().min(4).max(40).nullable().optional(),
+  serviceInterest: z.string().trim().min(2).max(160),
+  location: z.string().trim().min(2).max(160),
+  message: z.string().trim().min(10).max(4000),
+});
+
 export const adminProductUpdateSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(160),

@@ -12,11 +12,18 @@ import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
+  { label: 'Services', href: '/#services' },
+  { label: 'Portfolio', href: '/#portfolio' },
   { label: 'About', href: '/about' },
-  { label: 'Book', href: '/book' },
-  { label: 'Shop', href: '/shop' },
+  { label: 'Policies', href: '/policies' },
   { label: 'Contact', href: '/contact' },
 ];
+
+function isActivePath(currentPath: string | null, href: string) {
+  if (href.includes('#')) return false;
+  const normalizedHref = href.split('#')[0] || '/';
+  return currentPath === normalizedHref;
+}
 
 export function NavBar({ brandName }: { brandName: string }) {
   const { theme, toggleTheme } = useTheme();
@@ -44,13 +51,15 @@ export function NavBar({ brandName }: { brandName: string }) {
         )}
       >
         <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.filter((item) => item.href !== '/').map((item) => (
+          {NAV_LINKS.map((item) => (
             <Link
               key={item.label}
               href={item.href}
               className={cn(
                 'text-sm font-medium tracking-wide transition-colors',
-                pathname === item.href ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                isActivePath(pathname, item.href)
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               )}
             >
               {item.label}
@@ -75,14 +84,6 @@ export function NavBar({ brandName }: { brandName: string }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
-          <button
-            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            className="glass-subtle rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 md:hidden"
-            aria-label="Toggle navigation menu"
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-
           <button
             onClick={toggleTheme}
             className="glass-subtle group relative overflow-hidden rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
@@ -131,10 +132,18 @@ export function NavBar({ brandName }: { brandName: string }) {
 
           <Link
             href="/book"
-            className="hidden items-center justify-center rounded-full bg-[#3A4D39] px-5 py-2.5 text-sm font-medium text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#9ab18f] dark:text-[#102014] md:flex"
+            className="inline-flex items-center justify-center rounded-full bg-[#3A4D39] px-4 py-2.5 text-sm font-medium text-white shadow-md transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014] sm:px-5"
           >
             Book Now
           </Link>
+
+          <button
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className="glass-subtle rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 md:hidden"
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
 
@@ -148,7 +157,7 @@ export function NavBar({ brandName }: { brandName: string }) {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
                   'block rounded-xl px-4 py-3 text-sm font-medium transition-colors',
-                  pathname === item.href
+                  isActivePath(pathname, item.href)
                     ? 'bg-[rgba(154,177,143,0.2)] dark:bg-[rgba(108,139,103,0.16)] text-[#3A4D39] dark:text-[#d7e0d0]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
                 )}
@@ -156,6 +165,13 @@ export function NavBar({ brandName }: { brandName: string }) {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/book"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="mt-2 block rounded-xl bg-[#3A4D39] px-4 py-3 text-center text-sm font-semibold text-white transition hover:opacity-95 dark:bg-[#D4A847] dark:text-[#102014]"
+            >
+              Book Now
+            </Link>
           </div>
         </div>
       )}

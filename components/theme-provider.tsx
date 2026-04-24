@@ -17,23 +17,24 @@ function applyTheme(theme: Theme) {
   document.documentElement.style.colorScheme = theme;
 }
 
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'light';
+
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+  return storedTheme ?? (mediaQuery.matches ? 'dark' : 'light');
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    const initialTheme = storedTheme ?? (mediaQuery.matches ? 'dark' : 'light');
-
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
 
     const handleSystemThemeChange = (event: MediaQueryListEvent) => {
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
       if (!savedTheme) {
-        const nextTheme = event.matches ? 'dark' : 'light';
-        setTheme(nextTheme);
-        applyTheme(nextTheme);
+        setTheme(event.matches ? 'dark' : 'light');
       }
     };
 
@@ -41,11 +42,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, []);
 
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
   const toggleTheme = () => {
     setTheme((prev) => {
       const newTheme = prev === 'light' ? 'dark' : 'light';
       localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-      applyTheme(newTheme);
       return newTheme;
     });
   };

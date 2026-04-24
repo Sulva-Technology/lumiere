@@ -1,10 +1,10 @@
 # Working Memory
 
 ## Problem Summary
-- Homepage and footer needed content cleanup based on client feedback, the main nav needed a visible Contact link, and booking service definitions needed to be updated to a new makeup and content-creation offer set.
+- Public-facing pages needed to be rebuilt around a premium, booking-first beauty experience with clearer service comparison, stronger trust-building, polished inquiry handling, and mobile-visible conversion paths.
 
 ## Product Goal
-- Present a simpler public-facing experience with only the approved homepage sections and the current service lineup.
+- Turn the site into a luxury, feminine, booking-first beauty website that increases makeup bookings while still supporting bridal and content inquiries.
 
 ## Stack and Runtime
 - framework: next.js app router
@@ -15,51 +15,67 @@
 - deployment assumptions: vercel preview and production
 
 ## Confirmed Facts
-- The `Favorite items` block and the closing `Everything points to one of two outcomes...` CTA card were both rendered from `app/home-client.tsx`.
-- The first screenshot matched the marketing/CTA area in `components/footer.tsx`, not the hero.
-- Main site navigation links are defined in `components/navbar.tsx`.
-- Bookable service cards are loaded from Supabase `booking_services` records via `lib/data/public.ts`.
-- The repo already had unrelated lint failures in `app/book/page.tsx` and `components/theme-provider.tsx` before this change.
+- The homepage route remains `app/page.tsx` with the public experience rendered by `app/home-client.tsx`.
+- Live bookable services still come from Supabase `booking_services` via `lib/data/public.ts`.
+- Shop routes and cart integrations remain intact, but homepage emphasis was shifted away from shop-first merchandising.
+- General inquiries now submit through `POST /api/contact`, validated by Zod and delivered through the existing Resend mailer setup in `lib/notifications.ts`.
+- Desktop and mobile navigation now emphasize Home, Services, Portfolio, About, Policies, Contact, and Book Now.
+- Full repo lint is currently green after cleaning prior issues in `app/book/page.tsx` and `components/theme-provider.tsx`.
 
 ## Unknowns / Needs Confirmation
-- Production database state before migration execution is unknown because no local Supabase env credentials were available in the workspace.
+- Production Supabase content for bridal-specific services is still unknown; homepage bridal cards use polished inquiry-first fallbacks rather than assuming live booking records exist.
 
 ## Active Files / Surfaces
 - `app/home-client.tsx`
 - `app/page.tsx`
+- `app/layout.tsx`
+- `app/about/page.tsx`
+- `app/contact/page.tsx`
+- `app/faq/page.tsx`
+- `app/policies/page.tsx`
+- `app/api/contact/route.ts`
+- `components/contact-inquiry-form.tsx`
+- `components/faq-accordion.tsx`
 - `components/footer.tsx`
 - `components/navbar.tsx`
-- `supabase/migrations/012_refresh_booking_services.sql`
+- `components/theme-provider.tsx`
+- `lib/marketing-content.ts`
+- `lib/notifications.ts`
+- `lib/schemas.ts`
+- `app/sitemap.ts`
 
 ## Decisions
-- Removed the homepage `Favorite items` block and the closing CTA card entirely rather than hiding them behind settings.
-- Simplified the footer by removing the descriptive marketing copy and CTA buttons from the left column while keeping branding and link groups intact.
-- Added `Contact` to the top navigation link list for both desktop and mobile menus.
-- Added a migration that upserts the requested Soft Glam, Full Glam, and three content-creation services, then retires other active makeup/content services.
+- Rebuilt the homepage into the AGENTS.md section order: hero, featured services, portfolio, trust, process, bridal CTA, testimonials, policies preview, FAQ, contact, footer.
+- Preserved the existing `/book` booking flow and live service API as the primary conversion path for standard bookable services.
+- Routed bridal and custom services toward inquiry-first CTAs instead of inventing unsupported booking records.
+- Added a dedicated `/policies` route and refreshed `/faq`, `/contact`, and `/about` to match the booking-first public narrative.
+- Added a reusable inquiry form component and a lightweight `POST /api/contact` route rather than introducing a new external form provider.
 
 ## API Contracts
-- No API shape changes were made. Public booking services still come from `GET /api/booking/services`.
+- Existing booking contracts remain unchanged: public booking services still come from `GET /api/booking/services`, and booking checkout still flows through `POST /api/bookings`.
+- New public inquiry contract: `POST /api/contact` accepts `fullName`, `email`, `phone`, `eventDate`, `serviceInterest`, `location`, and `message`.
 
 ## Data Model
 - `booking_services.slug` is unique and is the conflict target used by the new migration.
-- Migration `012_refresh_booking_services.sql` updates/inserts approved services and deactivates other active rows by `service_type`.
+- Homepage service comparison now blends live `booking_services` pricing where available with curated inquiry-first service definitions for unsupported bridal/lesson offerings.
 
 ## Auth and Security
-- No auth or security boundary changes were made.
+- Public inquiry submissions use the same trusted-origin checks and rate limiting pattern as the other public POST routes.
 
 ## UI System Notes
-- Homepage now ends after the shop section cards.
-- Footer keeps branding plus Explore/Information links, without the removed marketing CTA cluster.
+- The public-facing design now leans into warm editorial luxury: full-bleed hero, serif-led hierarchy, soft neutrals, gold accents, and restrained glass/surface treatments.
+- Homepage sections use anchor IDs for Services, Portfolio, Policies, FAQ, and Contact to support the revised navigation.
+- The mobile header now keeps `Book Now` visible.
 
 ## Bugs Fixed
-- Removed the client-rejected homepage cards and footer CTA section.
-- Added `Contact` to the main nav.
-- Prepared the new booking service catalog in Supabase migration form.
+- Removed the shop-first homepage structure in favor of a booking-first conversion flow.
+- Added real inquiry form submission instead of a purely presentational contact form.
+- Cleared the previous repo-wide lint failures in `app/book/page.tsx` and `components/theme-provider.tsx`.
 
 ## Risks / Watchouts
-- The service migration deactivates other active `makeup` and `content` services, which may require admin availability rules to be reassigned if they pointed at retired service rows.
-- The migration assumes the requested makeup offer set should be the full active makeup lineup.
+- Bridal preview, bridal party, wedding-day makeup, and lessons are currently marketed through inquiry-first cards unless matching live booking services are later added to Supabase.
+- The homepage no longer surfaces shop content, so if products become a business priority later, that should be a deliberate secondary pass instead of restoring the previous home layout.
 
 ## Next Actions
-- Run the new Supabase migration in the target environment before expecting the booking page to show the updated services.
-- If the client wanted the entire footer brand block removed instead of just the CTA area, do one more small pass on `components/footer.tsx`.
+- Review the live content and contact addresses in admin `store_settings` so the inquiry flow replies route to the right inboxes in production.
+- If bridal or lesson services should become directly bookable, add those records to `booking_services` and availability instead of relying on inquiry-only fallbacks.

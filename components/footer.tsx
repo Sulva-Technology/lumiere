@@ -39,6 +39,17 @@ export function Footer({ brandName }: FooterProps) {
               <span className="font-serif text-2xl tracking-[0.14em] uppercase text-[var(--text-primary)] sm:text-3xl">{brandName}</span>
             </div>
           </div>
+          <p className="mt-6 max-w-md text-sm leading-7 text-[#496052] dark:text-[var(--text-secondary)]">
+            Luxury beauty bookings for bridal mornings, birthdays, events, and content-ready glam with a clear, polished experience from inquiry to confirmation.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#3A4D39] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 dark:bg-[#D4A847] dark:text-[#102014]">
+              Book Now
+            </Link>
+            <Link href="/contact" className="inline-flex items-center justify-center rounded-full border border-[rgba(58,77,57,0.18)] px-5 py-3 text-sm font-semibold text-[#1b3121] transition hover:bg-black/5 dark:border-[rgba(154,177,143,0.18)] dark:text-white dark:hover:bg-white/5">
+              Start an Inquiry
+            </Link>
+          </div>
         </div>
 
         <div className="md:justify-self-center">
@@ -47,17 +58,17 @@ export function Footer({ brandName }: FooterProps) {
             <Link href="/" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Home
             </Link>
-            <Link href="/shop" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Shop
+            <Link href="/#services" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              Services
             </Link>
-            <Link href="/book" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Book
+            <Link href="/#portfolio" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              Portfolio
+            </Link>
+            <Link href="/about" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              About
             </Link>
             <Link href="/contact" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Contact
-            </Link>
-            <Link href="/track-order" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Track Order
             </Link>
           </div>
         </div>
@@ -65,17 +76,20 @@ export function Footer({ brandName }: FooterProps) {
         <div>
           <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
           <div className="flex flex-col gap-3">
+            <Link href="/policies" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              Policies
+            </Link>
             <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               FAQ
             </Link>
             <Link href="/shipping-returns" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Shipping & Returns
             </Link>
+            <Link href="/shop" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              Shop
+            </Link>
             <Link href="/privacy-policy" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Terms of Service
             </Link>
           </div>
         </div>
@@ -83,7 +97,7 @@ export function Footer({ brandName }: FooterProps) {
 
       <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[#496052] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)] dark:text-[var(--text-secondary)]">
         <p>Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
-        <p className="text-xs uppercase tracking-[0.22em]">Shop beauty. Book confidently.</p>
+        <p className="text-xs uppercase tracking-[0.22em]">Book beautifully. Arrive confidently.</p>
       </div>
     </footer>
   );

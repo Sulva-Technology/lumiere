@@ -29,8 +29,8 @@ export async function generateMetadata(): Promise<Metadata> {
       default: store.storeName,
       template: `%s | ${store.storeName}`,
     },
-    description: 'itzlolabeauty is a founder-led beauty studio where clients can shop makeup essentials or book polished makeup and content sessions.',
-    keywords: ['makeup artistry', 'content studio', 'digital content creation', 'editorial makeup', 'bridal glam', 'social media reels', 'studio sessions'],
+    description: 'Luxury makeup artistry for bridal, events, photoshoots, and confidence-led beauty bookings with clear services, polished care, and premium results.',
+    keywords: ['makeup artistry', 'bridal glam', 'event makeup', 'soft glam', 'full glam', 'photoshoot makeup', 'beauty bookings', 'content creation'],
     authors: [{ name: store.storeName }],
     creator: store.storeName,
 
@@ -39,8 +39,8 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'en_US',
       url: siteUrl,
       siteName: store.storeName,
-      title: `${store.storeName} | Shop Makeup. Book Beauty.`,
-      description: 'Shop beauty essentials or reserve a signature makeup or content session with itzlolabeauty.',
+      title: `${store.storeName} | Luxury Glam Bookings`,
+      description: 'Reserve polished makeup services for bridal, events, content sessions, and confidence-led beauty moments.',
       images: [
         {
           url: '/images/logo.jpeg',
@@ -52,8 +52,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${store.storeName} | Shop Makeup. Book Beauty.`,
-      description: 'A founder-led beauty studio for makeup artistry, creator sessions, and beauty essentials.',
+      title: `${store.storeName} | Luxury Glam Bookings`,
+      description: 'Luxury makeup bookings for bridal, events, photoshoots, and elevated beauty appointments.',
       images: ['/images/logo.jpeg'],
     },
     robots: {

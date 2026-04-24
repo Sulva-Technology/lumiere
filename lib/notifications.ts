@@ -49,6 +49,19 @@ type BookingEmailPayload = {
   makeupIntake?: MakeupBookingIntake | null;
 };
 
+type ContactInquiryEmailPayload = {
+  storeName: string;
+  supportEmail: string;
+  bookingContactEmail: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  eventDate?: string | null;
+  serviceInterest: string;
+  location: string;
+  message: string;
+};
+
 type OrderStatusEmailPayload = {
   storeName: string;
   supportEmail: string;
@@ -294,6 +307,60 @@ export async function sendOrderStatusUpdateEmail(payload: OrderStatusEmailPayloa
     subject: `${payload.storeName} order update ${payload.orderNumber}`,
     html: customerHtml,
     replyTo: payload.supportEmail,
+  });
+}
+
+export async function sendContactInquiryEmails(payload: ContactInquiryEmailPayload) {
+  const internalRecipients = Array.from(
+    new Set([payload.bookingContactEmail, payload.supportEmail].filter(Boolean))
+  ).filter((recipient): recipient is string => Boolean(recipient) && recipient !== payload.email);
+
+  const eventDateMarkup = payload.eventDate
+    ? `<p><strong>Event date:</strong> ${escapeHtml(payload.eventDate)}</p>`
+    : '<p><strong>Event date:</strong> Not provided yet</p>';
+
+  const internalHtml = `
+    <div style="font-family:Arial,sans-serif;padding:24px;background:#eef2ea;color:#16301c;">
+      <h2 style="margin-top:0;">New beauty inquiry</h2>
+      <p><strong>Name:</strong> ${escapeHtml(payload.fullName)}</p>
+      <p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
+      <p><strong>Phone:</strong> ${escapeHtml(payload.phone)}</p>
+      ${eventDateMarkup}
+      <p><strong>Service:</strong> ${escapeHtml(payload.serviceInterest)}</p>
+      <p><strong>Location:</strong> ${escapeHtml(payload.location)}</p>
+      <p><strong>Message:</strong><br />${escapeHtml(payload.message).replaceAll('\n', '<br />')}</p>
+    </div>
+  `;
+
+  const customerHtml = `
+    <div style="background:#0c1510;padding:32px;font-family:Georgia,serif;color:#eef2ea;">
+      <h1 style="margin:0 0 12px;font-size:32px;color:#eef2ea;">${escapeHtml(payload.storeName)}</h1>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#c9d5c3;">Your inquiry has been received.</p>
+      <div style="padding:20px;border:1px solid rgba(154,177,143,0.2);border-radius:20px;background:#16211a;">
+        <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.fullName)},</p>
+        <p style="margin:0 0 12px;font-family:Arial,sans-serif;color:#c9d5c3;">Thanks for reaching out about <strong>${escapeHtml(payload.serviceInterest)}</strong>. Your details are in and a reply will follow with next steps.</p>
+        <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Location: ${escapeHtml(payload.location)}</p>
+        ${payload.eventDate ? `<p style="margin:0 0 8px;font-family:Arial,sans-serif;">Event date: ${escapeHtml(payload.eventDate)}</p>` : ''}
+        <p style="margin:0;font-family:Arial,sans-serif;">If your date is time-sensitive, feel free to reply with any extra details.</p>
+      </div>
+      <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#9ab18f;">Questions in the meantime? Reply to this email or contact ${escapeHtml(payload.bookingContactEmail || payload.supportEmail)}.</p>
+    </div>
+  `;
+
+  if (internalRecipients.length > 0) {
+    await sendMail({
+      to: internalRecipients,
+      subject: `New inquiry: ${payload.serviceInterest} for ${payload.fullName}`,
+      html: internalHtml,
+      replyTo: payload.email,
+    });
+  }
+
+  await sendMail({
+    to: payload.email,
+    subject: `${payload.storeName} inquiry received`,
+    html: customerHtml,
+    replyTo: payload.bookingContactEmail || payload.supportEmail,
   });
 }
 

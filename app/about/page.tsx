@@ -3,45 +3,60 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { Glass } from '@/components/ui/glass';
-
-const founderIntro = 'My name is Damilola. I\'m a creative based in Arizona.I\'ve always been drawn to creating whether it\'s through visuals, beauty, or storytelling.';
-const founderMission = 'I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.';
-const founderClose = 'I\'d love to be a part of your story and help bring your vision to life.';
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen px-6 pb-24 pt-32">
-      <div className="mx-auto flex max-w-7xl flex-col gap-20">
-        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="space-y-6">
-            <div className="inline-flex items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/50 px-4 py-2 text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)] dark:bg-black/20">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                <Image src="/images/logo.jpeg" alt="itzlolabeauty logo" fill className="object-cover" sizes="40px" />
-              </div>
-              itzlolabeauty
+    <main className="px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-16">
+        <section className="grid gap-10 lg:grid-cols-[1fr_0.95fr] lg:items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75 }}
+            className="rounded-[34px] border border-[rgba(58,77,57,0.12)] bg-[linear-gradient(135deg,rgba(248,241,233,0.98),rgba(241,236,229,0.94))] p-7 shadow-[0_28px_90px_rgba(52,42,30,0.08)] dark:border-[rgba(154,177,143,0.14)] dark:bg-[linear-gradient(135deg,rgba(21,30,24,0.96),rgba(11,18,15,0.98))]"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#8B6914] dark:text-[#F0D080]">About Itz Lola Beauty</p>
+            <h1 className="mt-4 font-serif text-4xl text-[var(--heading-primary)] sm:text-5xl dark:text-white">
+              Warm, polished artistry built around how you want to feel in the moment.
+            </h1>
+            <div className="mt-6 space-y-4 text-lg leading-relaxed text-[var(--text-secondary)]">
+              <p>
+                Itz Lola Beauty was shaped for clients who want more than a pretty final look. The goal is a calm, elevated experience where your features are understood, your timing is respected, and your glam feels intentional from every angle.
+              </p>
+              <p>
+                Whether the appointment is for a wedding morning, a birthday dinner, a photoshoot, or a confidence reset, the work is rooted in reliability, thoughtful prep, and makeup that wears beautifully in person and on camera.
+              </p>
+              <p>
+                Every booking is approached with care so you can arrive feeling seen, supported, and fully ready for the moment ahead.
+              </p>
             </div>
-            <div className="space-y-4">
-              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderIntro}</p>
-              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderMission}</p>
-              <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderClose}</p>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]">
-                Book a Session
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 text-sm font-semibold text-white transition hover:opacity-95 dark:bg-[#D4A847] dark:text-[#1A1008]">
+                Book your glam
               </Link>
-              <Link href="/shop" className="inline-flex items-center justify-center rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80">
-                Shop the Edit
+              <Link href="/contact?service=Bridal%20Wedding%20Day%20Makeup" className="inline-flex items-center justify-center rounded-full border border-[rgba(58,77,57,0.18)] px-8 py-4 text-sm font-semibold text-[var(--heading-primary)] transition hover:bg-black/5 dark:border-[rgba(154,177,143,0.18)] dark:text-white dark:hover:bg-white/5">
+                Start an inquiry
               </Link>
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.15 }}>
-            <Glass level="heavy" className="overflow-hidden p-0">
-              <div className="relative aspect-[4/5]">
-                <Image src="/images/founder.jpeg" alt="Damilola of itzlolabeauty" fill className="object-cover" priority sizes="(min-width: 1024px) 40vw, 100vw" />
-              </div>
-            </Glass>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.85, delay: 0.1 }}
+            className="overflow-hidden rounded-[34px] border border-[rgba(58,77,57,0.12)] shadow-[0_28px_90px_rgba(43,49,38,0.10)] dark:border-[rgba(154,177,143,0.14)]"
+          >
+            <div className="relative aspect-[4/5]">
+              <Image
+                src="/images/founder.jpeg"
+                alt="Portrait of the Itz Lola Beauty founder."
+                fill
+                priority
+                className="object-cover"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+              />
+            </div>
           </motion.div>
         </section>
       </div>

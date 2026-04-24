@@ -74,6 +74,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
               <button
                 key={image.id}
                 onClick={() => setActiveImage(index)}
+                aria-label={`View product image ${index + 1}`}
                 className={`relative aspect-square overflow-hidden rounded-2xl ${activeImage === index ? 'ring-2 ring-[#8B6914] dark:ring-[#D4A847]' : 'opacity-70'}`}
               >
                 <Image src={image.url} alt={image.alt ?? product.name} fill className="object-cover" referrerPolicy="no-referrer" />
@@ -131,7 +132,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
             <Glass level="medium" className="p-6">
               <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Details & Benefits</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
-                {product.details.length > 0 ? product.details.map((detail) => <li key={detail}>{detail}</li>) : <li>More product details coming soon.</li>}
+                {product.details.length > 0 ? product.details.map((detail) => <li key={detail}>{detail}</li>) : <li>Product details are shared in the product description and order confirmation.</li>}
               </ul>
             </Glass>
             <Glass level="medium" className="p-6">

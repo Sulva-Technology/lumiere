@@ -1,16 +1,18 @@
 import { Metadata } from 'next';
-import { getPublicStoreSettings } from '@/lib/data/public';
+import { getBookingServices, getPublicStoreSettings } from '@/lib/data/public';
 import HomeClient from './home-client';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Home',
-  description: 'The definitive studio for high-end makeup artistry and professional digital content creation. Experience the new standard in creative storytelling.',
+  description: 'Luxury makeup artistry for bridal, events, photoshoots, and confidence-led beauty bookings with clear services, pricing, and next steps.',
 };
 
 export default async function HomePage() {
   const store = await getPublicStoreSettings();
+  const services = await getBookingServices().catch(() => []);
+
   return (
     <HomeClient
       settings={{
@@ -25,6 +27,7 @@ export default async function HomePage() {
         home_shop_section_link_href: store.homeShopSectionLinkHref,
         home_shop_section_items: store.homeShopSectionItems,
       }}
+      services={services}
     />
   );
 }
