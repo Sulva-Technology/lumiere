@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Book', href: '/book' },
   { label: 'Shop', href: '/shop' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 export function NavBar({ brandName }: { brandName: string }) {

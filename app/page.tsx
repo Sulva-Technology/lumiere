@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getProducts, getPublicStoreSettings } from '@/lib/data/public';
+import { getPublicStoreSettings } from '@/lib/data/public';
 import HomeClient from './home-client';
 
 export const dynamic = 'force-dynamic';
@@ -10,11 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, store] = await Promise.all([getProducts(), getPublicStoreSettings()]);
-  const favoriteItems = products.filter((product) => product.featured).slice(0, 3);
+  const store = await getPublicStoreSettings();
   return (
     <HomeClient
-      favoriteItems={favoriteItems}
       settings={{
         store_name: store.storeName,
         support_email: store.supportEmail,

@@ -5,17 +5,16 @@ import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { ProductListItem, StoreSettings } from '@/lib/types';
+import type { StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 const headlineWords = 'Shop. Book the Session.'.split(' ');
 
 type HomeClientProps = {
-  favoriteItems: Array<Pick<ProductListItem, 'id' | 'slug' | 'name'>>;
   settings: StoreSettings | null;
 };
 
-export default function Home({ favoriteItems, settings }: HomeClientProps) {
+export default function Home({ settings }: HomeClientProps) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
   const shopSectionTitle = resolvedSettings.home_shop_section_title || 'Shop';
   const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label || 'Shop Collection';
@@ -171,58 +170,6 @@ export default function Home({ favoriteItems, settings }: HomeClientProps) {
           ))}
         </div>
 
-        {resolvedSettings.home_favorites_enabled && (
-          <Glass level="medium" className="mt-6 p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h3 className="font-serif text-2xl">Favorite items</h3>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">Quick links to the products you want everyone to see.</p>
-              </div>
-              <Link href="/shop" className="text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80">
-                View all products
-              </Link>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {favoriteItems.length > 0 ? (
-                favoriteItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/product/${item.slug}`}
-                    className="rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm text-[var(--text-primary)] transition-colors hover:border-[#8B6914] hover:text-[#8B6914] dark:border-white/10 dark:bg-white/5"
-                  >
-                    {item.name}
-                  </Link>
-                ))
-              ) : (
-                <span className="text-sm text-[var(--text-secondary)]">Feature products in the admin to show them here.</span>
-              )}
-            </div>
-          </Glass>
-        )}
-      </section>
-
-      <section className="mx-auto mb-24 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Glass level="heavy" className="p-8 text-center md:p-12">
-          <h2 className="font-serif text-3xl md:text-5xl">Everything points to one of two outcomes: shop beautifully or book confidently.</h2>
-
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--text-secondary)]">
-            The storefront and service experience now work together, so clients can move quickly from discovery to purchase or appointment confirmation.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href="/book"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--text-primary)] px-8 py-3 font-medium text-[var(--bg-gradient-start)] transition-opacity hover:opacity-90"
-            >
-              Book your Glam <ArrowRight size={18} />
-            </Link>
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--text-primary)] px-8 py-3 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80"
-            >
-              Shop
-            </Link>
-          </div>
-        </Glass>
       </section>
     </div>
   );

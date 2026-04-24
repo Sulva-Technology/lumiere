@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
 
 import { useTheme } from '@/components/theme-provider';
 
@@ -39,25 +38,6 @@ export function Footer({ brandName }: FooterProps) {
               <p className="text-[10px] uppercase tracking-[0.34em] text-[var(--text-accent)]">Beauty Studio</p>
               <span className="font-serif text-2xl tracking-[0.14em] uppercase text-[var(--text-primary)] sm:text-3xl">{brandName}</span>
             </div>
-          </div>
-
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-[#496052] dark:text-[var(--text-secondary)] sm:text-lg">
-            itzlolabeauty brings together beauty essentials, makeup artistry, and creator-ready sessions in one polished studio experience.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/book"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#8B6914] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_34px_rgba(139,105,20,0.18)] transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
-            >
-              Book Your Session <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="/shop"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[rgba(58,77,57,0.18)] bg-white/40 px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[#8B6914] hover:text-[#8B6914] dark:border-[rgba(154,177,143,0.12)] dark:bg-transparent dark:hover:border-[#D4A847] dark:hover:text-[#D4A847]"
-            >
-              Shop Essentials
-            </Link>
           </div>
         </div>
 
