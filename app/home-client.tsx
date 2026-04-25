@@ -8,7 +8,7 @@ import { ArrowRight } from 'lucide-react';
 import type { StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
-const headlineWords = 'Shop. Book the Session.'.split(' ');
+const headlineWords = 'Luxury Glam. Book the Session.'.split(' ');
 
 type HomeClientProps = {
   settings: StoreSettings | null;
@@ -16,10 +16,7 @@ type HomeClientProps = {
 
 export default function Home({ settings }: HomeClientProps) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
-  const shopSectionTitle = resolvedSettings.home_shop_section_title || 'Shop';
-  const shopSectionLinkLabel = resolvedSettings.home_shop_section_link_label || 'Shop Collection';
-  const shopSectionLinkHref = resolvedSettings.home_shop_section_link_href || '/shop';
-  const shopSectionItems = resolvedSettings.home_shop_section_items;
+  // Shop section removed to prioritize bookings
   return (
     <div className="flex flex-col gap-24">
       <section className="relative mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -69,7 +66,7 @@ export default function Home({ settings }: HomeClientProps) {
                 transition={{ delay: 0.8, duration: 1 }}
                 className="mb-8 hidden max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:block sm:text-lg md:text-xl"
               >
-                Discover premium makeup essentials or reserve a polished studio service built around makeup artistry and creator-ready content.
+                Discover a polished studio service built around high-end makeup artistry and creator-ready content. Confidence, redefined.
               </motion.p>
 
               <motion.div
@@ -145,31 +142,6 @@ export default function Home({ settings }: HomeClientProps) {
             </motion.div>
           ))}
         </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8 }}
-          className="mb-10 flex items-end justify-between"
-        >
-          <h2 className="font-serif text-3xl md:text-4xl">{shopSectionTitle}</h2>
-          <Link href={shopSectionLinkHref} className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
-            {shopSectionLinkLabel} <ArrowRight size={16} />
-          </Link>
-        </motion.div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {shopSectionItems.map((item, index) => (
-            <Glass key={`${item.title}-${index}`} level="medium" className="p-8">
-              <h3 className="font-serif text-2xl">{item.title}</h3>
-              <p className="mt-2 text-[var(--text-secondary)]">{item.description}</p>
-            </Glass>
-          ))}
-        </div>
-
       </section>
     </div>
   );

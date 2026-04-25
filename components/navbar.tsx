@@ -14,7 +14,6 @@ const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Book', href: '/book' },
-  { label: 'Shop', href: '/shop' },
   { label: 'Contact', href: '/contact' },
 ];
 
@@ -140,7 +139,7 @@ export function NavBar({ brandName }: { brandName: string }) {
 
       {isMobileMenuOpen && (
         <div className="mx-auto mt-3 max-w-7xl px-1 md:hidden">
-          <div className="rounded-2xl border border-[rgba(58,77,57,0.22)] bg-[rgba(247,247,242,0.88)] p-2 shadow-lg backdrop-blur-xl dark:border-[rgba(154,177,143,0.2)] dark:bg-[rgba(15,24,18,0.88)]">
+          <div className="rounded-2xl border border-[rgba(58,77,57,0.22)] bg-[rgba(247,247,242,0.96)] p-2 shadow-xl backdrop-blur-2xl">
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.label}
@@ -149,8 +148,8 @@ export function NavBar({ brandName }: { brandName: string }) {
                 className={cn(
                   'block rounded-xl px-4 py-3 text-sm font-medium transition-colors',
                   pathname === item.href
-                    ? 'bg-[rgba(154,177,143,0.2)] dark:bg-[rgba(108,139,103,0.16)] text-[#3A4D39] dark:text-[#d7e0d0]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
+                    ? 'bg-[rgba(154,177,143,0.2)] text-[#3A4D39]'
+                    : 'text-[#496052] hover:text-[#3A4D39] hover:bg-black/5'
                 )}
               >
                 {item.label}

@@ -47,17 +47,11 @@ export function Footer({ brandName }: FooterProps) {
             <Link href="/" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Home
             </Link>
-            <Link href="/shop" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Shop
-            </Link>
             <Link href="/book" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Book
+              Book Now
             </Link>
             <Link href="/contact" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Contact
-            </Link>
-            <Link href="/track-order" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Track Order
             </Link>
           </div>
         </div>
@@ -67,9 +61,6 @@ export function Footer({ brandName }: FooterProps) {
           <div className="flex flex-col gap-3">
             <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               FAQ
-            </Link>
-            <Link href="/shipping-returns" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Shipping & Returns
             </Link>
             <Link href="/privacy-policy" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
               Privacy Policy
@@ -83,7 +74,7 @@ export function Footer({ brandName }: FooterProps) {
 
       <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[#496052] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)] dark:text-[var(--text-secondary)]">
         <p>Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
-        <p className="text-xs uppercase tracking-[0.22em]">Shop beauty. Book confidently.</p>
+        <p className="text-xs uppercase tracking-[0.22em]">Luxury Glam. Book confidently.</p>
       </div>
     </footer>
   );
