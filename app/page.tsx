@@ -1,30 +1,73 @@
 import { Metadata } from 'next';
 import { getPublicStoreSettings } from '@/lib/data/public';
 import HomeClient from './home-client';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Home',
-  description: 'The definitive studio for high-end makeup artistry and professional digital content creation. Experience the new standard in creative storytelling.',
+  title: 'Luxury Makeup Artistry & Content Creation Studio',
+  description: 'Book premium Soft Glam, Full Glam, and Bridal makeup sessions with Damilola. Professional content creation studio services for creators and brands in Arizona.',
 };
 
 export default async function HomePage() {
   const store = await getPublicStoreSettings();
+  const siteUrl = 'https://itzlolabeauty.com';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+          {
+            '@type': 'ListItem',
+            'position': 1,
+            'name': 'Home',
+            'item': siteUrl
+          }
+        ]
+      },
+      {
+        '@type': 'ItemList',
+        'name': 'Studio Services',
+        'itemListElement': [
+          {
+            '@type': 'Service',
+            'name': 'Luxury Makeup Artistry',
+            'description': 'Soft Glam, Full Glam, and Bridal makeup services tailored for photoshoots, events, and weddings.',
+            'provider': { '@id': `${siteUrl}/#salon` },
+            'url': `${siteUrl}/book?type=makeup`
+          },
+          {
+            '@type': 'Service',
+            'name': 'Content Creation Session',
+            'description': 'Professional vertical video, brand photography, and social storytelling for creators and brands.',
+            'provider': { '@id': `${siteUrl}/#salon` },
+            'url': `${siteUrl}/book?type=content`
+          }
+        ]
+      }
+    ]
+  };
+
   return (
-    <HomeClient
-      settings={{
-        store_name: store.storeName,
-        support_email: store.supportEmail,
-        support_phone: store.supportPhone,
-        booking_contact_email: store.bookingContactEmail,
-        announcement_bar: store.announcementBar,
-        home_favorites_enabled: store.homeFavoritesEnabled,
-        home_shop_section_title: store.homeShopSectionTitle,
-        home_shop_section_link_label: store.homeShopSectionLinkLabel,
-        home_shop_section_link_href: store.homeShopSectionLinkHref,
-        home_shop_section_items: store.homeShopSectionItems,
-      }}
-    />
+    <>
+      <JsonLd data={schema} />
+      <HomeClient
+        settings={{
+          store_name: store.storeName,
+          support_email: store.supportEmail,
+          support_phone: store.supportPhone,
+          booking_contact_email: store.bookingContactEmail,
+          announcement_bar: store.announcementBar,
+          home_favorites_enabled: store.homeFavoritesEnabled,
+          home_shop_section_title: store.homeShopSectionTitle,
+          home_shop_section_link_label: store.homeShopSectionLinkLabel,
+          home_shop_section_link_href: store.homeShopSectionLinkHref,
+          home_shop_section_items: store.homeShopSectionItems,
+        }}
+      />
+    </>
   );
 }

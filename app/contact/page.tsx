@@ -1,5 +1,11 @@
-﻿import { Glass } from '@/components/ui/glass';
+import { Metadata } from 'next';
+import { Glass } from '@/components/ui/glass';
 import { getPublicStoreSettings } from '@/lib/data/public';
+
+export const metadata: Metadata = {
+  title: 'Contact Itz Lola Beauty | Bridal & Event Inquiries',
+  description: 'Have questions about our makeup or content services? Get in touch with Damilola for bridal inquiries, event bookings, and collaborations in Arizona.',
+};
 
 export default async function ContactPage() {
   const store = await getPublicStoreSettings();

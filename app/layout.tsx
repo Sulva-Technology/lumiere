@@ -7,6 +7,7 @@ import { AmbientBackground } from '@/components/ambient-background';
 import { CartProvider } from '@/components/cart-context';
 import { AppShell } from '@/components/app-shell';
 import { getPublicStoreSettings } from '@/lib/data/public';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,6 +26,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(siteUrl),
+    alternates: {
+      canonical: '/',
+    },
     title: {
       default: store.storeName,
       template: `%s | ${store.storeName}`,
@@ -70,10 +74,55 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store = await getPublicStoreSettings();
+  const siteUrl = 'https://itzlolabeauty.com';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        'name': store.storeName,
+        'url': siteUrl,
+        'logo': {
+          '@type': 'ImageObject',
+          'url': `${siteUrl}/images/logo.jpeg`,
+          'width': '512',
+          'height': '512'
+        },
+        'sameAs': []
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        'url': siteUrl,
+        'name': store.storeName,
+        'publisher': { '@id': `${siteUrl}/#organization` }
+      },
+      {
+        '@type': 'BeautySalon',
+        '@id': `${siteUrl}/#salon`,
+        'name': store.storeName,
+        'description': 'Luxury makeup artistry and digital content creation studio by Damilola in Arizona.',
+        'url': siteUrl,
+        'telephone': store.supportPhone,
+        'address': {
+          '@type': 'PostalAddress',
+          'addressRegion': 'AZ',
+          'addressCountry': 'US'
+        },
+        'image': `${siteUrl}/images/logo.jpeg`,
+        'priceRange': '$$',
+        'parentOrganization': { '@id': `${siteUrl}/#organization` },
+        'knowsAbout': ['Makeup Artistry', 'Bridal Makeup', 'Content Creation', 'Beauty Education']
+      }
+    ]
+  };
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cormorant.variable}`}>
       <head>
+        <JsonLd data={schema} />
         <Script id="theme-init" strategy="beforeInteractive">
           {`
             (function() {

@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { SERVICES } from '@/lib/data/services';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://itzlolabeauty.com';
@@ -23,6 +24,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     productUrls = [];
   }
 
+  const serviceUrls: MetadataRoute.Sitemap = SERVICES.map((service) => ({
+    url: `${baseUrl}/services/${service.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
   const staticUrls = [
     {
       url: baseUrl,
@@ -31,22 +39,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/shop`,
+      url: `${baseUrl}/services`,
       lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/book`,
       lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
+      changeFrequency: 'weekly' as const,
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.5,
+      priority: 0.6,
     },
     {
       url: `${baseUrl}/faq`,
@@ -56,5 +70,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...productUrls];
+  return [...staticUrls, ...serviceUrls, ...productUrls];
 }

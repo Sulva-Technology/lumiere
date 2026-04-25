@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Calendar, Camera, Check, ChevronRight, Clock, Sparkles, UploadCloud } from 'lucide-react';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency, formatDateTime } from '@/lib/format';
+import { JsonLd } from '@/components/seo/JsonLd';
 import type {
   AvailableSlot,
   BookingReservation,
@@ -236,5 +237,31 @@ function BookingPageContent() {
 }
 
 export default function BookingPage() {
-  return <Suspense fallback={<div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">Loading booking experience...</div>}><BookingPageContent /></Suspense>;
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://itzlolabeauty.com'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Book',
+        'item': 'https://itzlolabeauty.com/book'
+      }
+    ]
+  };
+
+  return (
+    <>
+      <JsonLd data={schema} />
+      <Suspense fallback={<div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">Loading booking experience...</div>}>
+        <BookingPageContent />
+      </Suspense>
+    </>
+  );
 }
