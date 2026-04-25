@@ -13,7 +13,7 @@ insert into public.booking_services (name, slug, description, duration_minutes, 
 select
   'Soft Glam',
   'soft-glam',
-  'A natural, radiant look that enhances your features while keeping your skin looking like skin. Perfect for everyday glam, events, or photos. Travel Fee: A $20 travel fee applies for locations beyond a 6-mile radius.',
+  'A natural, radiant look that enhances your features while keeping your skin looking like skin. Perfect for everyday glam, events, or photos.\nTravel Fee: A $20 travel fee applies for locations beyond a 6-mile radius.',
   90,
   120.00,
   true,
@@ -28,7 +28,7 @@ update public.booking_services
 set
   name = 'Full Glam',
   slug = 'full-glam',
-  description = 'A more defined, elevated look with fuller coverage, detailed eye makeup, and a flawless finish. Ideal for special occasions and photoshoots. Travel Fee: A $20 travel fee applies for locations beyond an 8-mile radius.',
+  description = 'A more defined, elevated look with fuller coverage, detailed eye makeup, and a flawless finish. Ideal for special occasions and photoshoots.\nTravel Fee: A $20 travel fee applies for locations beyond an 8-mile radius.',
   duration_minutes = 120,
   price = 170.00,
   active = true,
@@ -39,7 +39,7 @@ insert into public.booking_services (name, slug, description, duration_minutes, 
 select
   'Full Glam',
   'full-glam',
-  'A more defined, elevated look with fuller coverage, detailed eye makeup, and a flawless finish. Ideal for special occasions and photoshoots. Travel Fee: A $20 travel fee applies for locations beyond an 8-mile radius.',
+  'A more defined, elevated look with fuller coverage, detailed eye makeup, and a flawless finish. Ideal for special occasions and photoshoots.\nTravel Fee: A $20 travel fee applies for locations beyond an 8-mile radius.',
   120,
   170.00,
   true,
@@ -55,7 +55,7 @@ values
   (
     'Social Media Video Content (30 Minutes)',
     'social-media-video-content-30-minutes',
-    'Perfect for capturing quick, meaningful moments like birthdays, girls'' dinners, and family content. Deliverables: 2 edited videos (1 to 2 minutes each), raw video footage included, up to 2 revision rounds. Travel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.',
+    'Perfect for capturing quick, meaningful moments like birthdays, girls'' dinners, and family content. Deliverables: 2 edited videos (1 to 2 minutes each), raw video footage included, up to 2 revision rounds.\nTravel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.',
     30,
     70.00,
     true,
@@ -64,7 +64,7 @@ values
   (
     'Video Content Session (1 Hour)',
     'video-content-session-1-hour',
-    'Ideal for event coverage and personal branding content with more depth and variety. Deliverables: 3 edited videos (1 to 2 minutes each), raw video footage included, up to 2 revision rounds. Travel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.',
+    'Ideal for event coverage and personal branding content with more depth and variety. Deliverables: 3 edited videos (1 to 2 minutes each), raw video footage included, up to 2 revision rounds.\nTravel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.',
     60,
     150.00,
     true,
@@ -73,7 +73,7 @@ values
   (
     'Premium Video Content Session (2 Hours)',
     'premium-video-content-session-2-hours',
-    'Best for brands, events, and creators who need a higher volume of content from one session. Deliverables: 6 edited videos (1 to 2 minutes each), raw video footage included, up to 4 revision rounds. Travel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.',
+    'Best for brands, events, and creators who need a higher volume of content from one session. Deliverables: 6 edited videos (1 to 2 minutes each), raw video footage included, up to 4 revision rounds.\nTravel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.',
     120,
     250.00,
     true,

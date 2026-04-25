@@ -148,7 +148,7 @@ export default function AdminServicesPage() {
                     <span className={`rounded-full px-2 py-1 tracking-[0.18em] ${service.active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/8 text-white/55'}`}>{service.active ? 'Active' : 'Hidden'}</span>
                   </div>
                   <h2 className="mt-3 font-serif text-3xl text-[#F7E7C1]">{service.name}</h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-7 text-white/60">{service.description || 'No description yet.'}</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 whitespace-pre-wrap text-white/60">{service.description || 'No description yet.'}</p>
                   <div className="mt-4 flex flex-wrap gap-3 text-sm text-white/55">
                     <span className="rounded-full border border-white/10 px-3 py-1">{service.durationMinutes} mins</span>
                     <span className="rounded-full border border-white/10 px-3 py-1">{formatCurrency(service.price)}</span>
