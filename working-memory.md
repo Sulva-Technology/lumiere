@@ -66,11 +66,14 @@
 - The public-facing design now leans into warm editorial luxury: full-bleed hero, serif-led hierarchy, soft neutrals, gold accents, and restrained glass/surface treatments.
 - Homepage sections use anchor IDs for Services, Portfolio, Policies, FAQ, and Contact to support the revised navigation.
 - The mobile header now keeps `Book Now` visible.
+- Theme tokens in `app/globals.css` now register surface, border, input, text-accent, and soft-shadow utilities with Tailwind so light/dark surfaces do not silently lose backgrounds, borders, or shadows.
+- Form fields and FAQ panels now use shared theme tokens instead of hard-coded light surfaces, and the homepage hero-top nav controls use explicit white text/darker glass for contrast over the image.
 
 ## Bugs Fixed
 - Removed the shop-first homepage structure in favor of a booking-first conversion flow.
 - Added real inquiry form submission instead of a purely presentational contact form.
 - Cleared the previous repo-wide lint failures in `app/book/page.tsx` and `components/theme-provider.tsx`.
+- Fixed light/dark theme contrast regressions caused by missing Tailwind token registrations and light-only component overrides.
 
 ## Risks / Watchouts
 - Bridal preview, bridal party, wedding-day makeup, and lessons are currently marketed through inquiry-first cards unless matching live booking services are later added to Supabase.

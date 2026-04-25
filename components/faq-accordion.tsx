@@ -11,7 +11,7 @@ export function FaqAccordion({
   className?: string;
 }) {
   return (
-    <div className={cn('divide-y border-border-soft border-soft-2 bg-surface-primary shadow-sm backdrop-blur-sm', className)}>
+    <div className={cn('overflow-hidden rounded-[28px] border border-border-soft bg-surface-primary shadow-shadow-soft backdrop-blur-sm divide-y divide-border-soft', className)}>
       {items.map((item) => (
         <details key={item.question} className="group">
           <summary className="flex list-none items-center justify-between gap-6 px-6 py-5 text-left marker:hidden sm:px-8">

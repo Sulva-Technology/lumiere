@@ -14,7 +14,7 @@ type ContactInquiryFormProps = {
 };
 
 const fieldClassName =
-  'w-full rounded-[20px] border border-border-soft bg-white/80 px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-secondary/50 focus:border-accent-gold/50 focus:shadow-[0_0_0_4px_rgba(139,105,20,0.12)] dark:border-white/10 dark:bg-white/5 dark:placeholder:text-white/40';
+  'w-full rounded-[20px] border border-border-soft bg-input-bg px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-accent-gold/60 focus:shadow-[0_0_0_4px_rgba(139,105,20,0.16)] dark:placeholder:text-text-secondary';
 
 export function ContactInquiryForm({ className, defaultServiceInterest }: ContactInquiryFormProps) {
   const resolvedInitialService = defaultServiceInterest?.trim() || 'General Inquiry';

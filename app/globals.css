@@ -23,8 +23,14 @@
   /* Theme Tokens */
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-accent: var(--text-accent);
   --color-heading-primary: var(--heading-primary);
   --color-accent-gold: var(--accent-gold);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border-soft: var(--border-soft);
+  --color-input-bg: var(--input-bg);
+  --shadow-shadow-soft: var(--shadow-soft);
 }
 
 @layer base {
@@ -33,14 +39,14 @@
     --bg-gradient-mid: #eef2ea;
     --bg-gradient-end: #dfe7d8;
     --text-primary: #16301c;
-    --text-secondary: rgba(22, 48, 28, 0.78);
+    --text-secondary: rgba(22, 48, 28, 0.76);
     --text-accent: #3A4D39;
     --heading-primary: #102014;
-    --accent-gold: #8B6914;
-    --surface-primary: rgba(250, 252, 247, 0.84);
-    --surface-elevated: rgba(244, 248, 241, 0.92);
-    --border-soft: rgba(58, 77, 57, 0.16);
-    --input-bg: rgba(255, 255, 255, 0.78);
+    --accent-gold: #76570f;
+    --surface-primary: rgba(255, 252, 247, 0.9);
+    --surface-elevated: rgba(252, 247, 240, 0.96);
+    --border-soft: rgba(58, 77, 57, 0.18);
+    --input-bg: rgba(255, 255, 255, 0.92);
     --shadow-soft: 0 18px 50px rgba(58, 77, 57, 0.12);
     
     /* Light Mode Glass */
@@ -60,15 +66,15 @@
     --bg-gradient-start: #0c1510;
     --bg-gradient-mid: #14211a;
     --bg-gradient-end: #203126;
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.8);
+    --text-primary: #f8fbf5;
+    --text-secondary: rgba(248, 251, 245, 0.76);
     --text-accent: #9ab18f;
     --heading-primary: #f4f8f1;
-    --accent-gold: #D4A847;
-    --surface-primary: rgba(15, 24, 18, 0.84);
-    --surface-elevated: rgba(22, 33, 26, 0.92);
-    --border-soft: rgba(154, 177, 143, 0.16);
-    --input-bg: rgba(10, 16, 12, 0.52);
+    --accent-gold: #e5bf67;
+    --surface-primary: rgba(14, 24, 18, 0.9);
+    --surface-elevated: rgba(20, 33, 25, 0.96);
+    --border-soft: rgba(202, 220, 193, 0.2);
+    --input-bg: rgba(255, 255, 255, 0.07);
     --shadow-soft: 0 24px 64px rgba(0, 0, 0, 0.34);
 
     
@@ -123,8 +129,14 @@
   textarea,
   select {
     color: var(--text-primary);
+    background: var(--input-bg);
     border: 1px solid var(--border-soft);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  option {
+    background: var(--surface-elevated);
+    color: var(--text-primary);
   }
 
   input::placeholder,
@@ -135,9 +147,9 @@
   input:focus,
   textarea:focus,
   select:focus {
-    border-color: rgba(58, 77, 57, 0.52);
+    border-color: color-mix(in srgb, var(--accent-gold) 68%, var(--border-soft));
     box-shadow:
-      0 0 0 4px rgba(58, 77, 57, 0.14),
+      0 0 0 4px color-mix(in srgb, var(--accent-gold) 18%, transparent),
       var(--shadow-soft);
   }
 }
