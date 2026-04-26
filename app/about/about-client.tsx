@@ -27,7 +27,7 @@ export default function AboutClient() {
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderClose}</p>
             </div>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]">
+              <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#102014]">
                 Book a Session
               </Link>
               <Link href="/contact" className="inline-flex items-center justify-center rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80">

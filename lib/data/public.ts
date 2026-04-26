@@ -223,15 +223,27 @@ export async function getBookingServices(): Promise<BookingService[]> {
 
   if (error) throw error;
 
-  return (data ?? []).map((service) => ({
-    id: service.id,
-    slug: service.slug,
-    name: service.name,
-    description: service.description,
-    durationMinutes: service.duration_minutes,
-    price: normalizeMoney(service.price),
-    serviceType: service.service_type,
-  }));
+  // We import SERVICES dynamically to avoid circular dependencies if any, 
+  // though here it's fine. We'll use the slug to match.
+  const { SERVICES } = require('./services');
+
+  return (data ?? []).map((service) => {
+    const seoData = SERVICES.find((s: any) => s.slug === service.slug);
+    
+    return {
+      id: service.id,
+      slug: service.slug,
+      name: service.name,
+      description: service.description,
+      durationMinutes: service.duration_minutes,
+      price: normalizeMoney(service.price),
+      serviceType: service.service_type,
+      // Pass through SEO specific fields if they exist
+      included: seoData?.included ?? [],
+      prepNotes: seoData?.prepNotes ?? [],
+      bestFor: seoData?.bestFor ?? ''
+    } as BookingService;
+  });
 }
 
 export async function getStylists(): Promise<StylistSummary[]> {

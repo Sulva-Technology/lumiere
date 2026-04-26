@@ -6,8 +6,8 @@ import { JsonLd } from '@/components/seo/JsonLd';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Luxury Makeup Artistry & Content Creation Studio',
-  description: 'Book premium Soft Glam, Full Glam, and Bridal makeup sessions with Damilola. Professional content creation studio services for creators and brands in Arizona.',
+  title: 'Makeup Artist in Arizona | Luxury Glam & Content Studio',
+  description: 'Top-rated makeup artist in Arizona specializing in Soft Glam, Full Glam, and Bridal makeup. Professional studio for photoshoots, events, and content creation.',
 };
 
 export default async function HomePage() {

@@ -164,6 +164,9 @@ export interface BookingService {
   price: number;
   serviceType: BookingServiceType;
   active?: boolean;
+  bestFor?: string;
+  included?: string[];
+  prepNotes?: string[];
 }
 
 export interface AvailabilityRule {

@@ -1,12 +1,13 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { SERVICES } from '@/lib/data/services';
+import { getBookingServices } from '@/lib/data/public';
 import { notFound } from 'next/navigation';
 import ServiceDetailClient from './service-detail-client';
 
 export async function generateStaticParams() {
-  return SERVICES.map((service) => ({
+  const services = await getBookingServices();
+  return services.map((service) => ({
     slug: service.slug,
   }));
 }
@@ -17,19 +18,21 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const service = SERVICES.find((s) => s.slug === slug);
+  const services = await getBookingServices();
+  const service = services.find((s) => s.slug === slug);
 
   if (!service) return { title: 'Service Not Found' };
 
   return {
     title: `${service.name} | Luxury Makeup & Content`,
-    description: service.bestFor,
+    description: service.bestFor || service.description || '',
   };
 }
 
 export default async function ServiceDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const service = SERVICES.find((s) => s.slug === slug);
+  const services = await getBookingServices();
+  const service = services.find((s) => s.slug === slug);
 
   if (!service) {
     notFound();
@@ -45,6 +48,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
           <ArrowLeft size={16} /> Back to Services
         </Link>
 
+        {/* Pass the live database service to the client */}
         <ServiceDetailClient service={service} />
       </div>
     </main>

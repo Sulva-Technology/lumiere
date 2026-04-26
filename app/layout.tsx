@@ -33,8 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
       default: store.storeName,
       template: `%s | ${store.storeName}`,
     },
-    description: 'itzlolabeauty is a founder-led beauty studio where clients can shop makeup essentials or book polished makeup and content sessions.',
-    keywords: ['makeup artistry', 'content studio', 'digital content creation', 'editorial makeup', 'bridal glam', 'social media reels', 'studio sessions'],
+    description: 'Expert Makeup Artist in Arizona specializing in Soft Glam, Full Glam, and Bridal beauty. Professional studio for photoshoots, events, and content creation.',
+    keywords: ['makeup artist in Arizona', 'Arizona makeup artist', 'bridal makeup Arizona', 'soft glam makeup', 'full glam makeup', 'content creation studio'],
     authors: [{ name: store.storeName }],
     creator: store.storeName,
 
@@ -43,21 +43,21 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'en_US',
       url: siteUrl,
       siteName: store.storeName,
-      title: `${store.storeName} | Shop Makeup. Book Beauty.`,
-      description: 'Shop beauty essentials or reserve a signature makeup or content session with itzlolabeauty.',
+      title: `Makeup Artist in Arizona | ${store.storeName}`,
+      description: 'Book the top makeup artist in Arizona for luxury glam, bridal, and content creation sessions. Professional artistry for events and photoshoots.',
       images: [
         {
           url: '/images/logo.jpeg',
           width: 1200,
           height: 630,
-          alt: store.storeName,
+          alt: `Makeup Artist in Arizona - ${store.storeName}`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${store.storeName} | Shop Makeup. Book Beauty.`,
-      description: 'A founder-led beauty studio for makeup artistry, creator sessions, and beauty essentials.',
+      title: `Makeup Artist in Arizona | ${store.storeName}`,
+      description: 'Luxury makeup artist and content creator in Arizona specializing in high-end editorial and bridal looks.',
       images: ['/images/logo.jpeg'],
     },
     robots: {
