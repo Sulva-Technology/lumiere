@@ -272,19 +272,31 @@ export async function getStylists(): Promise<StylistSummary[]> {
 export async function getAvailability(stylistId?: string, serviceId?: string): Promise<AvailableSlot[]> {
   await syncRecurringAvailabilityRules();
   const supabase = createSupabaseAdminClient();
+  
+  // 1. Fetch candidate slots
   let query = supabase
     .from('booking_availability')
-    .select('id, stylist_id, service_id, starts_at, ends_at, is_available, bookings(id, status)')
+    .select('id, stylist_id, service_id, starts_at, ends_at, is_available')
     .eq('is_available', true)
     .gte('starts_at', nowIso())
     .order('starts_at')
-    .limit(40);
+    .limit(80); // Increased limit to ensure we find enough buffered slots
 
   if (stylistId) query = query.eq('stylist_id', stylistId);
   if (serviceId) query = query.eq('service_id', serviceId);
 
-  const [{ data, error }, { data: reservations, error: reservationError }] = await Promise.all([
+  // 2. Fetch all confirmed bookings and pending reservations to check for buffers
+  const [
+    { data: slots, error: slotsError },
+    { data: confirmedBookings, error: bookingsError },
+    { data: reservations, error: reservationError }
+  ] = await Promise.all([
     query,
+    supabase
+      .from('bookings')
+      .select('starts_at, ends_at, status')
+      .in('status', ['confirmed', 'completed'])
+      .gte('ends_at', nowIso()),
     supabase
       .from('booking_reservations')
       .select('availability_id, expires_at, reservation_status')
@@ -292,19 +304,37 @@ export async function getAvailability(stylistId?: string, serviceId?: string): P
       .gt('expires_at', nowIso()),
   ]);
 
-  if (error) throw error;
+  if (slotsError) throw slotsError;
+  if (bookingsError) throw bookingsError;
   if (reservationError) throw reservationError;
 
   const blockedIds = new Set((reservations ?? []).map((item) => item.availability_id));
+  const BUFFER_MS = 60 * 60_000; // 60 minutes
 
-  return (data ?? [])
+  return (slots ?? [])
     .filter((slot) => {
-      const hasConfirmedBooking = Array.isArray(slot.bookings)
-        ? slot.bookings.some((booking) => ['confirmed', 'completed', 'refunded'].includes(booking.status))
-        : false;
+      // Check for direct reservation block
+      if (blockedIds.has(slot.id)) return false;
 
-      return !blockedIds.has(slot.id) && !hasConfirmedBooking;
+      const slotStart = new Date(slot.starts_at).getTime();
+      const slotEnd = new Date(slot.ends_at).getTime();
+
+      // Check for overlap with any confirmed booking + 60min buffer
+      const isBlockedByBooking = (confirmedBookings ?? []).some((booking) => {
+        const bStart = new Date(booking.starts_at).getTime();
+        const bEnd = new Date(booking.ends_at).getTime();
+        
+        // Expanded booking window: [start - buffer, end + buffer]
+        const expandedStart = bStart - BUFFER_MS;
+        const expandedEnd = bEnd + BUFFER_MS;
+
+        // Overlap check: slot starts before booking ends AND slot ends after booking starts
+        return slotStart < expandedEnd && slotEnd > expandedStart;
+      });
+
+      return !isBlockedByBooking;
     })
+    .slice(0, 40) // Return top 40 available slots after buffering
     .map((slot) => ({
       id: slot.id,
       stylistId: slot.stylist_id,
@@ -365,9 +395,11 @@ export async function validateCartLines(lines: CartLineInput[]): Promise<Validat
 
 async function getAvailableSlot(input: Pick<CreateBookingInput, 'availabilityId' | 'serviceId' | 'stylistId'>) {
   const supabase = createSupabaseAdminClient();
+  
+  // 1. Fetch the requested slot
   const { data: slot, error: slotError } = await supabase
     .from('booking_availability')
-    .select('id, starts_at, ends_at, is_available, stylist_id, service_id, bookings(id, status)')
+    .select('id, starts_at, ends_at, is_available, stylist_id, service_id')
     .eq('id', input.availabilityId)
     .eq('is_available', true)
     .maybeSingle();
@@ -377,14 +409,24 @@ async function getAvailableSlot(input: Pick<CreateBookingInput, 'availabilityId'
     throw new Error('That appointment time is no longer available.');
   }
 
-  const hasConfirmedBooking = Array.isArray(slot.bookings)
-    ? slot.bookings.some((booking) => ['confirmed', 'completed', 'refunded'].includes(booking.status))
-    : false;
+  const slotStart = new Date(slot.starts_at).getTime();
+  const slotEnd = new Date(slot.ends_at).getTime();
+  const BUFFER_MS = 60 * 60_000;
 
-  if (hasConfirmedBooking) {
-    throw new Error('That appointment time has already been booked.');
+  // 2. Double check for ANY overlapping confirmed bookings for this stylist (including buffers)
+  const { data: confirmedBookings } = await supabase
+    .from('bookings')
+    .select('id, starts_at, ends_at')
+    .eq('stylist_id', input.stylistId)
+    .in('status', ['confirmed', 'completed'])
+    .lt('starts_at', new Date(slotEnd + BUFFER_MS).toISOString())
+    .gt('ends_at', new Date(slotStart - BUFFER_MS).toISOString());
+
+  if (confirmedBookings && confirmedBookings.length > 0) {
+    throw new Error('This time is no longer available due to a recent booking overlap.');
   }
 
+  // 3. Check for active reservations
   const { data: activeReservation } = await supabase
     .from('booking_reservations')
     .select('id')

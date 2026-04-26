@@ -213,7 +213,7 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
           }
         }
 
-        cursor = new Date(cursor.getTime() + duration * 60_000);
+        cursor = new Date(cursor.getTime() + 30 * 60_000); // 30-minute steps for more flexible start times
       }
 
       day = new Date(day);
