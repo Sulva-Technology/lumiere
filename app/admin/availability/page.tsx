@@ -183,8 +183,8 @@ export default function AdminAvailabilityPage() {
           </div>
           <form onSubmit={handleCreateSlot} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Service</label>
-              <select value={selectedService} onChange={(event) => setSelectedService(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Service</label>
+              <select value={selectedService} onChange={(event) => setSelectedService(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40">
                 <option value="">Select a service...</option>
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
@@ -194,17 +194,17 @@ export default function AdminAvailabilityPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Date</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Date</label>
               <div className="relative">
                 <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required className="w-full rounded-2xl bg-white/40 py-3 pl-10 pr-4 text-sm outline-none dark:bg-black/40" />
+                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Start Time</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Start Time</label>
               <div className="relative">
                 <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} required className="w-full rounded-2xl bg-white/40 py-3 pl-10 pr-4 text-sm outline-none dark:bg-black/40" />
+                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
               </div>
             </div>
             <button type="submit" disabled={creatingSlot} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]">
@@ -220,8 +220,8 @@ export default function AdminAvailabilityPage() {
           </div>
           <form onSubmit={handleCreateRule} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Service</label>
-              <select value={ruleServiceId} onChange={(event) => setRuleServiceId(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Service</label>
+              <select value={ruleServiceId} onChange={(event) => setRuleServiceId(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40">
                 <option value="">Select a service...</option>
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
@@ -231,8 +231,8 @@ export default function AdminAvailabilityPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Weekday</label>
-              <select value={ruleWeekday} onChange={(event) => setRuleWeekday(event.target.value)} className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Weekday</label>
+              <select value={ruleWeekday} onChange={(event) => setRuleWeekday(event.target.value)} className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40">
                 {WEEKDAYS.map((weekday, index) => (
                   <option key={weekday} value={index}>
                     {weekday}
@@ -242,12 +242,12 @@ export default function AdminAvailabilityPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">Start Time</label>
-                <input type="time" value={ruleStartTime} onChange={(event) => setRuleStartTime(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40" />
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Start Time</label>
+                <input type="time" value={ruleStartTime} onChange={(event) => setRuleStartTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">End Time</label>
-                <input type="time" value={ruleEndTime} onChange={(event) => setRuleEndTime(event.target.value)} required className="w-full rounded-2xl bg-white/40 px-4 py-3 text-sm outline-none dark:bg-black/40" />
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">End Time</label>
+                <input type="time" value={ruleEndTime} onChange={(event) => setRuleEndTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
               </div>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">This creates a repeating weekly rule and automatically fills future bookable slots ahead for that window.</p>
