@@ -33,8 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
       default: store.storeName,
       template: `%s | ${store.storeName}`,
     },
-    description: 'Expert Makeup Artist in Arizona specializing in Soft Glam, Full Glam, and Bridal beauty. Professional studio for photoshoots, events, and content creation.',
-    keywords: ['makeup artist in Arizona', 'Arizona makeup artist', 'bridal makeup Arizona', 'soft glam makeup', 'full glam makeup', 'content creation studio'],
+    description: 'Expert Makeup Artist in Arizona specializing in Soft Glam and Full Glam. Professional studio for photoshoots, events, and content creation.',
+    keywords: ['makeup artist in Arizona', 'Arizona makeup artist', 'soft glam makeup', 'full glam makeup', 'event makeup Arizona', 'content creation studio'],
     authors: [{ name: store.storeName }],
     creator: store.storeName,
 
@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: siteUrl,
       siteName: store.storeName,
       title: `Makeup Artist in Arizona | ${store.storeName}`,
-      description: 'Book the top makeup artist in Arizona for luxury glam, bridal, and content creation sessions. Professional artistry for events and photoshoots.',
+      description: 'Book the top makeup artist in Arizona for luxury glam and content creation sessions. Professional artistry for events and photoshoots.',
       images: [
         {
           url: '/images/logo.jpeg',
@@ -57,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: `Makeup Artist in Arizona | ${store.storeName}`,
-      description: 'Luxury makeup artist and content creator in Arizona specializing in high-end editorial and bridal looks.',
+      description: 'Luxury makeup artist and content creator in Arizona specializing in high-end editorial and event looks.',
       images: ['/images/logo.jpeg'],
     },
     robots: {
@@ -114,7 +114,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         'image': `${siteUrl}/images/logo.jpeg`,
         'priceRange': '$$',
         'parentOrganization': { '@id': `${siteUrl}/#organization` },
-        'knowsAbout': ['Makeup Artistry', 'Bridal Makeup', 'Content Creation', 'Beauty Education']
+        'knowsAbout': ['Makeup Artistry', 'Event Makeup', 'Content Creation', 'Beauty Education']
       }
     ]
   };

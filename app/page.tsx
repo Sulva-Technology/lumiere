@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Makeup Artist in Arizona | Luxury Glam & Content Studio',
-  description: 'Top-rated makeup artist in Arizona specializing in Soft Glam, Full Glam, and Bridal makeup. Professional studio for photoshoots, events, and content creation.',
+  description: 'Top-rated makeup artist in Arizona specializing in Soft Glam and Full Glam. Professional studio for photoshoots, events, and content creation.',
 };
 
 export default async function HomePage() {
@@ -35,7 +35,7 @@ export default async function HomePage() {
           {
             '@type': 'Service',
             'name': 'Luxury Makeup Artistry',
-            'description': 'Soft Glam, Full Glam, and Bridal makeup services tailored for photoshoots, events, and weddings.',
+            'description': 'Soft Glam and Full Glam makeup services tailored for photoshoots and events.',
             'provider': { '@id': `${siteUrl}/#salon` },
             'url': `${siteUrl}/book?type=makeup`
           },

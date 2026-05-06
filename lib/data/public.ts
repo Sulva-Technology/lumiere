@@ -19,7 +19,6 @@ import type {
   StylistSummary,
   ValidatedCartLine,
 } from '@/lib/types';
-import { SERVICES } from './services';
 
 function normalizeMoney(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -223,6 +222,10 @@ export async function getBookingServices(): Promise<BookingService[]> {
     .order('price');
 
   if (error) throw error;
+
+  // We import SERVICES dynamically to avoid circular dependencies if any, 
+  // though here it's fine. We'll use the slug to match.
+  const { SERVICES } = require('./services');
 
   return (data ?? []).map((service) => {
     const seoData = SERVICES.find((s: any) => s.slug === service.slug);

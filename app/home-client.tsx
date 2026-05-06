@@ -35,37 +35,16 @@ export default function Home({ settings }: HomeClientProps) {
             />
           </motion.div>
 
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#F5F0EA]/90 via-transparent to-transparent dark:from-[#1A1008]/90" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent to-black/30" />
 
-          <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
-            <Glass level="heavy" className="flex w-full max-w-3xl flex-col items-center p-4 text-center sm:p-10 md:p-16">
-              <div className="mb-5 flex items-center gap-3 rounded-full border border-[#c8a03c]/20 bg-white/40 px-4 py-2 dark:bg-black/20">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                  <Image src="/images/logo.jpeg" alt="itzlolabeauty brand logo" fill className="object-cover" sizes="40px" />
-                </div>
-                <p className="text-xs uppercase tracking-[0.45em] text-[var(--text-secondary)]">Itz Lola Beauty</p>
-              </div>
-
-              <h1 className="mb-5 font-serif text-4xl font-medium tracking-tight sm:mb-6 sm:text-5xl md:text-7xl text-[var(--text-primary)]">
-                Luxury Makeup Artist in Arizona
-              </h1>
-
-              <p className="mb-8 max-w-2xl text-base text-[var(--text-secondary)] sm:mb-10 sm:text-lg md:text-xl">
-                Premium Soft Glam, Full Glam, and Bridal makeup artistry for events, photoshoots, and creators across Arizona. Experience the new standard in beauty and digital storytelling.
-              </p>
-
+          <div className="absolute inset-0 z-20 flex items-end justify-center p-6 pb-8 sm:pb-12">
+            <Glass level="heavy" className="flex w-fit flex-col items-center p-4 text-center sm:p-6">
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   href="/book"
-                  className="w-full rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white shadow-lg transition-all hover:scale-[1.02] hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] sm:w-auto text-center"
+                  className="rounded-full bg-[#8B6914] px-10 py-4 font-medium text-white shadow-lg transition-all hover:scale-[1.02] hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] text-center"
                 >
-                  Book Your Arizona Glam
-                </Link>
-                <Link
-                  href="/contact"
-                  className="w-full rounded-full border border-[#8B6914]/30 bg-white/50 px-8 py-4 font-medium text-[#8B6914] transition-all hover:bg-white/80 dark:border-[#D4A847]/30 dark:bg-black/20 dark:text-[#D4A847] sm:w-auto text-center"
-                >
-                  Submit Bridal Inquiry
+                  Book Now
                 </Link>
               </div>
             </Glass>
@@ -89,7 +68,7 @@ export default function Home({ settings }: HomeClientProps) {
           {[
             {
               title: 'Makeup Artistry',
-              description: 'From natural Soft Glam to elevated Full Glam and Bridal artistry, we specialize in enhancing your unique features for birthdays, weddings, and photoshoots.',
+              description: 'From natural Soft Glam to elevated Full Glam, we specialize in enhancing your unique features for birthdays, events, and photoshoots.',
               cta: 'Book Makeup Artist',
               href: '/book?type=makeup',
               img: 'makeup.jpeg',
@@ -185,7 +164,7 @@ export default function Home({ settings }: HomeClientProps) {
           <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Common Questions</h2>
           <div className="space-y-6">
             {[
-              { q: 'How do I book for a bridal party?', a: 'For bridal parties and group bookings, please use our Contact page to submit a bridal inquiry for custom pricing and availability.' },
+              { q: 'Do you accommodate group bookings?', a: 'Yes! For group bookings and special events, please use our Contact page to submit an inquiry for custom pricing and availability.' },
               { q: 'Can I reschedule my appointment?', a: 'Rescheduling is permitted with advance notice according to our policy. Your deposit may be transferred to a new date once.' },
               { q: 'Do you offer mobile makeup services?', a: 'Yes, we offer mobile services across Arizona. Travel fees are calculated based on your location during the booking process.' },
             ].map((faq) => (

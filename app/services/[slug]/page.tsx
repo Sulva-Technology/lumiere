@@ -2,15 +2,19 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { getBookingServices } from '@/lib/data/public';
+import { SERVICES } from '@/lib/data/services';
 import { notFound } from 'next/navigation';
 import ServiceDetailClient from './service-detail-client';
 
-export async function generateStaticParams() {
-  const services = await getBookingServices();
-  return services.map((service) => ({
+// Use static list so this works at build time without a DB connection
+export function generateStaticParams() {
+  return SERVICES.map((service) => ({
     slug: service.slug,
   }));
 }
+
+// Allow new slugs added via admin to be served dynamically
+export const dynamicParams = true;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
