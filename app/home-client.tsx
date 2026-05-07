@@ -18,8 +18,8 @@ export default function Home({ settings }: HomeClientProps) {
   return (
     <div className="flex flex-col gap-24 pb-24">
       {/* Hero Section */}
-      <section className="relative mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative h-[72vh] min-h-[520px] w-full overflow-hidden rounded-[32px] sm:min-h-[600px]">
+      <section className="relative mx-auto mt-4 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+        <div className="relative aspect-[3/4] sm:aspect-[21/9] w-full overflow-hidden rounded-[32px]">
           <motion.div
             className="absolute inset-0 z-0"
             animate={{ scale: [1.0, 1.05, 1.0] }}
@@ -30,14 +30,13 @@ export default function Home({ settings }: HomeClientProps) {
               alt="Itz Lola Beauty Studio - Luxury Makeup and Content Creation in Arizona"
               fill
               className="object-cover"
-              style={{ objectPosition: 'center 30%' }}
               priority
             />
           </motion.div>
 
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent to-black/30" />
 
-          <div className="absolute inset-0 z-20 flex items-end justify-center p-6 pb-8 sm:pb-12">
+          <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
             <Glass level="heavy" className="flex w-fit flex-col items-center p-4 text-center sm:p-6">
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
@@ -56,8 +55,7 @@ export default function Home({ settings }: HomeClientProps) {
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 flex items-end justify-between">
           <div className="space-y-2">
-            <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Studio Services</h2>
-            <p className="text-[var(--text-secondary)]">Tailored beauty and content packages for every occasion in Arizona.</p>
+            <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Services</h2>
           </div>
           <Link href="/book" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
             Explore All Services <ArrowRight size={16} />
