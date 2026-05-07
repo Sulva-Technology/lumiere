@@ -19,7 +19,7 @@ export default function Home({ settings }: HomeClientProps) {
     <div className="flex flex-col gap-24 pb-24">
       {/* Hero Section */}
       <section className="relative mx-auto mt-4 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-        <div className="relative aspect-[3/4] sm:aspect-[21/9] w-full overflow-hidden rounded-[32px]">
+        <div className="relative aspect-[4/5] sm:aspect-[16/9] w-full overflow-hidden rounded-[32px]">
           <motion.div
             className="absolute inset-0 z-0"
             animate={{ scale: [1.0, 1.05, 1.0] }}
@@ -29,7 +29,7 @@ export default function Home({ settings }: HomeClientProps) {
               src="/images/home.jpeg"
               alt="Itz Lola Beauty Studio - Luxury Makeup and Content Creation in Arizona"
               fill
-              className="object-cover"
+              className=""
               priority
             />
           </motion.div>
@@ -73,7 +73,7 @@ export default function Home({ settings }: HomeClientProps) {
             },
             {
               title: 'Content Creation',
-              description: 'Professional vertical video, brand photography, and social storytelling sessions designed for creators and brands looking for a polished social presence.',
+              description: 'This is designed for anyone who needs high-quality, engaging video contents, tailored and optimized for platforms like Instagram and TikTok.',
               cta: 'Reserve Content Session',
               href: '/book?type=content',
               img: 'content.jpeg',
