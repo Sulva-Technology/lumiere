@@ -19,7 +19,6 @@ export default async function ContactPage() {
           <div className="mt-6 space-y-4 text-[var(--text-secondary)]">
             <p>Support: {store.supportEmail}</p>
             <p>Bookings: {store.bookingContactEmail}</p>
-            <p>Hours: Monday to Saturday, 9 AM to 6 PM</p>
           </div>
         </Glass>
 

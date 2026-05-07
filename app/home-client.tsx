@@ -29,7 +29,7 @@ export default function Home({ settings }: HomeClientProps) {
               src="/images/home.jpeg"
               alt="Itz Lola Beauty Studio - Luxury Makeup and Content Creation in Arizona"
               fill
-              className=""
+              className="object-cover object-top"
               priority
             />
           </motion.div>
