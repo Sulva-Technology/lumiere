@@ -35,7 +35,6 @@ export function Footer({ brandName }: FooterProps) {
               <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="64px" />
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-[0.34em] text-[var(--text-accent)]">Beauty Studio</p>
               <span className="font-serif text-2xl tracking-[0.14em] uppercase text-[var(--text-primary)] sm:text-3xl">{brandName}</span>
             </div>
           </div>
@@ -59,7 +58,7 @@ export function Footer({ brandName }: FooterProps) {
           </div>
         </div>
 
-        <div>
+        {/* <div>
           <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
           <div className="flex flex-col gap-3">
             <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
@@ -72,7 +71,7 @@ export function Footer({ brandName }: FooterProps) {
               Terms of Service
             </Link>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[#496052] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)] dark:text-[var(--text-secondary)]">
