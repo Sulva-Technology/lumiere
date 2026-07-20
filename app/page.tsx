@@ -61,6 +61,7 @@ export default async function HomePage() {
           support_phone: store.supportPhone,
           booking_contact_email: store.bookingContactEmail,
           announcement_bar: store.announcementBar,
+          travel_fee: store.travelFee,
           home_favorites_enabled: store.homeFavoritesEnabled,
           home_shop_section_title: store.homeShopSectionTitle,
           home_shop_section_link_label: store.homeShopSectionLinkLabel,

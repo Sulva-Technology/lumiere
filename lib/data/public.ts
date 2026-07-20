@@ -215,13 +215,18 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
 
 export async function getBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from('booking_services')
-    .select('id, slug, name, description, duration_minutes, price, service_type')
-    .eq('active', true)
-    .order('price');
+  const [{ data, error }, { data: settings, error: settingsError }] = await Promise.all([
+    supabase
+      .from('booking_services')
+      .select('id, slug, name, description, duration_minutes, price, service_type')
+      .eq('active', true)
+      .order('price'),
+    supabase.from('store_settings').select('travel_fee').order('created_at').limit(1).maybeSingle(),
+  ]);
 
   if (error) throw error;
+  if (settingsError) throw settingsError;
+  const travelFee = Number.isFinite(Number(settings?.travel_fee)) && Number(settings?.travel_fee) >= 0 ? Number(settings?.travel_fee) : 20;
 
   // We import SERVICES dynamically to avoid circular dependencies if any, 
   // though here it's fine. We'll use the slug to match.
@@ -234,7 +239,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
       id: service.id,
       slug: service.slug,
       name: service.name,
-      description: service.description,
+      description: formatTravelFeeDescription(service.description, travelFee),
       durationMinutes: service.duration_minutes,
       price: normalizeMoney(service.price),
       serviceType: service.service_type,
@@ -244,6 +249,12 @@ export async function getBookingServices(): Promise<BookingService[]> {
       bestFor: seoData?.bestFor ?? ''
     } as BookingService;
   });
+}
+
+function formatTravelFeeDescription(description: string | null, travelFee: number) {
+  if (!description) return description;
+
+  return description.replace(/((?:Travel Fee|Travel Policy):[^\n]*?)\$\d+(?:\.\d{1,2})?/gi, `$1$${travelFee.toFixed(2)}`);
 }
 
 export async function getStylists(): Promise<StylistSummary[]> {
@@ -912,6 +923,7 @@ export async function getPublicStoreSettings() {
     supportPhone: '+1 (555) 123-4567',
     bookingContactEmail: 'ogunjobiniyiola906@gmail.com',
     announcementBar: null,
+    travelFee: 20,
     homeFavoritesEnabled: true,
     homeShopSectionTitle: 'Shop',
     homeShopSectionLinkLabel: 'Shop Collection',
@@ -923,7 +935,7 @@ export async function getPublicStoreSettings() {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from('store_settings')
-      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
+      .select('store_name, support_email, support_phone, booking_contact_email, announcement_bar, travel_fee, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
       .order('created_at')
       .limit(1)
       .maybeSingle();
@@ -936,6 +948,7 @@ export async function getPublicStoreSettings() {
       supportPhone: data?.support_phone?.trim() || fallback.supportPhone,
       bookingContactEmail: data?.booking_contact_email?.trim() || fallback.bookingContactEmail,
       announcementBar: data?.announcement_bar?.trim() || fallback.announcementBar,
+      travelFee: Number.isFinite(Number(data?.travel_fee)) && Number(data?.travel_fee) >= 0 ? Number(data?.travel_fee) : fallback.travelFee,
       homeFavoritesEnabled: data?.home_favorites_enabled ?? fallback.homeFavoritesEnabled,
       homeShopSectionTitle: data?.home_shop_section_title?.trim() || fallback.homeShopSectionTitle,
       homeShopSectionLinkLabel: data?.home_shop_section_link_label?.trim() || fallback.homeShopSectionLinkLabel,

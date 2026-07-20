@@ -43,6 +43,7 @@ export default function AdminSettingsPage() {
           supportPhone: settings.support_phone,
           bookingContactEmail: settings.booking_contact_email,
           announcementBar: settings.announcement_bar,
+          travelFee: settings.travel_fee,
           homeFavoritesEnabled: settings.home_favorites_enabled,
           homeShopSectionTitle: settings.home_shop_section_title,
           homeShopSectionLinkLabel: settings.home_shop_section_link_label,
@@ -116,6 +117,11 @@ export default function AdminSettingsPage() {
         <input value={settings.support_phone ?? ''} onChange={(event) => setSettings({ ...settings, support_phone: event.target.value })} className="w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" placeholder="Support phone" />
         <input value={settings.booking_contact_email ?? ''} onChange={(event) => setSettings({ ...settings, booking_contact_email: event.target.value })} className="w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" placeholder="Booking contact email" />
         <textarea value={settings.announcement_bar ?? ''} onChange={(event) => setSettings({ ...settings, announcement_bar: event.target.value })} className="min-h-28 w-full rounded-3xl bg-white/40 px-5 py-4 outline-none dark:bg-black/40" placeholder="Announcement bar text" />
+        <div className="rounded-3xl border border-black/10 bg-white/50 px-5 py-4 dark:border-white/10 dark:bg-black/40">
+          <label htmlFor="travel-fee" className="block text-sm font-medium text-[var(--text-primary)]">Travel fee (USD)</label>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">This updates the travel fee shown in the booking flow and on the homepage. It is not automatically added to online checkout.</p>
+          <input id="travel-fee" type="number" min="0" step="0.01" inputMode="decimal" value={settings.travel_fee} onChange={(event) => setSettings({ ...settings, travel_fee: Number(event.target.value) })} className="mt-3 w-full rounded-full bg-white/40 px-5 py-3 outline-none dark:bg-black/40" />
+        </div>
         <label className="flex items-center justify-between gap-4 rounded-3xl border border-black/10 bg-white/50 px-5 py-4 text-sm text-[var(--text-primary)] dark:border-white/10 dark:bg-black/40">
           <span>Show favorite items on home</span>
           <input

@@ -627,7 +627,7 @@ export async function getStoreSettings(): Promise<StoreSettings | null> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from('store_settings')
-    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
+    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, travel_fee, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
     .order('created_at')
     .limit(1)
     .maybeSingle();
@@ -647,6 +647,7 @@ export async function updateStoreSettings(input: {
   supportPhone?: string;
   bookingContactEmail?: string;
   announcementBar?: string;
+  travelFee?: number;
   homeFavoritesEnabled?: boolean;
   homeShopSectionTitle?: string;
   homeShopSectionLinkLabel?: string;
@@ -658,6 +659,7 @@ export async function updateStoreSettings(input: {
   const supportPhone = input.supportPhone?.trim() ? input.supportPhone.trim() : null;
   const bookingContactEmail = input.bookingContactEmail?.trim() ? input.bookingContactEmail.trim() : null;
   const announcementBar = input.announcementBar?.trim() ? input.announcementBar.trim() : null;
+  const travelFee = input.travelFee ?? 20;
   const homeFavoritesEnabled = input.homeFavoritesEnabled ?? true;
   const homeShopSectionTitle = input.homeShopSectionTitle?.trim() ? input.homeShopSectionTitle.trim() : null;
   const homeShopSectionLinkLabel = input.homeShopSectionLinkLabel?.trim() ? input.homeShopSectionLinkLabel.trim() : null;
@@ -673,6 +675,7 @@ export async function updateStoreSettings(input: {
         support_phone: supportPhone,
         booking_contact_email: bookingContactEmail,
         announcement_bar: announcementBar,
+        travel_fee: travelFee,
         home_favorites_enabled: homeFavoritesEnabled,
         home_shop_section_title: homeShopSectionTitle,
         home_shop_section_link_label: homeShopSectionLinkLabel,
@@ -697,6 +700,7 @@ export async function updateStoreSettings(input: {
       support_phone: supportPhone,
       booking_contact_email: bookingContactEmail,
       announcement_bar: announcementBar,
+      travel_fee: travelFee,
       home_favorites_enabled: homeFavoritesEnabled,
       home_shop_section_title: homeShopSectionTitle,
       home_shop_section_link_label: homeShopSectionLinkLabel,

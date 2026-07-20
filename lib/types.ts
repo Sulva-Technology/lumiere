@@ -314,6 +314,7 @@ export interface StoreSettings {
   support_phone: string | null;
   booking_contact_email: string | null;
   announcement_bar: string | null;
+  travel_fee: number;
   home_favorites_enabled: boolean;
   home_shop_section_title: string | null;
   home_shop_section_link_label: string | null;

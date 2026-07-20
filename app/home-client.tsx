@@ -144,7 +144,7 @@ export default function Home({ settings }: HomeClientProps) {
           <div className="space-y-6">
             {[
               { title: 'Deposits', text: 'A non-refundable deposit is required to secure all bookings. This amount is applied toward your total service balance.' },
-              { title: 'Travel Policy', text: 'We are based in Arizona. A $20 travel fee applies for mobile services beyond a specific radius (6-8 miles) from our studio location.' },
+              { title: 'Travel Policy', text: `We are based in Arizona. A $${resolvedSettings.travel_fee.toFixed(2)} travel fee applies for mobile services beyond a specific radius (6-8 miles) from our studio location.` },
               { title: 'Late Arrival', text: 'Grace periods are limited. Please arrive on time to ensure you receive the full duration of your premium service.' },
             ].map((policy) => (
               <div key={policy.title} className="space-y-2">
