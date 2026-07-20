@@ -1,10 +1,21 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-const makeupLookTypes = ['Soft glam', 'Full glam', 'Natural', 'Not sure'] as const;
-const makeupSkinTypes = ['Oily', 'Dry', 'Combination', 'Normal', 'Not sure'] as const;
-const makeupLashesPreferences = ['Yes', 'No', "I'll bring my own"] as const;
-const makeupHistoryAnswers = ['Yes', 'No'] as const;
-const bookingServiceTypes = ['makeup', 'content'] as const;
+const makeupLookTypes = [
+  "Soft glam",
+  "Full glam",
+  "Natural",
+  "Not sure",
+] as const;
+const makeupSkinTypes = [
+  "Oily",
+  "Dry",
+  "Combination",
+  "Normal",
+  "Not sure",
+] as const;
+const makeupLashesPreferences = ["Yes", "No", "I'll bring my own"] as const;
+const makeupHistoryAnswers = ["Yes", "No"] as const;
+const bookingServiceTypes = ["makeup", "content"] as const;
 const homeShopSectionItemSchema = z.object({
   title: z.string().trim().min(1).max(120),
   description: z.string().trim().min(1).max(500),
@@ -40,6 +51,7 @@ export const createBookingSchema = z.object({
   phone: z.string().trim().min(7).max(30),
   notes: z.string().trim().max(500).optional(),
   locationOutsideTravelRadius: z.boolean().optional().default(false),
+  paymentMethod: z.enum(["online", "in_person"]).optional().default("online"),
   makeupIntake: z
     .object({
       appointmentDateTimeNeeded: z.string().trim().min(2).max(160),
@@ -53,7 +65,12 @@ export const createBookingSchema = z.object({
       lashesPreference: z.enum(makeupLashesPreferences),
       hadProfessionalMakeupBefore: z.enum(makeupHistoryAnswers),
       priorExperienceNotes: z.string().trim().max(1000).nullable().optional(),
-      productPreferencesOrRestrictions: z.string().trim().max(1000).nullable().optional(),
+      productPreferencesOrRestrictions: z
+        .string()
+        .trim()
+        .max(1000)
+        .nullable()
+        .optional(),
     })
     .optional(),
 });
@@ -70,9 +87,13 @@ export const adminProductUpdateSchema = z.object({
   categoryId: z.string().uuid().nullable(),
   featured: z.boolean(),
   active: z.boolean(),
-  lifecycleStatus: z.enum(['active', 'archived']).optional(),
-  defaultImageUrl: z.union([z.string().trim().url(), z.literal(''), z.null()]).optional(),
-  mediaAssetId: z.union([z.string().uuid(), z.literal(''), z.null()]).optional(),
+  lifecycleStatus: z.enum(["active", "archived"]).optional(),
+  defaultImageUrl: z
+    .union([z.string().trim().url(), z.literal(""), z.null()])
+    .optional(),
+  mediaAssetId: z
+    .union([z.string().uuid(), z.literal(""), z.null()])
+    .optional(),
 });
 
 export const adminProductCreateSchema = z.object({
@@ -82,55 +103,72 @@ export const adminProductCreateSchema = z.object({
     .trim()
     .min(2)
     .max(180)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers, and hyphens only.'),
-  description: z.string().trim().max(4000).optional().or(z.literal('')),
-  categoryId: z.string().uuid().optional().or(z.literal('')),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Use lowercase letters, numbers, and hyphens only.",
+    ),
+  description: z.string().trim().max(4000).optional().or(z.literal("")),
+  categoryId: z.string().uuid().optional().or(z.literal("")),
   featured: z.boolean().optional().default(false),
   active: z.boolean().optional().default(true),
-  defaultImageUrl: z.string().trim().url().optional().or(z.literal('')),
-  mediaAssetId: z.string().uuid().optional().or(z.literal('')),
+  defaultImageUrl: z.string().trim().url().optional().or(z.literal("")),
+  mediaAssetId: z.string().uuid().optional().or(z.literal("")),
   variantTitle: z.string().trim().min(1).max(160),
   sku: z.string().trim().min(2).max(120),
   price: z.coerce.number().min(0),
   compareAtPrice: z.union([z.coerce.number().min(0), z.null()]).optional(),
   stockQuantity: z.coerce.number().int().min(0),
-  shade: z.string().trim().max(120).optional().or(z.literal('')),
-  length: z.string().trim().max(120).optional().or(z.literal('')),
-  size: z.string().trim().max(120).optional().or(z.literal('')),
+  shade: z.string().trim().max(120).optional().or(z.literal("")),
+  length: z.string().trim().max(120).optional().or(z.literal("")),
+  size: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
 export const adminOrderStatusSchema = z.object({
-  paymentStatus: z.enum(['pending', 'paid', 'failed', 'cancelled']).optional(),
-  fulfillmentStatus: z.enum(['unfulfilled', 'processing', 'shipped', 'delivered']).optional(),
+  paymentStatus: z.enum(["pending", "paid", "failed", "cancelled"]).optional(),
+  fulfillmentStatus: z
+    .enum(["unfulfilled", "processing", "shipped", "delivered"])
+    .optional(),
 });
 
 export const adminBookingStatusSchema = z.object({
-  status: z.enum(['confirmed', 'completed', 'cancelled', 'expired', 'refunded']),
+  status: z.enum([
+    "confirmed",
+    "completed",
+    "cancelled",
+    "expired",
+    "refunded",
+  ]),
 });
 
 export const adminAvailabilityCreateSchema = z.object({
   stylistId: z.string().uuid(),
   serviceId: z.string().uuid(),
   startsAt: z.string().datetime(),
-  durationMinutes: z.number().int().min(15).max(12 * 60),
+  durationMinutes: z
+    .number()
+    .int()
+    .min(15)
+    .max(12 * 60),
 });
 
 export const adminAvailabilityDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
-export const adminAvailabilityScheduleSchema = z.object({
-  stylistId: z.string().uuid(),
-  startDate: z.string().date(),
-  endDate: z.string().date(),
-  weekdayStartTime: z.string().regex(/^\d{2}:\d{2}$/),
-  weekdayEndTime: z.string().regex(/^\d{2}:\d{2}$/),
-  weekendStartTime: z.string().regex(/^\d{2}:\d{2}$/),
-  weekendEndTime: z.string().regex(/^\d{2}:\d{2}$/),
-}).refine((value) => value.endDate >= value.startDate, {
-  message: 'End date must be on or after the start date.',
-  path: ['endDate'],
-});
+export const adminAvailabilityScheduleSchema = z
+  .object({
+    stylistId: z.string().uuid(),
+    startDate: z.string().date(),
+    endDate: z.string().date(),
+    weekdayStartTime: z.string().regex(/^\d{2}:\d{2}$/),
+    weekdayEndTime: z.string().regex(/^\d{2}:\d{2}$/),
+    weekendStartTime: z.string().regex(/^\d{2}:\d{2}$/),
+    weekendEndTime: z.string().regex(/^\d{2}:\d{2}$/),
+  })
+  .refine((value) => value.endDate >= value.startDate, {
+    message: "End date must be on or after the start date.",
+    path: ["endDate"],
+  });
 
 export const adminBookingServiceSchema = z.object({
   id: z.string().uuid().optional(),
@@ -140,9 +178,16 @@ export const adminBookingServiceSchema = z.object({
     .trim()
     .min(2)
     .max(180)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers, and hyphens only.'),
-  description: z.string().trim().max(2000).optional().or(z.literal('')),
-  durationMinutes: z.coerce.number().int().min(15).max(12 * 60),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Use lowercase letters, numbers, and hyphens only.",
+    ),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  durationMinutes: z.coerce
+    .number()
+    .int()
+    .min(15)
+    .max(12 * 60),
   price: z.coerce.number().min(0),
   serviceType: z.enum(bookingServiceTypes),
   active: z.boolean().optional().default(true),
@@ -160,26 +205,40 @@ export const adminAvailabilityRuleSchema = z.object({
 
 export const adminMediaLifecycleSchema = z.object({
   assetId: z.string().uuid(),
-  lifecycleStatus: z.enum(['active', 'archived', 'deleted', 'orphaned']),
+  lifecycleStatus: z.enum(["active", "archived", "deleted", "orphaned"]),
 });
 
 export const storeSettingsSchema = z.object({
   storeName: z.string().trim().min(2).max(160),
   supportEmail: z.string().email(),
-  supportPhone: z.string().trim().max(40).optional().or(z.literal('')),
-  bookingContactEmail: z.string().email().optional().or(z.literal('')),
-  announcementBar: z.string().trim().max(280).optional().or(z.literal('')),
+  supportPhone: z.string().trim().max(40).optional().or(z.literal("")),
+  bookingContactEmail: z.string().email().optional().or(z.literal("")),
+  announcementBar: z.string().trim().max(280).optional().or(z.literal("")),
   travelFee: z.coerce.number().min(0).max(10000).optional(),
   homeFavoritesEnabled: z.boolean().optional(),
-  homeShopSectionTitle: z.string().trim().max(160).optional().or(z.literal('')),
-  homeShopSectionLinkLabel: z.string().trim().max(120).optional().or(z.literal('')),
-  homeShopSectionLinkHref: z.string().trim().max(240).optional().or(z.literal('')),
-  homeShopSectionItems: z.array(homeShopSectionItemSchema).max(12).optional().default([]),
+  homeShopSectionTitle: z.string().trim().max(160).optional().or(z.literal("")),
+  homeShopSectionLinkLabel: z
+    .string()
+    .trim()
+    .max(120)
+    .optional()
+    .or(z.literal("")),
+  homeShopSectionLinkHref: z
+    .string()
+    .trim()
+    .max(240)
+    .optional()
+    .or(z.literal("")),
+  homeShopSectionItems: z
+    .array(homeShopSectionItemSchema)
+    .max(12)
+    .optional()
+    .default([]),
 });
 
 export const adminEmailSchema = z.object({
   to: z.string().trim().min(3).max(1000),
   subject: z.string().trim().min(1).max(180),
   message: z.string().trim().min(1).max(10000),
-  replyTo: z.string().email().optional().or(z.literal('')),
+  replyTo: z.string().email().optional().or(z.literal("")),
 });

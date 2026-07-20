@@ -72,6 +72,7 @@ function BookingPageContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success") === "1";
   const canceled = searchParams.get("canceled") === "1";
+  const payingInPerson = searchParams.get("payment") === "in_person";
   const reservationId = searchParams.get("reservation");
   const requestedType =
     searchParams.get("type") === "content" ? "content" : "makeup";
@@ -92,6 +93,7 @@ function BookingPageContent() {
   const [notes, setNotes] = useState("");
   const [locationOutsideTravelRadius, setLocationOutsideTravelRadius] =
     useState(false);
+  const paymentMethod = "online" as const;
   const [travelFee, setTravelFee] = useState(20);
   const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState("");
   const [visibleMonth, setVisibleMonth] = useState(() =>
@@ -263,7 +265,9 @@ function BookingPageContent() {
             },
         );
         setStatusMessage(
-          "Your payment completed successfully. We are finalizing your appointment confirmation now.",
+          payingInPerson
+            ? "Your appointment is confirmed. Payment is due in person at your appointment."
+            : "Your payment completed successfully. We are finalizing your appointment confirmation now.",
         );
         return;
       }
@@ -287,7 +291,7 @@ function BookingPageContent() {
       }
     }
     void syncReservationStatus();
-  }, [canceled, reservationId, success]);
+  }, [canceled, payingInPerson, reservationId, success]);
 
   async function handleReferenceUpload(file: File) {
     setUploadingReference(true);
@@ -357,7 +361,9 @@ function BookingPageContent() {
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? "Unable to continue.");
-      window.location.href = json.data.checkoutUrl;
+      window.location.href =
+        json.data.checkoutUrl ??
+        `/book?success=1&reservation=${json.data.reservationId}&payment=in_person`;
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -769,7 +775,7 @@ function BookingPageContent() {
                     />
                     <span>
                       My appointment location is more than 15 miles from the
-                      studio. I understand a travel fee may apply.
+                      artist. I understand a travel fee may apply.
                     </span>
                   </label>
                   {isMakeupService ? (
@@ -1057,8 +1063,12 @@ function BookingPageContent() {
                   className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-5 font-bold text-white transition-all hover:shadow-xl hover:shadow-[#8B6914]/20 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
                 >
                   {saving
-                    ? "Preparing secure checkout..."
-                    : "Continue to secure checkout"}
+                    ? paymentMethod === "in_person"
+                      ? "Confirming appointment..."
+                      : "Preparing secure checkout..."
+                    : paymentMethod === "in_person"
+                      ? "Confirm appointment — pay in person"
+                      : "Continue to secure checkout"}
                   <ChevronRight size={20} />
                 </button>
                 <button

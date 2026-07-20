@@ -566,6 +566,7 @@ export async function createBookingCheckout(
   if (!service) throw new Error("Selected service is unavailable.");
   const travelFee = input.locationOutsideTravelRadius ? store.travelFee : 0;
   const totalAmount = service.price + travelFee;
+  const isInPersonPayment = input.paymentMethod === "in_person";
   const isMakeupService = service.serviceType === "makeup";
 
   if (isMakeupService && !input.makeupIntake) {
@@ -586,7 +587,7 @@ export async function createBookingCheckout(
       [
         input.notes?.trim(),
         input.locationOutsideTravelRadius
-          ? "Travel notice: Client confirmed appointment location is more than 15 miles away."
+          ? "Travel notice: Client confirmed appointment location is more than 15 miles from the artist."
           : null,
       ]
         .filter(Boolean)
@@ -631,12 +632,12 @@ export async function createBookingCheckout(
     .from("payments")
     .insert({
       reservation_id: reservation.id,
-      provider: "hosted_checkout",
+      provider: isInPersonPayment ? "in_person" : "hosted_checkout",
       status: "pending",
       amount: totalAmount,
       currency: "usd",
-      method_family: "hosted_checkout",
-      expires_at: reservation.expires_at,
+      method_family: isInPersonPayment ? "in_person" : "hosted_checkout",
+      expires_at: isInPersonPayment ? null : reservation.expires_at,
       metadata: {
         kind: "booking",
         serviceName: service.name,
@@ -654,6 +655,15 @@ export async function createBookingCheckout(
     reservationId: reservation.id,
     amount: totalAmount,
   });
+
+  if (isInPersonPayment) {
+    await finalizePaidBooking({ paymentId: payment.id, inPerson: true });
+    return {
+      checkoutUrl: null,
+      reservationId: reservation.id,
+      paymentId: payment.id,
+    };
+  }
 
   try {
     const session = await createHostedCheckoutSession({
@@ -678,7 +688,7 @@ export async function createBookingCheckout(
               {
                 name: "Travel fee",
                 description:
-                  "Appointment location is more than 15 miles from the studio.",
+                  "Appointment location is more than 15 miles from the artist.",
                 amount: travelFee,
                 quantity: 1,
               },
@@ -747,6 +757,7 @@ export async function finalizePaidBooking(input: {
   providerReference?: string | null;
   sessionReference?: string | null;
   reservationId?: string | null;
+  inPerson?: boolean;
 }): Promise<BookingConfirmation | null> {
   const supabase = createSupabaseAdminClient();
   const payment = await findBookingPaymentRecord(supabase, input);
@@ -765,16 +776,21 @@ export async function finalizePaidBooking(input: {
     input.sessionReference ?? payment.session_reference ?? null;
   const resolvedProviderReference =
     input.providerReference ?? payment.provider_reference ?? payment.id;
+  const paymentStatus = input.inPerson ? "pending" : "paid";
+  const bookingPaymentStatus = input.inPerson ? "pending_payment" : "paid";
+  const reconciliationState = input.inPerson
+    ? "awaiting_in_person_payment"
+    : "captured";
 
   if (payment.booking_id) {
     await supabase
       .from("payments")
       .update({
-        status: "paid",
-        paid_at: payment.paid_at ?? nowIso(),
+        status: paymentStatus,
+        paid_at: input.inPerson ? null : (payment.paid_at ?? nowIso()),
         session_reference: resolvedSessionReference,
         provider_reference: resolvedProviderReference,
-        reconciliation_state: "captured",
+        reconciliation_state: reconciliationState,
       })
       .eq("id", payment.id);
 
@@ -882,7 +898,7 @@ export async function finalizePaidBooking(input: {
     starts_at: reservationAvailability?.starts_at,
     ends_at: reservationAvailability?.ends_at,
     status: "confirmed",
-    payment_status: "paid",
+    payment_status: bookingPaymentStatus,
   };
 
   let bookingResult = await supabase
@@ -929,11 +945,11 @@ export async function finalizePaidBooking(input: {
       .from("payments")
       .update({
         booking_id: existing.id,
-        status: "paid",
-        paid_at: payment.paid_at ?? nowIso(),
+        status: paymentStatus,
+        paid_at: input.inPerson ? null : (payment.paid_at ?? nowIso()),
         session_reference: resolvedSessionReference,
         provider_reference: resolvedProviderReference,
-        reconciliation_state: "captured",
+        reconciliation_state: reconciliationState,
       })
       .eq("id", payment.id);
 
@@ -963,11 +979,11 @@ export async function finalizePaidBooking(input: {
     .from("payments")
     .update({
       booking_id: booking.id,
-      status: "paid",
-      paid_at: payment.paid_at ?? nowIso(),
+      status: paymentStatus,
+      paid_at: input.inPerson ? null : (payment.paid_at ?? nowIso()),
       session_reference: resolvedSessionReference,
       provider_reference: resolvedProviderReference,
-      reconciliation_state: "captured",
+      reconciliation_state: reconciliationState,
     })
     .eq("id", payment.id);
 

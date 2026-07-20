@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export interface Category {
   id: string;
@@ -68,7 +74,7 @@ export interface ValidatedCartLine {
 }
 
 export interface CheckoutSummary {
-  currency: 'usd';
+  currency: "usd";
   subtotal: number;
   shipping: number;
   total: number;
@@ -97,16 +103,37 @@ export interface CreateCheckoutSessionResult {
   paymentId: string;
 }
 
-export type PaymentStatus = 'created' | 'pending' | 'authorized' | 'paid' | 'failed' | 'cancelled' | 'expired' | 'refunded';
-export type PaymentProvider = 'hosted_checkout';
-export type PaymentMethodFamily = 'hosted_checkout';
-export type OrderLifecycleState = 'draft' | 'pending_payment' | 'paid' | 'payment_failed' | 'cancelled' | 'refunded';
-export type BookingLifecycleState = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled' | 'expired' | 'refunded';
-export type MakeupLookType = 'Soft glam' | 'Full glam' | 'Natural' | 'Not sure';
-export type MakeupSkinType = 'Oily' | 'Dry' | 'Combination' | 'Normal' | 'Not sure';
-export type MakeupLashesPreference = 'Yes' | 'No' | "I'll bring my own";
-export type MakeupHistoryAnswer = 'Yes' | 'No';
-export type BookingServiceType = 'makeup' | 'content';
+export type PaymentStatus =
+  | "created"
+  | "pending"
+  | "authorized"
+  | "paid"
+  | "failed"
+  | "cancelled"
+  | "expired"
+  | "refunded";
+export type PaymentProvider = "hosted_checkout";
+export type PaymentMethodFamily = "hosted_checkout";
+export type OrderLifecycleState =
+  | "draft"
+  | "pending_payment"
+  | "paid"
+  | "payment_failed"
+  | "cancelled"
+  | "refunded";
+export type BookingLifecycleState =
+  | "pending_payment"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "expired"
+  | "refunded";
+export type MakeupLookType = "Soft glam" | "Full glam" | "Natural" | "Not sure";
+export type MakeupSkinType =
+  "Oily" | "Dry" | "Combination" | "Normal" | "Not sure";
+export type MakeupLashesPreference = "Yes" | "No" | "I'll bring my own";
+export type MakeupHistoryAnswer = "Yes" | "No";
+export type BookingServiceType = "makeup" | "content";
 
 export interface MakeupBookingIntake {
   appointmentDateTimeNeeded: string;
@@ -149,9 +176,9 @@ export interface MediaAsset {
   objectPath: string;
   publicUrl: string;
   alt: string | null;
-  ownerType: 'product' | 'product_image' | 'variant' | 'general';
+  ownerType: "product" | "product_image" | "variant" | "general";
   ownerId: string | null;
-  lifecycleStatus: 'active' | 'archived' | 'deleted' | 'orphaned';
+  lifecycleStatus: "active" | "archived" | "deleted" | "orphaned";
   sortOrder: number;
 }
 
@@ -209,6 +236,7 @@ export interface CreateBookingInput {
   phone: string;
   notes?: string;
   locationOutsideTravelRadius?: boolean;
+  paymentMethod?: "online" | "in_person";
   makeupIntake?: MakeupBookingIntake | null;
 }
 
@@ -222,12 +250,12 @@ export interface BookingReservation {
   phone: string;
   notes: string | null;
   makeupIntake: MakeupBookingIntake | null;
-  reservationStatus: 'pending_payment' | 'confirmed' | 'cancelled' | 'expired';
+  reservationStatus: "pending_payment" | "confirmed" | "cancelled" | "expired";
   expiresAt: string;
 }
 
 export interface CreateBookingCheckoutResult {
-  checkoutUrl: string;
+  checkoutUrl: string | null;
   reservationId: string;
   paymentId: string;
 }
@@ -269,7 +297,7 @@ export interface AdminBookingRow {
   paymentProvider: string | null;
   paymentReference: string | null;
   notes: string | null;
-  entryType: 'booking' | 'reservation';
+  entryType: "booking" | "reservation";
 }
 
 export interface AdminCustomerRow {
@@ -300,7 +328,7 @@ export interface DashboardMetrics {
 export interface AuthenticatedAdminUser {
   id: string;
   email: string;
-  role: 'admin' | 'manager' | 'staff';
+  role: "admin" | "manager" | "staff";
 }
 
 export interface HomeShopSectionItem {
