@@ -93,7 +93,7 @@ function BookingPageContent() {
   const [notes, setNotes] = useState("");
   const [locationOutsideTravelRadius, setLocationOutsideTravelRadius] =
     useState(false);
-  let paymentMethod: "online" | "in_person" = "online";
+  const paymentMethod: string = "online";
   const [travelFee, setTravelFee] = useState(20);
   const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState("");
   const [visibleMonth, setVisibleMonth] = useState(() =>
