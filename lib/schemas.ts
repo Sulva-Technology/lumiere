@@ -39,6 +39,7 @@ export const createBookingSchema = z.object({
   email: z.string().email(),
   phone: z.string().trim().min(7).max(30),
   notes: z.string().trim().max(500).optional(),
+  locationOutsideTravelRadius: z.boolean().optional().default(false),
   makeupIntake: z
     .object({
       appointmentDateTimeNeeded: z.string().trim().min(2).max(160),

@@ -215,7 +215,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
 
 export async function getBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
-  const [{ data, error }, { data: settings, error: settingsError }] = await Promise.all([
+  const [{ data, error }, { data: settings }] = await Promise.all([
     supabase
       .from('booking_services')
       .select('id, slug, name, description, duration_minutes, price, service_type')
@@ -225,7 +225,6 @@ export async function getBookingServices(): Promise<BookingService[]> {
   ]);
 
   if (error) throw error;
-  if (settingsError) throw settingsError;
   const travelFee = Number.isFinite(Number(settings?.travel_fee)) && Number(settings?.travel_fee) >= 0 ? Number(settings?.travel_fee) : 20;
 
   // We import SERVICES dynamically to avoid circular dependencies if any, 
@@ -485,7 +484,7 @@ export async function createBookingCheckout(input: CreateBookingInput): Promise<
     full_name: input.fullName,
     email: input.email,
     phone: input.phone,
-    notes: input.notes ?? null,
+    notes: [input.notes?.trim(), input.locationOutsideTravelRadius ? 'Travel notice: Client confirmed appointment location is more than 15 miles away.' : null].filter(Boolean).join('\n') || null,
     intake_payload: normalizedIntake,
     reservation_status: 'pending_payment',
     expires_at: expiresIn(15),

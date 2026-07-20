@@ -208,6 +208,7 @@ export interface CreateBookingInput {
   email: string;
   phone: string;
   notes?: string;
+  locationOutsideTravelRadius?: boolean;
   makeupIntake?: MakeupBookingIntake | null;
 }
 
