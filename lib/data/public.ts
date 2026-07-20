@@ -339,6 +339,20 @@ export async function getAvailability(
 ): Promise<AvailableSlot[]> {
   await syncRecurringAvailabilityRules();
   const supabase = createSupabaseAdminClient();
+  let requestedDurationMinutes = 0;
+
+  if (serviceId) {
+    const { data: service, error: serviceError } = await supabase
+      .from("booking_services")
+      .select("duration_minutes")
+      .eq("id", serviceId)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (serviceError) throw serviceError;
+    if (!service) throw new Error("Selected service is unavailable.");
+    requestedDurationMinutes = service.duration_minutes;
+  }
 
   // 1. Fetch candidate slots
   let query = supabase
@@ -350,7 +364,6 @@ export async function getAvailability(
     .limit(500);
 
   if (stylistId) query = query.eq("stylist_id", stylistId);
-  if (serviceId) query = query.eq("service_id", serviceId);
 
   // 2. Fetch all confirmed bookings and pending reservations to check for buffers
   const [
@@ -378,11 +391,13 @@ export async function getAvailability(
   if (reservationError) throw reservationError;
 
   const BUFFER_MS = 60 * 60_000; // 60 minutes
+  const seenSlotWindows = new Set<string>();
 
   return (slots ?? [])
     .filter((slot) => {
       const slotStart = new Date(slot.starts_at).getTime();
       const slotEnd = new Date(slot.ends_at).getTime();
+      if (slotEnd - slotStart < requestedDurationMinutes * 60_000) return false;
 
       const isBlockedByReservation = (reservations ?? []).some(
         (reservation) => {
@@ -417,7 +432,12 @@ export async function getAvailability(
         return slotStart < expandedEnd && slotEnd > expandedStart;
       });
 
-      return !isBlockedByBooking;
+      if (isBlockedByBooking) return false;
+
+      const windowKey = `${slot.stylist_id}:${slot.starts_at}`;
+      if (seenSlotWindows.has(windowKey)) return false;
+      seenSlotWindows.add(windowKey);
+      return true;
     })
     .slice(0, 180)
     .map((slot) => ({
@@ -489,6 +509,15 @@ async function getAvailableSlot(
   input: Pick<CreateBookingInput, "availabilityId" | "serviceId" | "stylistId">,
 ) {
   const supabase = createSupabaseAdminClient();
+  const { data: service, error: serviceError } = await supabase
+    .from("booking_services")
+    .select("duration_minutes")
+    .eq("id", input.serviceId)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (serviceError) throw serviceError;
+  if (!service) throw new Error("Selected service is unavailable.");
 
   // 1. Fetch the requested slot
   const { data: slot, error: slotError } = await supabase
@@ -502,7 +531,8 @@ async function getAvailableSlot(
   if (
     !slot ||
     slot.stylist_id !== input.stylistId ||
-    slot.service_id !== input.serviceId
+    new Date(slot.ends_at).getTime() - new Date(slot.starts_at).getTime() <
+      service.duration_minutes * 60_000
   ) {
     throw new Error("That appointment time is no longer available.");
   }
