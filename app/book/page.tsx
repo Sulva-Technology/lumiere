@@ -8,6 +8,7 @@ import {
   Calendar,
   Camera,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Sparkles,
@@ -58,6 +59,15 @@ const TYPE_OPTIONS: Array<{
   { value: "content", label: "Content", icon: Camera },
 ];
 
+function dateKey(value: string | Date) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function monthStart(value: Date) {
+  return new Date(value.getFullYear(), value.getMonth(), 1);
+}
+
 function BookingPageContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success") === "1";
@@ -82,6 +92,11 @@ function BookingPageContent() {
   const [notes, setNotes] = useState("");
   const [locationOutsideTravelRadius, setLocationOutsideTravelRadius] =
     useState(false);
+  const [travelFee, setTravelFee] = useState(20);
+  const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState("");
+  const [visibleMonth, setVisibleMonth] = useState(() =>
+    monthStart(new Date()),
+  );
   const [occasion, setOccasion] = useState("");
   const [referenceDescription, setReferenceDescription] = useState("");
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(
@@ -125,6 +140,7 @@ function BookingPageContent() {
         if (!stylistsResponse.ok)
           throw new Error(stylistsJson.error ?? "Unable to load artists.");
         setServices(servicesJson.services);
+        setTravelFee(Number(servicesJson.travelFee) || 20);
         setStylists(stylistsJson.stylists);
         if (stylistsJson.stylists[0] && !selectedStylist)
           setSelectedStylist(stylistsJson.stylists[0].id);
@@ -204,6 +220,27 @@ function BookingPageContent() {
     }
     void loadAvailability();
   }, [selectedService, selectedStylist]);
+
+  useEffect(() => {
+    if (!availability.length) return;
+    const firstDate = dateKey(availability[0].startsAt);
+    setSelectedAvailabilityDate((current) => current || firstDate);
+    setVisibleMonth(monthStart(new Date(availability[0].startsAt)));
+  }, [availability]);
+
+  const availabilityByDate = useMemo(() => {
+    const grouped = new Map<string, AvailableSlot[]>();
+    for (const slot of availability) {
+      const key = dateKey(slot.startsAt);
+      grouped.set(key, [...(grouped.get(key) ?? []), slot]);
+    }
+    return grouped;
+  }, [availability]);
+  const selectedDateSlots =
+    availabilityByDate.get(selectedAvailabilityDate) ?? [];
+  const bookingTotal =
+    (selectedServiceDetail?.price ?? 0) +
+    (locationOutsideTravelRadius ? travelFee : 0);
 
   useEffect(() => {
     async function syncReservationStatus() {
@@ -491,40 +528,139 @@ function BookingPageContent() {
             </header>
             <div className="mx-auto max-w-2xl">
               {availability.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {availability.map((slot) => (
-                    <button
-                      key={slot.id}
-                      onClick={() => {
-                        setSelectedAvailability(slot.id);
-                        setCurrentStep("details");
-                      }}
-                      className={`flex flex-col rounded-2xl border p-5 text-left transition-all hover:scale-[1.02] ${selectedAvailability === slot.id ? "border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]" : "border-black/5 bg-white/5 dark:border-white/5"}`}
-                    >
-                      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                        <Calendar size={14} />
-                        <span className="text-xs uppercase tracking-widest">
-                          {new Date(slot.startsAt).toLocaleDateString("en-US", {
+                <div className="space-y-6">
+                  <Glass level="medium" className="p-4 sm:p-6">
+                    <div className="mb-5 flex items-center justify-between">
+                      <button
+                        type="button"
+                        aria-label="Previous month"
+                        onClick={() =>
+                          setVisibleMonth(
+                            (month) =>
+                              new Date(
+                                month.getFullYear(),
+                                month.getMonth() - 1,
+                                1,
+                              ),
+                          )
+                        }
+                        className="rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <h2 className="font-serif text-xl text-[var(--text-primary)]">
+                        {visibleMonth.toLocaleDateString("en-US", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </h2>
+                      <button
+                        type="button"
+                        aria-label="Next month"
+                        onClick={() =>
+                          setVisibleMonth(
+                            (month) =>
+                              new Date(
+                                month.getFullYear(),
+                                month.getMonth() + 1,
+                                1,
+                              ),
+                          )
+                        }
+                        className="rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                        (day) => (
+                          <span key={day} className="py-2">
+                            {day}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from(
+                        {
+                          length: new Date(
+                            visibleMonth.getFullYear(),
+                            visibleMonth.getMonth(),
+                            1,
+                          ).getDay(),
+                        },
+                        (_, index) => (
+                          <span key={`blank-${index}`} />
+                        ),
+                      )}
+                      {Array.from(
+                        {
+                          length: new Date(
+                            visibleMonth.getFullYear(),
+                            visibleMonth.getMonth() + 1,
+                            0,
+                          ).getDate(),
+                        },
+                        (_, index) => {
+                          const day = new Date(
+                            visibleMonth.getFullYear(),
+                            visibleMonth.getMonth(),
+                            index + 1,
+                          );
+                          const key = dateKey(day);
+                          const count =
+                            availabilityByDate.get(key)?.length ?? 0;
+                          const selected = key === selectedAvailabilityDate;
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              disabled={!count}
+                              onClick={() => setSelectedAvailabilityDate(key)}
+                              className={`aspect-square rounded-xl text-sm transition-colors ${selected ? "bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]" : count ? "bg-[#8B6914]/10 font-bold text-[#8B6914] hover:bg-[#8B6914]/20 dark:bg-[#D4A847]/10 dark:text-[#F0D080]" : "cursor-not-allowed text-[var(--text-secondary)] opacity-30"}`}
+                            >
+                              <span>{index + 1}</span>
+                              {count > 0 && (
+                                <span className="mx-auto mt-0.5 block h-1 w-1 rounded-full bg-current" />
+                              )}
+                            </button>
+                          );
+                        },
+                      )}
+                    </div>
+                  </Glass>
+                  <div>
+                    <h2 className="font-serif text-xl text-[var(--text-primary)]">
+                      {selectedAvailabilityDate
+                        ? new Date(
+                            `${selectedAvailabilityDate}T12:00:00`,
+                          ).toLocaleDateString("en-US", {
                             weekday: "long",
-                            month: "short",
+                            month: "long",
                             day: "numeric",
-                          })}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="font-serif text-2xl text-[var(--text-primary)]">
+                          })
+                        : "Choose a date"}
+                    </h2>
+                    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {selectedDateSlots.map((slot) => (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAvailability(slot.id);
+                            setCurrentStep("details");
+                          }}
+                          className="rounded-2xl border border-black/5 bg-white/5 px-4 py-4 text-center font-serif text-lg text-[var(--text-primary)] transition-all hover:border-[#8B6914] hover:bg-[#8B6914]/5 dark:border-white/5 dark:hover:border-[#D4A847]"
+                        >
                           {new Date(slot.startsAt).toLocaleTimeString("en-US", {
-                            hour: "2-digit",
+                            hour: "numeric",
                             minute: "2-digit",
                           })}
-                        </span>
-                        <ChevronRight
-                          size={18}
-                          className="text-[#8B6914] dark:text-[#D4A847]"
-                        />
-                      </div>
-                    </button>
-                  ))}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <Glass level="medium" className="p-12 text-center">
@@ -880,6 +1016,26 @@ function BookingPageContent() {
                         </span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-secondary)]">
+                        Service
+                      </span>
+                      <span className="font-medium">
+                        {selectedServiceDetail
+                          ? formatCurrency(selectedServiceDetail.price)
+                          : "-"}
+                      </span>
+                    </div>
+                    {locationOutsideTravelRadius && (
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-secondary)]">
+                          Travel fee
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(travelFee)}
+                        </span>
+                      </div>
+                    )}
                     <div className="border-t border-black/5 pt-4 dark:border-white/5">
                       <div className="flex justify-between text-lg font-bold">
                         <span className="text-[#1A1008] dark:text-white">
@@ -887,7 +1043,7 @@ function BookingPageContent() {
                         </span>
                         <span className="text-[#8B6914] dark:text-[#F0D080]">
                           {selectedServiceDetail
-                            ? formatCurrency(selectedServiceDetail.price)
+                            ? formatCurrency(bookingTotal)
                             : "-"}
                         </span>
                       </div>
