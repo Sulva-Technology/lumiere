@@ -305,12 +305,12 @@ export async function getAvailability(stylistId?: string, serviceId?: string): P
     query,
     supabase
       .from('bookings')
-      .select('starts_at, ends_at, status')
+      .select('starts_at, ends_at, status, stylist_id')
       .in('status', ['confirmed', 'completed'])
       .gte('ends_at', nowIso()),
     supabase
       .from('booking_reservations')
-      .select('availability_id, expires_at, reservation_status')
+      .select('availability_id, expires_at, reservation_status, booking_availability(starts_at, ends_at, stylist_id)')
       .eq('reservation_status', 'pending_payment')
       .gt('expires_at', nowIso()),
   ]);
@@ -319,19 +319,25 @@ export async function getAvailability(stylistId?: string, serviceId?: string): P
   if (bookingsError) throw bookingsError;
   if (reservationError) throw reservationError;
 
-  const blockedIds = new Set((reservations ?? []).map((item) => item.availability_id));
   const BUFFER_MS = 60 * 60_000; // 60 minutes
 
   return (slots ?? [])
     .filter((slot) => {
-      // Check for direct reservation block
-      if (blockedIds.has(slot.id)) return false;
-
       const slotStart = new Date(slot.starts_at).getTime();
       const slotEnd = new Date(slot.ends_at).getTime();
 
+      const isBlockedByReservation = (reservations ?? []).some((reservation) => {
+        const reservationSlot = relationFirst(reservation.booking_availability);
+        if (!reservationSlot || reservationSlot.stylist_id !== slot.stylist_id) return false;
+        const reservationStart = new Date(reservationSlot.starts_at).getTime();
+        const reservationEnd = new Date(reservationSlot.ends_at).getTime();
+        return slotStart < reservationEnd && slotEnd > reservationStart;
+      });
+      if (isBlockedByReservation) return false;
+
       // Check for overlap with any confirmed booking + 60min buffer
       const isBlockedByBooking = (confirmedBookings ?? []).some((booking) => {
+        if (booking.stylist_id !== slot.stylist_id) return false;
         const bStart = new Date(booking.starts_at).getTime();
         const bEnd = new Date(booking.ends_at).getTime();
         
@@ -438,15 +444,21 @@ async function getAvailableSlot(input: Pick<CreateBookingInput, 'availabilityId'
   }
 
   // 3. Check for active reservations
-  const { data: activeReservation } = await supabase
+  const { data: activeReservations } = await supabase
     .from('booking_reservations')
-    .select('id')
-    .eq('availability_id', input.availabilityId)
+    .select('id, availability_id, booking_availability(starts_at, ends_at, stylist_id)')
     .eq('reservation_status', 'pending_payment')
-    .gt('expires_at', nowIso())
-    .maybeSingle();
+    .gt('expires_at', nowIso());
 
-  if (activeReservation) {
+  const hasOverlappingReservation = (activeReservations ?? []).some((reservation) => {
+    const reservedSlot = relationFirst(reservation.booking_availability);
+    if (!reservedSlot || reservedSlot.stylist_id !== input.stylistId) return false;
+    const reservedStart = new Date(reservedSlot.starts_at).getTime();
+    const reservedEnd = new Date(reservedSlot.ends_at).getTime();
+    return slotStart < reservedEnd && slotEnd > reservedStart;
+  });
+
+  if (hasOverlappingReservation) {
     throw new Error('That appointment time is being held for another guest.');
   }
 

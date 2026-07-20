@@ -118,6 +118,19 @@ export const adminAvailabilityDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const adminAvailabilityScheduleSchema = z.object({
+  stylistId: z.string().uuid(),
+  startDate: z.string().date(),
+  endDate: z.string().date(),
+  weekdayStartTime: z.string().regex(/^\d{2}:\d{2}$/),
+  weekdayEndTime: z.string().regex(/^\d{2}:\d{2}$/),
+  weekendStartTime: z.string().regex(/^\d{2}:\d{2}$/),
+  weekendEndTime: z.string().regex(/^\d{2}:\d{2}$/),
+}).refine((value) => value.endDate >= value.startDate, {
+  message: 'End date must be on or after the start date.',
+  path: ['endDate'],
+});
+
 export const adminBookingServiceSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(160),

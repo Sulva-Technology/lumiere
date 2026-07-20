@@ -19,6 +19,16 @@ interface AvailabilitySlot {
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+function nextMonthRange() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+  };
+}
+
 export default function AdminAvailabilityPage() {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
@@ -37,6 +47,14 @@ export default function AdminAvailabilityPage() {
   const [ruleStartTime, setRuleStartTime] = useState('13:00');
   const [ruleEndTime, setRuleEndTime] = useState('16:00');
   const [creatingRule, setCreatingRule] = useState(false);
+  const [scheduleRange] = useState(nextMonthRange);
+  const [scheduleStartDate, setScheduleStartDate] = useState(scheduleRange.start);
+  const [scheduleEndDate, setScheduleEndDate] = useState(scheduleRange.end);
+  const [weekdayStartTime, setWeekdayStartTime] = useState('16:00');
+  const [weekdayEndTime, setWeekdayEndTime] = useState('21:00');
+  const [weekendStartTime, setWeekendStartTime] = useState('07:00');
+  const [weekendEndTime, setWeekendEndTime] = useState('19:00');
+  const [creatingSchedule, setCreatingSchedule] = useState(false);
 
   const primaryStylistId = stylists[0]?.id ?? '';
   const activeRules = useMemo(() => rules.filter((rule) => rule.active), [rules]);
@@ -112,6 +130,37 @@ export default function AdminAvailabilityPage() {
     }
   }
 
+  async function handleCreateSchedule(event: React.FormEvent) {
+    event.preventDefault();
+    if (!primaryStylistId) return;
+
+    setCreatingSchedule(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/availability/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stylistId: primaryStylistId,
+          startDate: scheduleStartDate,
+          endDate: scheduleEndDate,
+          weekdayStartTime,
+          weekdayEndTime,
+          weekendStartTime,
+          weekendEndTime,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Failed to create the schedule.');
+
+      await loadData();
+    } catch (scheduleError) {
+      setError(scheduleError instanceof Error ? scheduleError.message : 'Failed to create the schedule.');
+    } finally {
+      setCreatingSchedule(false);
+    }
+  }
+
   async function handleDeleteSlot(id: string) {
     try {
       const response = await fetch(`/api/admin/availability?id=${id}`, { method: 'DELETE' });
@@ -174,6 +223,45 @@ export default function AdminAvailabilityPage() {
       </header>
 
       {error && <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">{error}</div>}
+
+      <Glass level="heavy" className="p-6 sm:p-8">
+        <div className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B6914] dark:text-[#D4A847]">Quick setup</p>
+          <h2 className="mt-2 font-serif text-2xl text-[#1A1008] dark:text-white">Set your working hours once</h2>
+          <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">Creates bookable times for every active service in this date range. Existing times are kept, so it is safe to run again.</p>
+        </div>
+        <form onSubmit={handleCreateSchedule} className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">From</label>
+              <input type="date" value={scheduleStartDate} onChange={(event) => setScheduleStartDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Until</label>
+              <input type="date" value={scheduleEndDate} onChange={(event) => setScheduleEndDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl bg-white/30 p-4 dark:bg-black/20">
+              <p className="font-medium text-[#1A1008] dark:text-white">Monday to Friday</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <input aria-label="Weekday start time" type="time" value={weekdayStartTime} onChange={(event) => setWeekdayStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
+                <input aria-label="Weekday end time" type="time" value={weekdayEndTime} onChange={(event) => setWeekdayEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
+              </div>
+            </div>
+            <div className="rounded-2xl bg-white/30 p-4 dark:bg-black/20">
+              <p className="font-medium text-[#1A1008] dark:text-white">Saturday and Sunday</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <input aria-label="Weekend start time" type="time" value={weekendStartTime} onChange={(event) => setWeekendStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
+                <input aria-label="Weekend end time" type="time" value={weekendEndTime} onChange={(event) => setWeekendEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
+              </div>
+            </div>
+          </div>
+          <button type="submit" disabled={creatingSchedule || !primaryStylistId} className="rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]">
+            {creatingSchedule ? 'Turning on availability...' : 'Turn On Availability'}
+          </button>
+        </form>
+      </Glass>
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1fr]">
         <Glass level="medium" className="p-6">
