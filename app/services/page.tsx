@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default async function ServicesPage() {
   // Fetch live services from the same source as the booking flow
   const services = await getBookingServices();
-  
+
   return (
     <main className="min-h-screen px-4 pb-24 pt-32">
       <div className="mx-auto max-w-7xl">

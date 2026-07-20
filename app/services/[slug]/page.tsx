@@ -45,8 +45,8 @@ export default async function ServiceDetailPage({ params }: PageProps) {
   return (
     <main className="min-h-screen px-4 pb-24 pt-32">
       <div className="mx-auto max-w-4xl">
-        <Link 
-          href="/services" 
+        <Link
+          href="/services"
           className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
         >
           <ArrowLeft size={16} /> Back to Services
