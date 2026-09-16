@@ -20,6 +20,12 @@ const homeShopSectionItemSchema = z.object({
   title: z.string().trim().min(1).max(120),
   description: z.string().trim().min(1).max(500),
 });
+const homeSectionVisibilitySchema = z.object({
+  hero: z.boolean().default(true),
+  gallery: z.boolean().default(true),
+  policies: z.boolean().default(true),
+  faq: z.boolean().default(true),
+});
 
 export const cartLineInputSchema = z.object({
   variantId: z.string().uuid(),
@@ -74,6 +80,17 @@ export const createBookingSchema = z.object({
         .optional(),
     })
     .optional(),
+});
+
+export const adminGalleryItemSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().trim().max(120).nullable().optional(),
+  alt: z.string().trim().min(3).max(240),
+  category: z.string().trim().max(80).nullable().optional(),
+  imageUrl: z.string().trim().min(1).max(2000),
+  mediaAssetId: z.string().uuid().nullable().optional(),
+  sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
+  active: z.boolean().default(true),
 });
 
 export const cancelReservationSchema = z.object({
@@ -235,6 +252,7 @@ export const storeSettingsSchema = z.object({
     .max(12)
     .optional()
     .default([]),
+  homeSectionVisibility: homeSectionVisibilitySchema.optional(),
 });
 
 export const adminEmailSchema = z.object({

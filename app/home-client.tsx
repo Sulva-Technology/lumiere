@@ -4,19 +4,21 @@ import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { StoreSettings } from '@/lib/types';
+import type { GalleryItem, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
 type HomeClientProps = {
   settings: StoreSettings | null;
+  gallery: GalleryItem[];
 };
 
-export default function Home({ settings }: HomeClientProps) {
+export default function Home({ settings, gallery }: HomeClientProps) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
+  const visibility = resolvedSettings.home_section_visibility;
 
   return (
     <div className="flex flex-col gap-24 pb-24">
-      {/* Hero Section */}
+      {visibility.hero && (
       <section className="relative mx-auto mt-4 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
         <div className="relative aspect-[4/5] sm:aspect-[16/9] w-full overflow-hidden rounded-[32px]">
           <div className="absolute inset-0 z-0">
@@ -45,58 +47,52 @@ export default function Home({ settings }: HomeClientProps) {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Services Overview */}
+      {visibility.gallery && gallery.length > 0 && (
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 flex items-end justify-between">
           <div className="space-y-2">
-            <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Services</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--text-accent)]">The portfolio</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-[var(--text-primary)]">Glam, tailored to you.</h2>
           </div>
           <Link href="/book" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
-            Explore All Services <ArrowRight size={16} />
+            Book your look <ArrowRight size={16} />
           </Link>
         </div>
 
-        <div>
-          {[
-            {
-              title: 'Makeup Artistry',
-              description: 'From natural Soft Glam to elevated Full Glam, we specialize in enhancing your unique features for birthdays, events, and photoshoots.',
-              cta: 'Book Makeup Artist',
-              href: '/book?type=makeup',
-              img: 'makeup.jpeg',
-            },
-          ].map((cat, index) => (
-            <div
-              key={cat.title}
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-12">
+          {gallery.slice(0, 5).map((item, index) => (
+            <figure
+              key={item.id}
+              className={`group relative overflow-hidden rounded-[24px] bg-[#dfe7d8] ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
             >
-              <Link href={cat.href} className="group block cursor-pointer">
-                <Glass level="medium" className="relative flex min-h-[380px] flex-col justify-end overflow-hidden p-8 sm:min-h-[440px] sm:p-12 transition-transform duration-500 group-hover:scale-[1.01]">
-                  <Image
-                    src={`/images/${cat.img}`}
-                    alt={`${cat.title} by Makeup Artist in Arizona`}
-                    fill
-                    className="object-cover opacity-60 transition-opacity duration-500 group-hover:opacity-80 dark:opacity-40 dark:group-hover:opacity-60"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="relative z-10">
-                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-white/70">Luxury makeup appointments</p>
-                    <h3 className="mb-3 font-serif text-4xl text-white sm:text-5xl">{cat.title}</h3>
-                    <p className="mb-5 max-w-xl text-base leading-relaxed text-white/90">{cat.description}</p>
-                    <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white">
-                      {cat.cta} <ArrowRight size={14} />
-                    </span>
-                  </div>
-                </Glass>
-              </Link>
-            </div>
+              <Image
+                src={item.imageUrl}
+                alt={item.alt}
+                fill
+                sizes={index === 0 ? '(min-width: 1024px) 56vw, 100vw' : '(min-width: 1024px) 33vw, 50vw'}
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+              <figcaption className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-6">
+                {item.category && <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/70">{item.category}</p>}
+                {item.title && <p className="mt-1 font-serif text-2xl sm:text-3xl">{item.title}</p>}
+              </figcaption>
+            </figure>
           ))}
         </div>
+        <div className="mt-8 sm:hidden">
+          <Link href="/book" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-accent)]">
+            Book your look <ArrowRight size={16} />
+          </Link>
+        </div>
       </section>
+      )}
 
-      {/* Policies & FAQ */}
+      {(visibility.policies || visibility.faq) && (
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 grid gap-12 lg:grid-cols-2">
-        <div className="space-y-8">
+        {visibility.policies && <div className="space-y-8">
           <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Booking Policies</h2>
           <div className="space-y-6">
             {[
@@ -114,9 +110,9 @@ export default function Home({ settings }: HomeClientProps) {
               View Full Terms & Conditions
             </Link>
           </div>
-        </div>
+        </div>}
 
-        <div className="space-y-8">
+        {visibility.faq && <div className="space-y-8">
           <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Common Questions</h2>
           <div className="space-y-6">
             {[
@@ -130,8 +126,9 @@ export default function Home({ settings }: HomeClientProps) {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
       </section>
+      )}
     </div>
   );
 }

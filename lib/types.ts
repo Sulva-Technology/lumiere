@@ -182,6 +182,17 @@ export interface MediaAsset {
   sortOrder: number;
 }
 
+export interface GalleryItem {
+  id: string;
+  title: string | null;
+  alt: string;
+  category: string | null;
+  imageUrl: string;
+  sortOrder: number;
+  active: boolean;
+  mediaAssetId: string | null;
+}
+
 export interface BookingService {
   id: string;
   name: string;
@@ -337,6 +348,13 @@ export interface HomeShopSectionItem {
   description: string;
 }
 
+export type HomeSectionVisibility = {
+  hero: boolean;
+  gallery: boolean;
+  policies: boolean;
+  faq: boolean;
+};
+
 export interface StoreSettings {
   id?: string;
   store_name: string;
@@ -350,4 +368,5 @@ export interface StoreSettings {
   home_shop_section_link_label: string | null;
   home_shop_section_link_href: string | null;
   home_shop_section_items: HomeShopSectionItem[];
+  home_section_visibility: HomeSectionVisibility;
 }

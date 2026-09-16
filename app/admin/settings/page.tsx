@@ -49,6 +49,7 @@ export default function AdminSettingsPage() {
           homeShopSectionLinkLabel: settings.home_shop_section_link_label,
           homeShopSectionLinkHref: settings.home_shop_section_link_href,
           homeShopSectionItems: settings.home_shop_section_items,
+          homeSectionVisibility: settings.home_section_visibility,
         }),
       });
       const json = await response.json();
@@ -131,6 +132,31 @@ export default function AdminSettingsPage() {
             className="h-4 w-4"
           />
         </label>
+        <div className="space-y-3 rounded-3xl border border-black/10 bg-white/50 p-5 dark:border-white/10 dark:bg-black/40">
+          <div>
+            <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Homepage Sections</h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">Show or hide each section without changing the design or deleting its content.</p>
+          </div>
+          {[
+            ['hero', 'Hero image'],
+            ['gallery', 'Portfolio gallery'],
+            ['policies', 'Booking policies'],
+            ['faq', 'Common questions'],
+          ].map(([key, label]) => (
+            <label key={key} className="flex items-center justify-between gap-4 rounded-2xl bg-white/30 px-4 py-3 text-sm dark:bg-black/20">
+              <span>{label}</span>
+              <input
+                type="checkbox"
+                checked={settings.home_section_visibility[key as keyof typeof settings.home_section_visibility]}
+                onChange={(event) => setSettings({
+                  ...settings,
+                  home_section_visibility: { ...settings.home_section_visibility, [key]: event.target.checked },
+                })}
+                className="h-4 w-4"
+              />
+            </label>
+          ))}
+        </div>
         <div className="space-y-4 rounded-3xl border border-black/10 p-5 dark:border-white/10">
           <div>
             <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Homepage Shop Section</h2>

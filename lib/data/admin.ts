@@ -3,7 +3,7 @@ import { sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmat
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
 import { finalizePaidOrder } from '@/lib/data/checkout';
-import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
+import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeSectionVisibility, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 import { finalizePaidBooking } from '@/lib/data/public';
 import { logEvent } from '@/lib/observability';
@@ -627,7 +627,7 @@ export async function getStoreSettings(): Promise<StoreSettings | null> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from('store_settings')
-    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, travel_fee, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items')
+    .select('id, store_name, support_email, support_phone, booking_contact_email, announcement_bar, travel_fee, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items, home_section_visibility')
     .order('created_at')
     .limit(1)
     .maybeSingle();
@@ -653,6 +653,7 @@ export async function updateStoreSettings(input: {
   homeShopSectionLinkLabel?: string;
   homeShopSectionLinkHref?: string;
   homeShopSectionItems?: HomeShopSectionItem[];
+  homeSectionVisibility?: HomeSectionVisibility;
 }) {
   const supabase = createSupabaseAdminClient();
   const current = await getStoreSettings();
@@ -665,6 +666,7 @@ export async function updateStoreSettings(input: {
   const homeShopSectionLinkLabel = input.homeShopSectionLinkLabel?.trim() ? input.homeShopSectionLinkLabel.trim() : null;
   const homeShopSectionLinkHref = input.homeShopSectionLinkHref?.trim() ? input.homeShopSectionLinkHref.trim() : null;
   const homeShopSectionItems = normalizeHomeShopSectionItems(input.homeShopSectionItems);
+  const homeSectionVisibility = input.homeSectionVisibility;
 
   if (!current) {
     const { data, error } = await supabase
@@ -681,6 +683,7 @@ export async function updateStoreSettings(input: {
         home_shop_section_link_label: homeShopSectionLinkLabel,
         home_shop_section_link_href: homeShopSectionLinkHref,
         home_shop_section_items: homeShopSectionItems,
+        home_section_visibility: homeSectionVisibility,
       })
       .select()
       .single();
@@ -706,6 +709,7 @@ export async function updateStoreSettings(input: {
       home_shop_section_link_label: homeShopSectionLinkLabel,
       home_shop_section_link_href: homeShopSectionLinkHref,
       home_shop_section_items: homeShopSectionItems,
+      home_section_visibility: homeSectionVisibility,
     })
     .eq('id', current.id)
     .select()

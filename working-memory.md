@@ -77,3 +77,11 @@
 - Added explicit loading states for initial Supabase service/stylist data and live availability in `app/book/page.tsx`. The initial service request now runs once rather than once per selected-stylist update.
 - Updated the homepage Terms link to `/terms-of-service`, created the requested visible policy content there, and restored a Terms & Conditions footer link.
 - Validation: lint passes and the production build compiled successfully after these follow-up changes.
+
+## Gallery & Homepage Controls
+- The redundant homepage Services panel was replaced with an editorial, image-led portfolio gallery. It uses the first five active images, with the lead image given dominant visual weight and supporting images arranged as a responsive collage.
+- New protected admin route: `/admin/gallery`. Managers can upload an image, add title/category/accessible alt text, set display order, hide/show an image, edit, or remove it. Uploads reuse the existing Supabase Storage bucket and media-asset tracking model.
+- New Settings > Homepage Sections controls independently show/hide Hero image, Portfolio gallery, Booking policies, and Common questions. Each individual gallery item also has its own Live toggle.
+- New migration: `017_home_gallery_and_section_visibility.sql` creates `gallery_items`, adds section visibility settings, and seeds the existing visual assets only if the gallery is empty.
+- Homepage gracefully displays an attractive local fallback gallery until migration 017 has been applied; the full editable admin gallery needs that migration in Supabase.
+- Validation: `npm run lint` passes and the production build completed successfully.

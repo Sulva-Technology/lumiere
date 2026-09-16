@@ -24,6 +24,12 @@ export function createDefaultStoreSettings(): StoreSettings {
     home_shop_section_link_label: 'Shop Collection',
     home_shop_section_link_href: '/shop',
     home_shop_section_items: defaultHomeShopSectionItems,
+    home_section_visibility: {
+      hero: true,
+      gallery: true,
+      policies: true,
+      faq: true,
+    },
   };
 }
 
@@ -44,5 +50,9 @@ export function applyStoreSettingsDefaults(settings: Partial<StoreSettings> | nu
     home_shop_section_link_label: settings?.home_shop_section_link_label?.trim() || defaults.home_shop_section_link_label,
     home_shop_section_link_href: settings?.home_shop_section_link_href?.trim() || defaults.home_shop_section_link_href,
     home_shop_section_items: settings?.home_shop_section_items?.length ? settings.home_shop_section_items : defaults.home_shop_section_items,
+    home_section_visibility: {
+      ...defaults.home_section_visibility,
+      ...(settings?.home_section_visibility ?? {}),
+    },
   };
 }

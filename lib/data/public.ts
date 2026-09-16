@@ -16,6 +16,7 @@ import type {
   MakeupBookingIntake,
   ProductDetail,
   ProductListItem,
+  GalleryItem,
   StylistSummary,
   ValidatedCartLine,
 } from "@/lib/types";
@@ -279,6 +280,37 @@ export async function getBookingServices(): Promise<BookingService[]> {
       bestFor: seoData?.bestFor ?? "",
     } as BookingService;
   });
+}
+
+export async function getPublicGallery(): Promise<GalleryItem[]> {
+  const fallback: GalleryItem[] = [
+    { id: 'soft-glam', title: 'Soft Glam', alt: 'Soft glam makeup look by Itz Lola Beauty', category: 'Soft Glam', imageUrl: '/images/makeup.jpeg', sortOrder: 1, active: true, mediaAssetId: null },
+    { id: 'luxury-glam', title: 'Luxury Glam', alt: 'Luxury makeup portrait by Itz Lola Beauty', category: 'Full Glam', imageUrl: '/images/home.jpeg', sortOrder: 2, active: true, mediaAssetId: null },
+    { id: 'artist-detail', title: 'Artist Detail', alt: 'Makeup artist Lola of Itz Lola Beauty', category: 'Behind the Scenes', imageUrl: '/images/founder.jpeg', sortOrder: 3, active: true, mediaAssetId: null },
+  ];
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("gallery_items")
+      .select("id, title, alt, category, image_url, sort_order, active, media_asset_id")
+      .eq("active", true)
+      .order("sort_order")
+      .order("created_at");
+    if (error) throw error;
+    return (data ?? []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      alt: item.alt,
+      category: item.category,
+      imageUrl: item.image_url,
+      sortOrder: item.sort_order,
+      active: item.active,
+      mediaAssetId: item.media_asset_id,
+    }));
+  } catch {
+    return fallback;
+  }
 }
 
 export async function getStylists(): Promise<StylistSummary[]> {
@@ -1164,6 +1196,7 @@ export async function getPublicStoreSettings() {
     homeShopSectionLinkLabel: "Shop Collection",
     homeShopSectionLinkHref: "/shop",
     homeShopSectionItems: [],
+    homeSectionVisibility: { hero: true, gallery: true, policies: true, faq: true },
   };
 
   try {
@@ -1171,7 +1204,7 @@ export async function getPublicStoreSettings() {
     const { data, error } = await supabase
       .from("store_settings")
       .select(
-        "store_name, support_email, support_phone, booking_contact_email, announcement_bar, travel_fee, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items",
+        "store_name, support_email, support_phone, booking_contact_email, announcement_bar, travel_fee, home_favorites_enabled, home_shop_section_title, home_shop_section_link_label, home_shop_section_link_href, home_shop_section_items, home_section_visibility",
       )
       .order("created_at")
       .limit(1)
@@ -1205,6 +1238,10 @@ export async function getPublicStoreSettings() {
       homeShopSectionItems: Array.isArray(data?.home_shop_section_items)
         ? data.home_shop_section_items
         : fallback.homeShopSectionItems,
+      homeSectionVisibility: {
+        ...fallback.homeSectionVisibility,
+        ...(data?.home_section_visibility ?? {}),
+      },
     };
   } catch {
     return fallback;

@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getPublicStoreSettings } from '@/lib/data/public';
+import { getPublicGallery, getPublicStoreSettings } from '@/lib/data/public';
 import HomeClient from './home-client';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const store = await getPublicStoreSettings();
+  const [store, gallery] = await Promise.all([getPublicStoreSettings(), getPublicGallery()]);
   const siteUrl = 'https://itzlolabeauty.com';
 
   const schema = {
@@ -60,7 +60,9 @@ export default async function HomePage() {
           home_shop_section_link_label: store.homeShopSectionLinkLabel,
           home_shop_section_link_href: store.homeShopSectionLinkHref,
           home_shop_section_items: store.homeShopSectionItems,
+          home_section_visibility: store.homeSectionVisibility,
         }}
+        gallery={gallery}
       />
     </>
   );
