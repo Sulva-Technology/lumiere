@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -20,11 +19,7 @@ export default function Home({ settings }: HomeClientProps) {
       {/* Hero Section */}
       <section className="relative mx-auto mt-4 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
         <div className="relative aspect-[4/5] sm:aspect-[16/9] w-full overflow-hidden rounded-[32px]">
-          <motion.div
-            className="absolute inset-0 z-0"
-            animate={{ scale: [1.0, 1.05, 1.0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          >
+          <div className="absolute inset-0 z-0">
             <Image
               src="/images/home.jpeg"
               alt="Itz Lola Beauty Studio - Luxury Makeup in Arizona"
@@ -32,7 +27,7 @@ export default function Home({ settings }: HomeClientProps) {
               className="object-cover object-top"
               priority
             />
-          </motion.div>
+          </div>
 
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent to-black/30" />
 
@@ -62,7 +57,7 @@ export default function Home({ settings }: HomeClientProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div>
           {[
             {
               title: 'Makeup Artistry',
@@ -72,15 +67,11 @@ export default function Home({ settings }: HomeClientProps) {
               img: 'makeup.jpeg',
             },
           ].map((cat, index) => (
-            <motion.div
+            <div
               key={cat.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15, duration: 0.6 }}
             >
               <Link href={cat.href} className="group block cursor-pointer">
-                <Glass level="medium" className="relative flex aspect-[16/9] flex-col justify-end p-8 transition-transform duration-500 group-hover:scale-[1.02]">
+                <Glass level="medium" className="relative flex min-h-[380px] flex-col justify-end overflow-hidden p-8 sm:min-h-[440px] sm:p-12 transition-transform duration-500 group-hover:scale-[1.01]">
                   <Image
                     src={`/images/${cat.img}`}
                     alt={`${cat.title} by Makeup Artist in Arizona`}
@@ -89,45 +80,18 @@ export default function Home({ settings }: HomeClientProps) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="relative z-10">
-                    <h3 className="mb-3 font-serif text-3xl text-white">{cat.title}</h3>
-                    <p className="mb-4 max-w-sm text-sm leading-relaxed text-white/90">{cat.description}</p>
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-white/70">Luxury makeup appointments</p>
+                    <h3 className="mb-3 font-serif text-4xl text-white sm:text-5xl">{cat.title}</h3>
+                    <p className="mb-5 max-w-xl text-base leading-relaxed text-white/90">{cat.description}</p>
                     <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white">
                       {cat.cta} <ArrowRight size={14} />
                     </span>
                   </div>
                 </Glass>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
-      </section>
-
-      {/* Booking Process */}
-      <section className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
-        <Glass level="medium" className="p-10 md:p-16">
-          <div className="mb-12 text-center space-y-4">
-            <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Your Glam Experience</h2>
-            <p className="text-[var(--text-secondary)]">A simple 3-step process to secure your luxury glam appointment.</p>
-          </div>
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
-            {[
-              { step: '01', title: 'Choose Your Service', text: 'Select the glam service that fits your occasion.' },
-              { step: '02', title: 'Secure Your Slot', text: 'Pick a live availability time and pay your non-refundable $35 retainer.' },
-              { step: '03', title: 'Arrive Ready', text: 'Come to your session prepared to be elevated and feel your most confident.' },
-            ].map((item) => (
-              <div key={item.step} className="space-y-4 text-center">
-                <span className="font-serif text-5xl text-[#8B6914]/20 dark:text-[#D4A847]/20">{item.step}</span>
-                <h3 className="font-serif text-xl text-[var(--text-primary)]">{item.title}</h3>
-                <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{item.text}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-12 text-center">
-            <Link href="/book" className="inline-flex items-center gap-2 rounded-full bg-[#8B6914] px-8 py-4 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
-              Start Booking Now <ArrowRight size={18} />
-            </Link>
-          </div>
-        </Glass>
       </section>
 
       {/* Policies & FAQ */}
@@ -146,7 +110,7 @@ export default function Home({ settings }: HomeClientProps) {
                 <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{policy.text}</p>
               </div>
             ))}
-            <Link href="/faq" className="inline-block text-sm font-medium text-[var(--text-accent)] underline underline-offset-4">
+            <Link href="/terms-of-service" className="inline-block text-sm font-medium text-[var(--text-accent)] underline underline-offset-4">
               View Full Terms & Conditions
             </Link>
           </div>

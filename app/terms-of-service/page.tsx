@@ -6,29 +6,36 @@ export default async function TermsOfServicePage() {
 
   return (
     <InfoPage
-      eyebrow="Legal"
-      title="Terms of Service"
-      intro={`These terms describe how customers use ${store.storeName}'s storefront, appointment booking flow, and support channels.`}
+      eyebrow="Booking Policies"
+      title="Terms & Conditions"
+      intro={`Please review these appointment terms before booking with ${store.storeName}.`}
       sections={[
         {
-          title: 'Storefront Purchases',
+          title: 'Booking & Retainer Fee',
           body: [
-            'Orders are subject to product availability and successful payment confirmation.',
-            'Displayed availability can change quickly, so final inventory validation happens server-side during checkout.',
+            'A non-refundable retainer fee of $35 is required to secure your appointment date.',
+            'The retainer is applied to your service total.',
           ],
         },
         {
-          title: 'Appointments',
+          title: 'Late Policy',
           body: [
-            'Booking a salon appointment reserves a live slot based on available stylist schedules.',
-            'Clients should contact the salon promptly if they need to reschedule or cancel an appointment.',
+            'A 10-minute grace period is allowed. After that, a $20 late fee will be applied.',
+            'Appointments exceeding 15 minutes late will be cancelled.',
           ],
         },
         {
-          title: 'Platform Use',
+          title: 'Rescheduling & No-Show Policy',
           body: [
-            'Customers agree not to misuse the storefront, booking forms, or support channels.',
-            'This draft should be reviewed and expanded with legal counsel before public launch.',
+            'To reschedule, please contact us at least 24 hours before your scheduled appointment. Your retainer may be transferred to one new appointment date with proper notice.',
+            'Failure to show up without notice results in loss of the retainer and a charge for the service.',
+          ],
+        },
+        {
+          title: 'Travel, Same-Day & Photo Use',
+          body: [
+            'Travel fees are determined by your service location. Select the travel option during booking so we can confirm your fee.',
+            'Same-day appointments carry a $50 add-on. The artist may photograph completed looks for portfolio and promotional use unless you request otherwise.',
           ],
         },
       ]}

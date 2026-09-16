@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  LoaderCircle,
   Sparkles,
   UploadCloud,
 } from "lucide-react";
@@ -59,6 +60,8 @@ function BookingPageContent() {
   const [currentStep, setCurrentStep] = useState<Step>("service");
   const [stylists, setStylists] = useState<StylistSummary[]>([]);
   const [services, setServices] = useState<BookingService[]>([]);
+  const [loadingBookingData, setLoadingBookingData] = useState(true);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [availability, setAvailability] = useState<AvailableSlot[]>([]);
   const [selectedStylist, setSelectedStylist] = useState("");
   const [selectedService, setSelectedService] = useState("");
@@ -98,6 +101,7 @@ function BookingPageContent() {
 
   useEffect(() => {
     async function load() {
+      setLoadingBookingData(true);
       try {
         const [servicesResponse, stylistsResponse] = await Promise.all([
           fetch("/api/booking/services"),
@@ -112,7 +116,7 @@ function BookingPageContent() {
         setServices(servicesJson.services);
         setTravelFee(Number(servicesJson.travelFee) || 20);
         setStylists(stylistsJson.stylists);
-        if (stylistsJson.stylists[0] && !selectedStylist)
+        if (stylistsJson.stylists[0])
           setSelectedStylist(stylistsJson.stylists[0].id);
       } catch (loadError) {
         setError(
@@ -120,10 +124,12 @@ function BookingPageContent() {
             ? loadError.message
             : "Unable to load booking data.",
         );
+      } finally {
+        setLoadingBookingData(false);
       }
     }
     void load();
-  }, [selectedStylist]);
+  }, []);
 
   const filteredServices = services;
   const selectedServiceDetail = useMemo(
@@ -156,6 +162,7 @@ function BookingPageContent() {
   useEffect(() => {
     if (!selectedStylist || !selectedService) return void setAvailability([]);
     async function loadAvailability() {
+      setLoadingAvailability(true);
       try {
         const response = await fetch(
           `/api/booking/availability?stylistId=${selectedStylist}&serviceId=${selectedService}`,
@@ -170,6 +177,8 @@ function BookingPageContent() {
             ? loadError.message
             : "Unable to load availability.",
         );
+      } finally {
+        setLoadingAvailability(false);
       }
     }
     void loadAvailability();
@@ -382,6 +391,11 @@ function BookingPageContent() {
           </div>
         ))}
       </div>
+      {error && currentStep !== "details" && (
+        <p role="alert" className="mb-6 text-center text-sm text-red-600 dark:text-red-300">
+          {error}
+        </p>
+      )}
         {currentStep === "service" && (
           <div className="space-y-6">
             <header className="text-center">
@@ -393,6 +407,15 @@ function BookingPageContent() {
                 to secure checkout.
               </p>
             </header>
+            {loadingBookingData ? (
+              <Glass level="medium" className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
+                <LoaderCircle className="animate-spin text-[#8B6914] dark:text-[#D4A847]" size={32} aria-hidden="true" />
+                <div>
+                  <p className="font-medium text-[var(--text-primary)]">Loading available services</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Just a moment while we prepare your booking options.</p>
+                </div>
+              </Glass>
+            ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {filteredServices.map((service) => {
                 const Icon = Sparkles;
@@ -431,7 +454,8 @@ function BookingPageContent() {
                 );
               })}
             </div>
-            {filteredServices.length === 0 && (
+            )}
+            {!loadingBookingData && !error && filteredServices.length === 0 && (
               <Glass
                 level="medium"
                 className="p-8 text-center text-[var(--text-secondary)]"
@@ -452,7 +476,15 @@ function BookingPageContent() {
               </p>
             </header>
             <div className="mx-auto max-w-2xl">
-              {availability.length > 0 ? (
+              {loadingAvailability ? (
+                <Glass level="medium" className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
+                  <LoaderCircle className="animate-spin text-[#8B6914] dark:text-[#D4A847]" size={32} aria-hidden="true" />
+                  <div>
+                    <p className="font-medium text-[var(--text-primary)]">Checking live availability</p>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">Finding the best times for your selected service.</p>
+                  </div>
+                </Glass>
+              ) : availability.length > 0 ? (
                 <div className="space-y-6">
                   <Glass level="medium" className="p-4 sm:p-6">
                     <div className="mb-5 flex items-center justify-between">
@@ -587,7 +619,7 @@ function BookingPageContent() {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : !error ? (
                 <Glass level="medium" className="p-12 text-center">
                   <Clock
                     size={32}
@@ -597,7 +629,7 @@ function BookingPageContent() {
                     No available appointments were found for the next few days.
                   </p>
                 </Glass>
-              )}
+              ) : null}
               <button
                 onClick={() => setCurrentStep("service")}
                 className="mt-6 text-sm text-[var(--text-secondary)] underline underline-offset-4"

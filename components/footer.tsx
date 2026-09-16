@@ -58,6 +58,18 @@ export function Footer({ brandName }: FooterProps) {
           </div>
         </div>
 
+        <div>
+          <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
+          <div className="flex flex-col gap-3">
+            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              Terms & Conditions
+            </Link>
+            <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+              FAQ
+            </Link>
+          </div>
+        </div>
+
         {/* <div>
           <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
           <div className="flex flex-col gap-3">

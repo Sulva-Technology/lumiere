@@ -71,3 +71,9 @@
 - Validation: `npm run lint` passes; the production build compiled successfully.
 - Deployment: apply `supabase/migrations/016_makeup_only_services_and_prices.sql`. Content-service records are retired rather than deleted, preserving historical booking/reporting data.
 - Open product decision: checkout currently charges the full service price plus selected add-ons. The $35 retainer is presented in site policy and service details; collecting only a retainer requires an explicit payment/accounting workflow change.
+
+## Latest Client Review Follow-Up
+- Removed the entire homepage `Your Glam Experience` section, matching the client’s item 2 request. The standalone makeup service card is now a full-width, intentionally composed feature rather than an empty two-column grid.
+- Added explicit loading states for initial Supabase service/stylist data and live availability in `app/book/page.tsx`. The initial service request now runs once rather than once per selected-stylist update.
+- Updated the homepage Terms link to `/terms-of-service`, created the requested visible policy content there, and restored a Terms & Conditions footer link.
+- Validation: lint passes and the production build compiled successfully after these follow-up changes.
