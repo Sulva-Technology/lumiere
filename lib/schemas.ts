@@ -51,6 +51,7 @@ export const createBookingSchema = z.object({
   phone: z.string().trim().min(7).max(30),
   notes: z.string().trim().max(500).optional(),
   locationOutsideTravelRadius: z.boolean().optional().default(false),
+  sameDayAppointment: z.boolean().optional().default(false),
   paymentMethod: z.enum(["online", "in_person"]).optional().default("online"),
   makeupIntake: z
     .object({

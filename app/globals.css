@@ -193,3 +193,19 @@
   opacity: 0.05;
 }
 
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(154, 177, 143, 0.16);
+  filter: blur(80px);
+}
+
+.dark .ambient-orb { background: rgba(108, 139, 103, 0.14); }
+.ambient-orb-one { width: 40vw; height: 40vw; left: -10vw; top: -10vh; }
+.ambient-orb-two { width: 35vw; height: 35vw; right: -10vw; top: 20vh; filter: blur(100px); }
+.ambient-orb-three { width: 45vw; height: 45vw; left: 20vw; bottom: -20vh; filter: blur(90px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
+

@@ -25,7 +25,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const initialTheme = storedTheme ?? (mediaQuery.matches ? 'dark' : 'light');
 
-    setTheme(initialTheme);
     applyTheme(initialTheme);
 
     const handleSystemThemeChange = (event: MediaQueryListEvent) => {

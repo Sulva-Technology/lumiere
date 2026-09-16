@@ -25,11 +25,11 @@ export default function ServicesClient({ initialServices }: ServicesClientProps)
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
         >
-          <Link href={`/book?type=${service.serviceType}&service=${service.id}`} className="group block h-full">
+          <Link href={`/book?service=${service.id}`} className="group block h-full">
             <Glass level="medium" className="flex h-full flex-col overflow-hidden transition-all duration-500 hover:scale-[1.02]">
               <div className="relative h-48 w-full overflow-hidden">
                  <Image 
-                    src={`/images/${service.serviceType === 'content' ? 'content.jpeg' : 'makeup.jpeg'}`}
+                    src="/images/makeup.jpeg"
                     alt={service.name}
                     fill
                     className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-110"

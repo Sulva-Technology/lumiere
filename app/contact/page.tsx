@@ -4,7 +4,7 @@ import { getPublicStoreSettings } from '@/lib/data/public';
 
 export const metadata: Metadata = {
   title: 'Contact Itz Lola Beauty | Event & Booking Inquiries',
-  description: 'Have questions about our makeup or content services? Get in touch with Damilola for event bookings, group inquiries, and collaborations in Arizona.',
+  description: 'Get in touch with Lola for makeup bookings, group inquiries, and special events in Arizona.',
 };
 
 export default async function ContactPage() {

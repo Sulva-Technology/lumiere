@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import AboutClient from './about-client';
 
 export const metadata: Metadata = {
-  title: 'About Damilola | Luxury Makeup Artist in Arizona',
-  description: 'Meet Damilola, the creative force behind Itz Lola Beauty. Specializing in high-end makeup artistry and professional digital storytelling in Arizona.',
+  title: 'About Lola | Luxury Makeup Artist in Arizona',
+  description: 'Meet Lola, the artist behind Itz Lola Beauty and its personalized luxury glam experience.',
 };
 
 export default function AboutPage() {

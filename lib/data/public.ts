@@ -250,29 +250,14 @@ export async function getProductBySlug(
 
 export async function getBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
-  const [{ data, error }, { data: settings }] = await Promise.all([
-    supabase
-      .from("booking_services")
-      .select(
-        "id, slug, name, description, duration_minutes, price, service_type",
-      )
-      .eq("active", true)
-      .order("price"),
-    supabase
-      .from("store_settings")
-      .select("travel_fee")
-      .order("created_at")
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const { data, error } = await supabase
+    .from("booking_services")
+    .select("id, slug, name, description, duration_minutes, price, service_type")
+    .eq("active", true)
+    .eq("service_type", "makeup")
+    .order("price");
 
   if (error) throw error;
-  const travelFee =
-    Number.isFinite(Number(settings?.travel_fee)) &&
-    Number(settings?.travel_fee) >= 0
-      ? Number(settings?.travel_fee)
-      : 20;
-
   // We import SERVICES dynamically to avoid circular dependencies if any,
   // though here it's fine. We'll use the slug to match.
   const { SERVICES } = require("./services");
@@ -284,7 +269,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
       id: service.id,
       slug: service.slug,
       name: service.name,
-      description: formatTravelFeeDescription(service.description, travelFee),
+      description: service.description,
       durationMinutes: service.duration_minutes,
       price: normalizeMoney(service.price),
       serviceType: service.service_type,
@@ -294,18 +279,6 @@ export async function getBookingServices(): Promise<BookingService[]> {
       bestFor: seoData?.bestFor ?? "",
     } as BookingService;
   });
-}
-
-function formatTravelFeeDescription(
-  description: string | null,
-  travelFee: number,
-) {
-  if (!description) return description;
-
-  return description.replace(
-    /((?:Travel Fee|Travel Policy):[^\n]*?)\$\d+(?:\.\d{1,2})?/gi,
-    `$1$${travelFee.toFixed(2)}`,
-  );
 }
 
 export async function getStylists(): Promise<StylistSummary[]> {
@@ -595,7 +568,8 @@ export async function createBookingCheckout(
   const service = services.find((item) => item.id === input.serviceId);
   if (!service) throw new Error("Selected service is unavailable.");
   const travelFee = input.locationOutsideTravelRadius ? store.travelFee : 0;
-  const totalAmount = service.price + travelFee;
+  const sameDayFee = input.sameDayAppointment ? 50 : 0;
+  const totalAmount = service.price + travelFee + sameDayFee;
   const isInPersonPayment = input.paymentMethod === "in_person";
   const isMakeupService = service.serviceType === "makeup";
 
@@ -618,6 +592,9 @@ export async function createBookingCheckout(
         input.notes?.trim(),
         input.locationOutsideTravelRadius
           ? "Travel notice: Client confirmed appointment location is more than 15 miles from the artist."
+          : null,
+        input.sameDayAppointment
+          ? "Same-day appointment add-on selected."
           : null,
       ]
         .filter(Boolean)
@@ -672,6 +649,7 @@ export async function createBookingCheckout(
         kind: "booking",
         serviceName: service.name,
         travelFee,
+        sameDayFee,
         makeupIntake: normalizedIntake,
       },
     })
@@ -720,6 +698,16 @@ export async function createBookingCheckout(
                 description:
                   "Appointment location is more than 15 miles from the artist.",
                 amount: travelFee,
+                quantity: 1,
+              },
+            ]
+          : []),
+        ...(sameDayFee > 0
+          ? [
+              {
+                name: "Same-day appointment",
+                description: "Priority same-day booking add-on.",
+                amount: sameDayFee,
                 quantity: 1,
               },
             ]

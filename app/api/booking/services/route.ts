@@ -7,7 +7,10 @@ export async function GET() {
       getBookingServices(),
       getPublicStoreSettings(),
     ]);
-    return NextResponse.json({ services, travelFee: store.travelFee });
+    return NextResponse.json(
+      { services, travelFee: store.travelFee },
+      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" } },
+    );
   } catch (error) {
     return NextResponse.json(
       {

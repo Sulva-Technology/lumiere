@@ -5,7 +5,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'FAQ | Booking, Deposits & Policies',
-  description: 'Common questions about makeup bookings, content creation sessions, deposits, and studio policies at Itz Lola Beauty.',
+  description: 'Common questions about makeup bookings, retainers, and studio policies at Itz Lola Beauty.',
 };
 
 export default async function FaqPage() {

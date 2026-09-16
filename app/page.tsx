@@ -3,11 +3,11 @@ import { getPublicStoreSettings } from '@/lib/data/public';
 import HomeClient from './home-client';
 import { JsonLd } from '@/components/seo/JsonLd';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'Makeup Artist in Arizona | Luxury Glam & Content Studio',
-  description: 'Top-rated makeup artist in Arizona specializing in Soft Glam and Full Glam. Professional studio for photoshoots, events, and content creation.',
+  title: 'Makeup Artist in Arizona | Luxury Glam',
+  description: 'Luxury Soft Glam and Full Glam makeup appointments for events, birthdays, photoshoots, and everyday confidence.',
 };
 
 export default async function HomePage() {
@@ -39,13 +39,6 @@ export default async function HomePage() {
             'provider': { '@id': `${siteUrl}/#salon` },
             'url': `${siteUrl}/book?type=makeup`
           },
-          {
-            '@type': 'Service',
-            'name': 'Content Creation Session',
-            'description': 'Professional vertical video, brand photography, and social storytelling for creators and brands.',
-            'provider': { '@id': `${siteUrl}/#salon` },
-            'url': `${siteUrl}/book?type=content`
-          }
         ]
       }
     ]

@@ -21,12 +21,9 @@ export const SERVICES: ServiceDetail[] = [
       'Natural lash application',
       'Setting for all-day wear'
     ],
-    price: '$120',
+    price: '$100',
     duration: '90 Minutes',
-    prepNotes: [
-      'Arrive with a clean, moisturized face.',
-      'Travel Fee: A $20 travel fee applies for locations beyond a 6-mile radius.'
-    ],
+    prepNotes: ['Arrive with a clean, moisturized face.'],
     type: 'makeup'
   },
   {
@@ -40,60 +37,9 @@ export const SERVICES: ServiceDetail[] = [
       'Detailed eye artistry',
       'Premium lash application'
     ],
-    price: '$170',
+    price: '$150',
     duration: '120 Minutes',
-    prepNotes: [
-      'Exfoliate skin the night before.',
-      'Travel Fee: A $20 travel fee applies for locations beyond an 8-mile radius.'
-    ],
+    prepNotes: ['Exfoliate skin the night before.'],
     type: 'makeup'
   },
-  {
-    name: 'Social Media Video Content (30 Minutes)',
-    slug: 'social-media-video-content-30-minutes',
-    bestFor: 'Perfect for capturing quick, meaningful moments like birthdays, girls’ dinners, and family content.',
-    included: [
-      '2 edited videos (1–2 minutes each)',
-      'Raw video footage included',
-      'Up to 2 revision rounds'
-    ],
-    price: '$70',
-    duration: '30 Minutes',
-    prepNotes: [
-      'Travel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.'
-    ],
-    type: 'content'
-  },
-  {
-    name: 'Video Content Session (1 Hour)',
-    slug: 'video-content-session-1-hour',
-    bestFor: 'Ideal for event coverage and personal branding content with more depth and variety.',
-    included: [
-      '3 edited videos (1–2 minutes each)',
-      'Raw video footage included',
-      'Up to 2 revision rounds'
-    ],
-    price: '$150',
-    duration: '1 Hour',
-    prepNotes: [
-      'Travel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.'
-    ],
-    type: 'content'
-  },
-  {
-    name: 'Premium Video Content Session (2 Hours)',
-    slug: 'premium-video-content-session-2-hours',
-    bestFor: 'Best for brands, events, and creators who need a higher volume of content from one session.',
-    included: [
-      '6 edited videos (1–2 minutes each)',
-      'Raw video footage included',
-      'Up to 4 revision rounds'
-    ],
-    price: '$250',
-    duration: '2 Hours',
-    prepNotes: [
-      'Travel Policy: A $20 travel fee applies for locations beyond an 8-mile radius.'
-    ],
-    type: 'content'
-  }
 ];

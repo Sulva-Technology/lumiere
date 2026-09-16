@@ -33,8 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
       default: store.storeName,
       template: `%s | ${store.storeName}`,
     },
-    description: 'Expert Makeup Artist in Arizona specializing in Soft Glam and Full Glam. Professional studio for photoshoots, events, and content creation.',
-    keywords: ['makeup artist in Arizona', 'Arizona makeup artist', 'soft glam makeup', 'full glam makeup', 'event makeup Arizona', 'content creation studio'],
+    description: 'Expert makeup artist in Arizona specializing in Soft Glam and Full Glam for events, birthdays, photoshoots, and bridal occasions.',
+    keywords: ['makeup artist in Arizona', 'Arizona makeup artist', 'soft glam makeup', 'full glam makeup', 'event makeup Arizona'],
     authors: [{ name: store.storeName }],
     creator: store.storeName,
 
@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: siteUrl,
       siteName: store.storeName,
       title: `Makeup Artist in Arizona | ${store.storeName}`,
-      description: 'Book the top makeup artist in Arizona for luxury glam and content creation sessions. Professional artistry for events and photoshoots.',
+      description: 'Book luxury Soft Glam and Full Glam makeup appointments for events, photoshoots, and special occasions.',
       images: [
         {
           url: '/images/logo.jpeg',
@@ -57,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: `Makeup Artist in Arizona | ${store.storeName}`,
-      description: 'Luxury makeup artist and content creator in Arizona specializing in high-end editorial and event looks.',
+      description: 'Luxury makeup artist in Arizona specializing in high-end event and editorial looks.',
       images: ['/images/logo.jpeg'],
     },
     robots: {
@@ -103,7 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         '@type': 'BeautySalon',
         '@id': `${siteUrl}/#salon`,
         'name': store.storeName,
-        'description': 'Luxury makeup artistry and digital content creation studio by Damilola in Arizona.',
+        'description': 'Luxury makeup artistry by Lola in Arizona.',
         'url': siteUrl,
         'telephone': store.supportPhone,
         'address': {
@@ -114,7 +114,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         'image': `${siteUrl}/images/logo.jpeg`,
         'priceRange': '$$',
         'parentOrganization': { '@id': `${siteUrl}/#organization` },
-        'knowsAbout': ['Makeup Artistry', 'Event Makeup', 'Content Creation', 'Beauty Education']
+        'knowsAbout': ['Makeup Artistry', 'Event Makeup', 'Bridal Makeup', 'Beauty Education']
       }
     ]
   };

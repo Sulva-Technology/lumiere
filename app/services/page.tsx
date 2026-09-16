@@ -3,8 +3,8 @@ import ServicesClient from './services-client';
 import { getBookingServices } from '@/lib/data/public';
 
 export const metadata: Metadata = {
-  title: 'Luxury Makeup & Content Services | Itz Lola Beauty',
-  description: 'Explore our premium services: Soft Glam, Full Glam, and Professional Content Creation in Arizona. Book your expert beauty session today.',
+  title: 'Luxury Makeup Services | Itz Lola Beauty',
+  description: 'Explore Soft Glam and Full Glam makeup appointments in Arizona.',
 };
 
 export default async function ServicesPage() {
@@ -19,7 +19,7 @@ export default async function ServicesPage() {
             Studio Services
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-[var(--text-secondary)]">
-            Explore our curated menu of high-end makeup artistry and professional digital content creation sessions.
+            Explore our curated menu of high-end makeup artistry for your next occasion.
           </p>
         </header>
 

@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!service) return { title: 'Service Not Found' };
 
   return {
-    title: `${service.name} | Luxury Makeup & Content`,
+    title: `${service.name} | Luxury Makeup`,
     description: service.bestFor || service.description || '',
   };
 }

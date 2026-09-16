@@ -3,12 +3,12 @@
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 import Link from 'next/link';
-import { Check, Clock, DollarSign, Sparkles, Camera } from 'lucide-react';
+import { Check, Clock, DollarSign, Sparkles } from 'lucide-react';
 import type { BookingService } from '@/lib/types';
 import { formatCurrency } from '@/lib/format';
 
 export default function ServiceDetailClient({ service }: { service: BookingService }) {
-  const Icon = service.serviceType === 'content' ? Camera : Sparkles;
+  const Icon = Sparkles;
 
   return (
     <article className="space-y-12">
@@ -19,7 +19,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
             <Icon size={20} />
           </div>
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-            {service.serviceType === 'makeup' ? 'Makeup Artistry' : 'Content Creation'}
+            Makeup Artistry
           </span>
         </div>
         <h1 className="font-serif text-5xl md:text-6xl text-[var(--text-primary)]">
@@ -37,7 +37,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
         <div className="space-y-12">
           {service.included && service.included.length > 0 && (
             <section className="space-y-6">
-              <h2 className="font-serif text-3xl text-[var(--text-primary)]">What's Included</h2>
+              <h2 className="font-serif text-3xl text-[var(--text-primary)]">What&apos;s Included</h2>
               <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {service.included.map((item, i) => (
                   <li key={i} className="flex gap-3 text-sm text-[var(--text-secondary)]">
@@ -97,13 +97,13 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
               </div>
               
               <Link
-                href={`/book?type=${service.serviceType}&service=${service.id}`}
+                href={`/book?service=${service.id}`}
                 className="flex w-full items-center justify-center rounded-full bg-[#8B6914] py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02] dark:bg-[#D4A847] dark:text-[#1A1008]"
               >
                 Book Now
               </Link>
               <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-secondary)]">
-                Deposit required to secure date
+                $35 retainer required to secure date
               </p>
             </div>
           </Glass>
@@ -111,7 +111,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
           <div className="px-4 text-center">
             <p className="text-xs text-[var(--text-secondary)]">
               Have questions about this service? <br />
-              <Link href="/contact" className="font-bold text-[var(--text-accent)] underline">Contact Damilola</Link>
+              <Link href="/contact" className="font-bold text-[var(--text-accent)] underline">Contact Lola</Link>
             </p>
           </div>
         </aside>

@@ -236,6 +236,7 @@ export interface CreateBookingInput {
   phone: string;
   notes?: string;
   locationOutsideTravelRadius?: boolean;
+  sameDayAppointment?: boolean;
   paymentMethod?: "online" | "in_person";
   makeupIntake?: MakeupBookingIntake | null;
 }

@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
 
-const founderIntro = "My name is Damilola. I'm a creative based in Arizona. I've always been drawn to creating whether it's through visuals, beauty, or storytelling.";
-const founderMission = "I use my creativity to bring out the beauty in people and help them feel confident, seen, and elevated.";
-const founderClose = "I'd love to be a part of your story and help bring your vision to life.";
+const founderIntro = "Hi, I’m Lola, the makeup artist and creative behind itzlolabeauty.";
+const founderMission = "For me, makeup has never been just about the finished look. It’s about how you feel while getting ready and the confidence you leave with. My style is all about enhancing you: beautiful skin, soft details, and polished glam that still feels like you.";
+const founderClose = "Every face is different, so every look is tailored to your features, style, and occasion. When you’re in my chair, I want the experience to feel just as good as the makeup - comfortable, intentional, and confidence-building. See you in my chair.";
 
 export default function AboutClient() {
   return (

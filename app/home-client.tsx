@@ -27,7 +27,7 @@ export default function Home({ settings }: HomeClientProps) {
           >
             <Image
               src="/images/home.jpeg"
-              alt="Itz Lola Beauty Studio - Luxury Makeup and Content Creation in Arizona"
+              alt="Itz Lola Beauty Studio - Luxury Makeup in Arizona"
               fill
               className="object-cover object-top"
               priority
@@ -71,13 +71,6 @@ export default function Home({ settings }: HomeClientProps) {
               href: '/book?type=makeup',
               img: 'makeup.jpeg',
             },
-            {
-              title: 'Content Creation',
-              description: 'This is designed for anyone who needs high-quality, engaging video contents, tailored and optimized for platforms like Instagram and TikTok.',
-              cta: 'Reserve Content Session',
-              href: '/book?type=content',
-              img: 'content.jpeg',
-            },
           ].map((cat, index) => (
             <motion.div
               key={cat.title}
@@ -114,12 +107,12 @@ export default function Home({ settings }: HomeClientProps) {
         <Glass level="medium" className="p-10 md:p-16">
           <div className="mb-12 text-center space-y-4">
             <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Your Glam Experience</h2>
-            <p className="text-[var(--text-secondary)]">A simple 3-step process to secure your session with the top makeup artist in Arizona.</p>
+            <p className="text-[var(--text-secondary)]">A simple 3-step process to secure your luxury glam appointment.</p>
           </div>
           <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
             {[
-              { step: '01', title: 'Choose Your Service', text: 'Select from our menu of makeup artistry or content creation packages.' },
-              { step: '02', title: 'Secure Your Slot', text: 'Pick a live availability time and pay your non-refundable deposit.' },
+              { step: '01', title: 'Choose Your Service', text: 'Select the glam service that fits your occasion.' },
+              { step: '02', title: 'Secure Your Slot', text: 'Pick a live availability time and pay your non-refundable $35 retainer.' },
               { step: '03', title: 'Arrive Ready', text: 'Come to your session prepared to be elevated and feel your most confident.' },
             ].map((item) => (
               <div key={item.step} className="space-y-4 text-center">
@@ -143,9 +136,10 @@ export default function Home({ settings }: HomeClientProps) {
           <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Booking Policies</h2>
           <div className="space-y-6">
             {[
-              { title: 'Deposits', text: 'A non-refundable deposit is required to secure all bookings. This amount is applied toward your total service balance.' },
-              { title: 'Travel Policy', text: `We are based in Arizona. A $${resolvedSettings.travel_fee.toFixed(2)} travel fee applies for mobile services beyond a specific radius (6-8 miles) from our studio location.` },
-              { title: 'Late Arrival', text: 'Grace periods are limited. Please arrive on time to ensure you receive the full duration of your premium service.' },
+              { title: 'Booking & Retainer', text: 'A non-refundable $35 retainer is required to secure your appointment date.' },
+              { title: 'Late Arrival', text: 'A 10-minute grace period is allowed. After that, a $20 late fee applies; appointments more than 15 minutes late are cancelled.' },
+              { title: 'No-Show Policy', text: 'A missed appointment without notice results in loss of the retainer and a charge for the service.' },
+              { title: 'Photos & Social Media', text: 'The artist may photograph completed looks for portfolio and promotional use unless you let us know otherwise.' },
             ].map((policy) => (
               <div key={policy.title} className="space-y-2">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-accent)]">{policy.title}</h3>
@@ -163,8 +157,8 @@ export default function Home({ settings }: HomeClientProps) {
           <div className="space-y-6">
             {[
               { q: 'Do you accommodate group bookings?', a: 'Yes! For group bookings and special events, please use our Contact page to submit an inquiry for custom pricing and availability.' },
-              { q: 'Can I reschedule my appointment?', a: 'Rescheduling is permitted with advance notice according to our policy. Your deposit may be transferred to a new date once.' },
-              { q: 'Do you offer mobile makeup services?', a: 'Yes, we offer mobile services across Arizona. Travel fees are calculated based on your location during the booking process.' },
+              { q: 'Can I reschedule my appointment?', a: 'Please contact us at least 24 hours before your appointment. Your retainer can be transferred to one new appointment date with proper notice.' },
+              { q: 'Do you offer mobile makeup services?', a: 'Yes. Select the travel-fee option during booking and we will confirm the fee for your location.' },
             ].map((faq) => (
               <div key={faq.q} className="space-y-2">
                 <h3 className="font-serif text-lg text-[var(--text-primary)]">{faq.q}</h3>

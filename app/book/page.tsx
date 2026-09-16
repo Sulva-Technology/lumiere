@@ -3,10 +3,8 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { AnimatePresence, motion } from "motion/react";
 import {
   Calendar,
-  Camera,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -21,9 +19,6 @@ import type {
   AvailableSlot,
   BookingReservation,
   BookingService,
-  BookingServiceType,
-  MakeupHistoryAnswer,
-  MakeupLashesPreference,
   MakeupLookType,
   MakeupSkinType,
   StylistSummary,
@@ -44,21 +39,6 @@ const SKIN_OPTIONS: MakeupSkinType[] = [
   "Normal",
   "Not sure",
 ];
-const LASH_OPTIONS: MakeupLashesPreference[] = [
-  "Yes",
-  "No",
-  "I'll bring my own",
-];
-const HISTORY_OPTIONS: MakeupHistoryAnswer[] = ["Yes", "No"];
-const TYPE_OPTIONS: Array<{
-  value: BookingServiceType;
-  label: string;
-  icon: typeof Sparkles;
-}> = [
-  { value: "makeup", label: "Makeup", icon: Sparkles },
-  { value: "content", label: "Content", icon: Camera },
-];
-
 function dateKey(value: string | Date) {
   const date = new Date(value);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -74,13 +54,9 @@ function BookingPageContent() {
   const canceled = searchParams.get("canceled") === "1";
   const payingInPerson = searchParams.get("payment") === "in_person";
   const reservationId = searchParams.get("reservation");
-  const requestedType =
-    searchParams.get("type") === "content" ? "content" : "makeup";
   const cancelHandledRef = useRef(false);
 
   const [currentStep, setCurrentStep] = useState<Step>("service");
-  const [serviceType, setServiceType] =
-    useState<BookingServiceType>(requestedType);
   const [stylists, setStylists] = useState<StylistSummary[]>([]);
   const [services, setServices] = useState<BookingService[]>([]);
   const [availability, setAvailability] = useState<AvailableSlot[]>([]);
@@ -93,6 +69,7 @@ function BookingPageContent() {
   const [notes, setNotes] = useState("");
   const [locationOutsideTravelRadius, setLocationOutsideTravelRadius] =
     useState(false);
+  const [sameDayAppointment, setSameDayAppointment] = useState(false);
   const paymentMethod: string = "online";
   const [travelFee, setTravelFee] = useState(20);
   const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState("");
@@ -111,15 +88,6 @@ function BookingPageContent() {
   const [skinType, setSkinType] = useState<MakeupSkinType>("Combination");
   const [skinConditionsOrAllergies, setSkinConditionsOrAllergies] =
     useState("");
-  const [lashesPreference, setLashesPreference] =
-    useState<MakeupLashesPreference>("Yes");
-  const [hadProfessionalMakeupBefore, setHadProfessionalMakeupBefore] =
-    useState<MakeupHistoryAnswer>("No");
-  const [priorExperienceNotes, setPriorExperienceNotes] = useState("");
-  const [
-    productPreferencesOrRestrictions,
-    setProductPreferencesOrRestrictions,
-  ] = useState("");
   const [uploadingReference, setUploadingReference] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reservation, setReservation] = useState<BookingReservation | null>(
@@ -157,14 +125,7 @@ function BookingPageContent() {
     void load();
   }, [selectedStylist]);
 
-  useEffect(() => {
-    setServiceType(requestedType);
-  }, [requestedType]);
-
-  const filteredServices = useMemo(
-    () => services.filter((service) => service.serviceType === serviceType),
-    [serviceType, services],
-  );
+  const filteredServices = services;
   const selectedServiceDetail = useMemo(
     () => services.find((service) => service.id === selectedService) ?? null,
     [services, selectedService],
@@ -191,15 +152,6 @@ function BookingPageContent() {
         !!referenceDescription &&
         !!appointmentDateTimeNeeded &&
         !!skinConditionsOrAllergies));
-
-  useEffect(() => {
-    if (
-      selectedServiceDetail &&
-      selectedServiceDetail.serviceType !== serviceType
-    )
-      setSelectedService("");
-    setSelectedAvailability("");
-  }, [serviceType, selectedServiceDetail]);
 
   useEffect(() => {
     if (!selectedStylist || !selectedService) return void setAvailability([]);
@@ -242,7 +194,8 @@ function BookingPageContent() {
     availabilityByDate.get(selectedAvailabilityDate) ?? [];
   const bookingTotal =
     (selectedServiceDetail?.price ?? 0) +
-    (locationOutsideTravelRadius ? travelFee : 0);
+    (locationOutsideTravelRadius ? travelFee : 0) +
+    (sameDayAppointment ? 50 : 0);
 
   useEffect(() => {
     async function syncReservationStatus() {
@@ -333,6 +286,7 @@ function BookingPageContent() {
         phone,
         notes,
         locationOutsideTravelRadius,
+        sameDayAppointment,
         ...(isMakeupService
           ? {
               makeupIntake: {
@@ -344,11 +298,8 @@ function BookingPageContent() {
                 lookType,
                 skinType,
                 skinConditionsOrAllergies,
-                lashesPreference,
-                hadProfessionalMakeupBefore,
-                priorExperienceNotes: priorExperienceNotes || null,
-                productPreferencesOrRestrictions:
-                  productPreferencesOrRestrictions || null,
+                lashesPreference: "Yes",
+                hadProfessionalMakeupBefore: "No",
               },
             }
           : {}),
@@ -431,44 +382,20 @@ function BookingPageContent() {
           </div>
         ))}
       </div>
-      <AnimatePresence mode="wait">
         {currentStep === "service" && (
-          <motion.div
-            key="service"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             <header className="text-center">
               <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">
                 Choose Your Service
               </h1>
               <p className="mt-4 text-[var(--text-secondary)]">
-                Start by choosing between makeup services and content services,
-                then pick your time and continue to secure checkout.
+                Choose your desired glam service, then pick a time and continue
+                to secure checkout.
               </p>
             </header>
-            <div className="mx-auto flex max-w-md rounded-full bg-black/5 p-1 dark:bg-white/5">
-              {TYPE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setServiceType(option.value);
-                    setSelectedService("");
-                  }}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition ${serviceType === option.value ? "bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]" : "text-[var(--text-secondary)]"}`}
-                >
-                  <option.icon size={16} />
-                  {option.label}
-                </button>
-              ))}
-            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {filteredServices.map((service) => {
-                const Icon =
-                  service.serviceType === "content" ? Camera : Sparkles;
+                const Icon = Sparkles;
                 return (
                   <button
                     key={service.id}
@@ -481,15 +408,13 @@ function BookingPageContent() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]">
-                          {service.serviceType}
+                          Makeup artistry
                         </p>
                         <h3 className="mt-3 font-serif text-2xl text-[var(--text-primary)]">
                           {service.name}
                         </h3>
                         <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-[var(--text-secondary)]">
-                          {service.description
-                            ?.replace(". Travel Fee:", ".\nTravel Fee:")
-                            .replace(". Travel Policy:", ".\nTravel Policy:")}
+                          {service.description}
                         </p>
                       </div>
                       <Icon className="shrink-0 text-[#8B6914] opacity-40 dark:text-[#D4A847]" />
@@ -511,19 +436,13 @@ function BookingPageContent() {
                 level="medium"
                 className="p-8 text-center text-[var(--text-secondary)]"
               >
-                No {serviceType} services are active yet.
+                No makeup services are active yet.
               </Glass>
             )}
-          </motion.div>
+          </div>
         )}
         {currentStep === "availability" && (
-          <motion.div
-            key="availability"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             <header className="text-center">
               <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">
                 Choose a Time
@@ -686,16 +605,10 @@ function BookingPageContent() {
                 Back to services
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
         {currentStep === "details" && (
-          <motion.div
-            key="details"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             <header className="text-center">
               <h1 className="font-serif text-4xl text-[var(--text-primary)]">
                 {isMakeupService
@@ -776,6 +689,17 @@ function BookingPageContent() {
                     <span>
                       My appointment location is more than 15 miles from the
                       artist. I understand a travel fee may apply.
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#8B6914]/20 bg-[#8B6914]/5 px-4 py-3 text-sm text-[var(--text-secondary)] dark:border-[#D4A847]/20 dark:bg-[#D4A847]/5">
+                    <input
+                      type="checkbox"
+                      checked={sameDayAppointment}
+                      onChange={(event) => setSameDayAppointment(event.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-[#8B6914] dark:accent-[#D4A847]"
+                    />
+                    <span>
+                      Same-day appointment requested <strong>(+$50)</strong>.
                     </span>
                   </label>
                   {isMakeupService ? (
@@ -888,75 +812,6 @@ function BookingPageContent() {
                           className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
                         />
                       </div>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                            Will you need lashes included?
-                          </label>
-                          <select
-                            value={lashesPreference}
-                            onChange={(event) =>
-                              setLashesPreference(
-                                event.target.value as MakeupLashesPreference,
-                              )
-                            }
-                            className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
-                          >
-                            {LASH_OPTIONS.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                            Have you had your makeup done professionally before?
-                            (Yes/No)
-                          </label>
-                          <select
-                            value={hadProfessionalMakeupBefore}
-                            onChange={(event) =>
-                              setHadProfessionalMakeupBefore(
-                                event.target.value as MakeupHistoryAnswer,
-                              )
-                            }
-                            className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
-                          >
-                            {HISTORY_OPTIONS.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                          If yes, anything you liked or didn't like?
-                        </label>
-                        <textarea
-                          value={priorExperienceNotes}
-                          onChange={(event) =>
-                            setPriorExperienceNotes(event.target.value)
-                          }
-                          className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                          Any product preferences or restrictions? (Optional)
-                        </label>
-                        <textarea
-                          value={productPreferencesOrRestrictions}
-                          onChange={(event) =>
-                            setProductPreferencesOrRestrictions(
-                              event.target.value,
-                            )
-                          }
-                          className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
-                        />
-                      </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
                           Notes for Artist
@@ -1042,6 +897,12 @@ function BookingPageContent() {
                         </span>
                       </div>
                     )}
+                    {sameDayAppointment && (
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-secondary)]">Same-day appointment</span>
+                        <span className="font-medium">{formatCurrency(50)}</span>
+                      </div>
+                    )}
                     <div className="border-t border-black/5 pt-4 dark:border-white/5">
                       <div className="flex justify-between text-lg font-bold">
                         <span className="text-[#1A1008] dark:text-white">
@@ -1082,9 +943,8 @@ function BookingPageContent() {
             {error && (
               <p className="mt-4 text-center text-sm text-red-500">{error}</p>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 }
