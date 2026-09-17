@@ -84,7 +84,7 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
               <p className="truncate font-serif text-xl uppercase tracking-[0.12em] text-[#e4eadf] sm:text-2xl">
                 {brandName}
               </p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.24em] text-[#9ab18f]/75">Admin Console</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.24em] text-[#C99361]/75">Admin Console</p>
             </motion.div>
           )}
 
@@ -128,7 +128,7 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
                       : 'text-white/72 hover:bg-white/4 hover:text-[#eef2ea]'
                   )}
                 >
-                   <Icon size={20} className={isActive ? 'text-[#d7e0d0]' : 'text-[#9ab18f]'} />
+                   <Icon size={20} className={isActive ? 'text-[#d7e0d0]' : 'text-[#C99361]'} />
                   {(!isCollapsed || isMobileSidebarOpen) && <span className="font-medium">{link.name}</span>}
                 </div>
               </Link>

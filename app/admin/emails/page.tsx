@@ -64,7 +64,7 @@ export default function AdminEmailsPage() {
       <form className="mt-8 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]" onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/72">Recipients</label>
+            <label className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/72">Recipients</label>
             <input
               value={to}
               onChange={(event) => setTo(event.target.value)}
@@ -74,7 +74,7 @@ export default function AdminEmailsPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/72">Subject</label>
+            <label className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/72">Subject</label>
             <input
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
@@ -84,7 +84,7 @@ export default function AdminEmailsPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/72">Reply-To</label>
+            <label className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/72">Reply-To</label>
             <input
               value={replyTo}
               onChange={(event) => setReplyTo(event.target.value)}
@@ -94,7 +94,7 @@ export default function AdminEmailsPage() {
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/72">Message</label>
+          <label className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/72">Message</label>
           <textarea
             value={message}
             onChange={(event) => setMessage(event.target.value)}

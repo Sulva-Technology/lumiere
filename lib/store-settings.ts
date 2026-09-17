@@ -18,7 +18,7 @@ export function createDefaultStoreSettings(): StoreSettings {
     support_phone: '',
     booking_contact_email: '',
     announcement_bar: '',
-    travel_fee: 20,
+    travel_fee: 0,
     home_favorites_enabled: true,
     home_shop_section_title: 'Shop',
     home_shop_section_link_label: 'Shop Collection',
@@ -28,7 +28,6 @@ export function createDefaultStoreSettings(): StoreSettings {
       hero: true,
       gallery: true,
       policies: true,
-      faq: true,
     },
   };
 }

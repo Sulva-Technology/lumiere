@@ -38,7 +38,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   href="/book"
-                  className="rounded-full bg-[#8B6914] px-10 py-4 font-medium text-white shadow-lg transition-all hover:scale-[1.02] hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008] text-center"
+                  className="rounded-full bg-[#8B4411] px-10 py-4 font-medium text-white shadow-lg transition-all hover:scale-[1.02] hover:opacity-90 text-center"
                 >
                   Book Now
                 </Link>
@@ -65,7 +65,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
           {gallery.slice(0, 5).map((item, index) => (
             <figure
               key={item.id}
-              className={`group relative overflow-hidden rounded-[24px] bg-[#dfe7d8] ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
+              className={`group relative overflow-hidden rounded-[24px] bg-[#F5F5DD] ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
             >
               <Image
                 src={item.imageUrl}
@@ -90,8 +90,8 @@ export default function Home({ settings, gallery }: HomeClientProps) {
       </section>
       )}
 
-      {(visibility.policies || visibility.faq) && (
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 grid gap-12 lg:grid-cols-2">
+      {visibility.policies && (
+      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {visibility.policies && <div className="space-y-8">
           <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Booking Policies</h2>
           <div className="space-y-6">
@@ -112,21 +112,6 @@ export default function Home({ settings, gallery }: HomeClientProps) {
           </div>
         </div>}
 
-        {visibility.faq && <div className="space-y-8">
-          <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Common Questions</h2>
-          <div className="space-y-6">
-            {[
-              { q: 'Do you accommodate group bookings?', a: 'Yes! For group bookings and special events, please use our Contact page to submit an inquiry for custom pricing and availability.' },
-              { q: 'Can I reschedule my appointment?', a: 'Please contact us at least 24 hours before your appointment. Your retainer can be transferred to one new appointment date with proper notice.' },
-              { q: 'Do you offer mobile makeup services?', a: 'Yes. Select the travel-fee option during booking and we will confirm the fee for your location.' },
-            ].map((faq) => (
-              <div key={faq.q} className="space-y-2">
-                <h3 className="font-serif text-lg text-[var(--text-primary)]">{faq.q}</h3>
-                <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{faq.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>}
       </section>
       )}
     </div>

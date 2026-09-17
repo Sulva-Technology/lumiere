@@ -34,8 +34,8 @@ export default async function TermsOfServicePage() {
         {
           title: 'Travel, Same-Day & Photo Use',
           body: [
-            'Travel fees are determined by your service location. Select the travel option during booking so we can confirm your fee.',
-            'Same-day appointments carry a $50 add-on. The artist may photograph completed looks for portfolio and promotional use unless you request otherwise.',
+            'Travel appointments are quoted directly by the artist. Text 224-722-9644 before booking to request a travel quote.',
+            'Same-day appointments include a $50 booking-fee add-on. The artist may photograph completed looks for portfolio and promotional use unless you request otherwise.',
           ],
         },
       ]}

@@ -87,7 +87,7 @@ export default function AdminBookingsPage() {
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <p className="text-xs uppercase tracking-[0.28em] text-[#9ab18f]">Operations</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-[#C99361]">Operations</p>
         <h1 className="mt-2 font-serif text-4xl text-[#eef2ea]">Bookings</h1>
         <p className="mt-2 text-sm text-[#d7e0d0]/75">See confirmed appointments and unresolved payment holds in one clean operations queue.</p>
       </div>
@@ -107,7 +107,7 @@ export default function AdminBookingsPage() {
             >
               <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(240px,0.95fr)] xl:items-start xl:gap-5 xl:px-1">
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Reference</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Reference</p>
                   <div className="mt-2">
                     <TruncatedText value={booking.bookingReference ?? booking.reservationId ?? 'Pending'} className="font-medium leading-8 text-[#eef2ea]" mono />
                   </div>
@@ -117,7 +117,7 @@ export default function AdminBookingsPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Client</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Client</p>
                   <div className="mt-2 space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.18)] p-2 text-[#d7e0d0]">
@@ -131,14 +131,14 @@ export default function AdminBookingsPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Service</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Service</p>
                   <div className="mt-2">
                     <TruncatedText value={booking.serviceName} className="text-base text-[#eef2ea]/90" />
                   </div>
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">When / Hold</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">When / Hold</p>
                   <div className="mt-2 flex items-start gap-3">
                     <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.12)] p-2 text-[#d7e0d0]/80">
                       <CalendarDays size={14} />
@@ -149,7 +149,7 @@ export default function AdminBookingsPage() {
 
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_170px] xl:grid-cols-1">
                   <div className="min-w-0 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.5)] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Payment</p>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Payment</p>
                     <div className="mt-3 flex items-start gap-3">
                       <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.12)] p-2 text-[#d7e0d0]/80">
                         <CreditCard size={14} />
@@ -167,7 +167,7 @@ export default function AdminBookingsPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65">Action</p>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Action</p>
                     <div className="mt-3 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.42)] p-3">
                       {booking.entryType === 'booking' ? (
                         <>

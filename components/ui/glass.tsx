@@ -17,7 +17,7 @@ export function Glass({ level = 'medium', className, children, ...props }: Glass
     <div className={cn(levelClass, 'relative overflow-hidden', className)} {...props}>
       {/* Inner top shimmer/highlight for heavy glass */}
       {level === 'heavy' && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-[#FFDC64]/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
       )}
       {children}
     </div>

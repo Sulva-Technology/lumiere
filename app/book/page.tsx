@@ -27,6 +27,7 @@ import type {
 
 type Step = "service" | "availability" | "details";
 const RETAINER_AMOUNT = 35;
+const SAME_DAY_FEE = 50;
 
 const LOOK_OPTIONS: MakeupLookType[] = [
   "Soft glam",
@@ -71,11 +72,8 @@ function BookingPageContent() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
-  const [locationOutsideTravelRadius, setLocationOutsideTravelRadius] =
-    useState(false);
   const [sameDayAppointment, setSameDayAppointment] = useState(false);
   const paymentMethod: string = "online";
-  const [travelFee, setTravelFee] = useState(20);
   const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState("");
   const [visibleMonth, setVisibleMonth] = useState(() =>
     monthStart(new Date()),
@@ -116,7 +114,6 @@ function BookingPageContent() {
         if (!stylistsResponse.ok)
           throw new Error(stylistsJson.error ?? "Unable to load artists.");
         setServices(servicesJson.services);
-        setTravelFee(Number(servicesJson.travelFee) || 20);
         setStylists(stylistsJson.stylists);
         if (stylistsJson.stylists[0])
           setSelectedStylist(stylistsJson.stylists[0].id);
@@ -200,8 +197,8 @@ function BookingPageContent() {
     availabilityByDate.get(selectedAvailabilityDate) ?? [];
   const bookingTotal =
     (selectedServiceDetail?.price ?? 0) +
-    (locationOutsideTravelRadius ? travelFee : 0) +
-    (sameDayAppointment ? 50 : 0);
+    (sameDayAppointment ? SAME_DAY_FEE : 0);
+  const bookingFee = RETAINER_AMOUNT + (sameDayAppointment ? SAME_DAY_FEE : 0);
 
   useEffect(() => {
     async function syncReservationStatus() {
@@ -297,7 +294,6 @@ function BookingPageContent() {
         email,
         phone,
         notes,
-        locationOutsideTravelRadius,
         sameDayAppointment,
         ...(isMakeupService
           ? {
@@ -353,7 +349,7 @@ function BookingPageContent() {
               <Check size={40} />
             </div>
           </div>
-          <h2 className="font-serif text-4xl text-[#1A1008] dark:text-white">
+          <h2 className="font-serif text-4xl text-[#4A2109]">
             Retainer Received
           </h2>
           <p className="mt-4 text-lg text-[var(--text-secondary)]">
@@ -384,7 +380,7 @@ function BookingPageContent() {
         {steps.map((step) => (
           <div key={step.key} className="flex flex-col items-center">
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-full ${currentStep === step.key ? "bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]" : "bg-black/5 text-[var(--text-secondary)] dark:bg-white/5"}`}
+              className={`flex h-12 w-12 items-center justify-center rounded-full ${currentStep === step.key ? "bg-[#8B4411] text-white" : "bg-black/5 text-[var(--text-secondary)]"}`}
             >
               <step.icon size={20} />
             </div>
@@ -395,14 +391,14 @@ function BookingPageContent() {
         ))}
       </div>
       {error && currentStep !== "details" && (
-        <p role="alert" className="mb-6 text-center text-sm text-red-600 dark:text-red-300">
+        <p role="alert" className="mb-6 text-center text-sm text-red-600">
           {error}
         </p>
       )}
         {currentStep === "service" && (
           <div className="space-y-6">
             <header className="text-center">
-              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">
+              <h1 className="font-serif text-4xl text-[#4A2109]">
                 Choose Your Service
               </h1>
               <p className="mt-4 text-[var(--text-secondary)]">
@@ -412,7 +408,7 @@ function BookingPageContent() {
             </header>
             {loadingBookingData ? (
               <Glass level="medium" className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
-                <LoaderCircle className="animate-spin text-[#8B6914] dark:text-[#D4A847]" size={32} aria-hidden="true" />
+                <LoaderCircle className="animate-spin text-[#8B4411]" size={32} aria-hidden="true" />
                 <div>
                   <p className="font-medium text-[var(--text-primary)]">Loading available services</p>
                   <p className="mt-1 text-sm text-[var(--text-secondary)]">Just a moment while we prepare your booking options.</p>
@@ -429,7 +425,7 @@ function BookingPageContent() {
                       setSelectedService(service.id);
                       setCurrentStep("availability");
                     }}
-                    className={`rounded-3xl border p-6 text-left transition-all hover:scale-[1.02] ${selectedService === service.id ? "border-[#8B6914] bg-[#8B6914]/5 dark:border-[#D4A847]" : "border-black/5 dark:border-white/5"}`}
+                    className={`rounded-3xl border p-6 text-left transition-all hover:scale-[1.02] ${selectedService === service.id ? "border-[#8B4411] bg-[#8B4411]/5" : "border-black/5"}`}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -443,10 +439,10 @@ function BookingPageContent() {
                           {service.description}
                         </p>
                       </div>
-                      <Icon className="shrink-0 text-[#8B6914] opacity-40 dark:text-[#D4A847]" />
+                      <Icon className="shrink-0 text-[#8B4411] opacity-40" />
                     </div>
-                    <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4 dark:border-white/5">
-                      <p className="font-serif text-2xl text-[#8B6914] dark:text-[#F0D080]">
+                    <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4">
+                      <p className="font-serif text-2xl text-[#8B4411]">
                         {formatCurrency(service.price)}
                       </p>
                     </div>
@@ -468,7 +464,7 @@ function BookingPageContent() {
         {currentStep === "availability" && (
           <div className="space-y-6">
             <header className="text-center">
-              <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">
+              <h1 className="font-serif text-4xl text-[#4A2109]">
                 Choose a Time
               </h1>
               <p className="mt-4 text-[var(--text-secondary)]">
@@ -478,7 +474,7 @@ function BookingPageContent() {
             <div className="mx-auto max-w-2xl">
               {loadingAvailability ? (
                 <Glass level="medium" className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
-                  <LoaderCircle className="animate-spin text-[#8B6914] dark:text-[#D4A847]" size={32} aria-hidden="true" />
+                  <LoaderCircle className="animate-spin text-[#8B4411]" size={32} aria-hidden="true" />
                   <div>
                     <p className="font-medium text-[var(--text-primary)]">Checking live availability</p>
                     <p className="mt-1 text-sm text-[var(--text-secondary)]">Finding the best times for your selected service.</p>
@@ -501,7 +497,7 @@ function BookingPageContent() {
                               ),
                           )
                         }
-                        className="rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                        className="rounded-full p-2 transition-colors hover:bg-black/5"
                       >
                         <ChevronLeft size={18} />
                       </button>
@@ -524,7 +520,7 @@ function BookingPageContent() {
                               ),
                           )
                         }
-                        className="rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                        className="rounded-full p-2 transition-colors hover:bg-black/5"
                       >
                         <ChevronRight size={18} />
                       </button>
@@ -575,7 +571,7 @@ function BookingPageContent() {
                               type="button"
                               disabled={!count}
                               onClick={() => setSelectedAvailabilityDate(key)}
-                              className={`aspect-square rounded-xl text-sm transition-colors ${selected ? "bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]" : count ? "bg-[#8B6914]/10 font-bold text-[#8B6914] hover:bg-[#8B6914]/20 dark:bg-[#D4A847]/10 dark:text-[#F0D080]" : "cursor-not-allowed text-[var(--text-secondary)] opacity-30"}`}
+                              className={`aspect-square rounded-xl text-sm transition-colors ${selected ? "bg-[#8B4411] text-white" : count ? "bg-[#8B4411]/10 font-bold text-[#8B4411] hover:bg-[#8B4411]/20" : "cursor-not-allowed text-[var(--text-secondary)] opacity-30"}`}
                             >
                               <span>{index + 1}</span>
                               {count > 0 && (
@@ -608,7 +604,7 @@ function BookingPageContent() {
                             setSelectedAvailability(slot.id);
                             setCurrentStep("details");
                           }}
-                          className="rounded-2xl border border-black/5 bg-white/5 px-4 py-4 text-center font-serif text-lg text-[var(--text-primary)] transition-all hover:border-[#8B6914] hover:bg-[#8B6914]/5 dark:border-white/5 dark:hover:border-[#D4A847]"
+                          className="rounded-2xl border border-black/5 bg-white/5 px-4 py-4 text-center font-serif text-lg text-[var(--text-primary)] transition-all hover:border-[#8B4411] hover:bg-[#8B4411]/5"
                         >
                           {new Date(slot.startsAt).toLocaleTimeString("en-US", {
                             hour: "numeric",
@@ -668,7 +664,7 @@ function BookingPageContent() {
                         value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
                         required
-                        className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
+                        className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none"
                       />
                     </div>
                     <div className="space-y-2">
@@ -680,7 +676,7 @@ function BookingPageContent() {
                         onChange={(event) => setEmail(event.target.value)}
                         required
                         type="email"
-                        className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
+                        className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none"
                       />
                     </div>
                   </div>
@@ -693,7 +689,7 @@ function BookingPageContent() {
                         value={phone}
                         onChange={(event) => setPhone(event.target.value)}
                         required
-                        className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
+                        className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none"
                       />
                     </div>
                     {isMakeupService && (
@@ -704,34 +700,23 @@ function BookingPageContent() {
                         <input
                           value={appointmentDateTimeNeeded}
                           readOnly
-                          className="w-full rounded-2xl bg-black/5 px-5 py-3 text-[var(--text-secondary)] outline-none dark:bg-white/5"
+                          className="w-full rounded-2xl bg-black/5 px-5 py-3 text-[var(--text-secondary)] outline-none"
                         />
                       </div>
                     )}
                   </div>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#8B6914]/20 bg-[#8B6914]/5 px-4 py-3 text-sm text-[var(--text-secondary)] dark:border-[#D4A847]/20 dark:bg-[#D4A847]/5">
-                    <input
-                      type="checkbox"
-                      checked={locationOutsideTravelRadius}
-                      onChange={(event) =>
-                        setLocationOutsideTravelRadius(event.target.checked)
-                      }
-                      className="mt-0.5 h-4 w-4 accent-[#8B6914] dark:accent-[#D4A847]"
-                    />
-                    <span>
-                      My appointment location is more than 15 miles from the
-                      artist. I understand a travel fee may apply.
-                    </span>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#8B6914]/20 bg-[#8B6914]/5 px-4 py-3 text-sm text-[var(--text-secondary)] dark:border-[#D4A847]/20 dark:bg-[#D4A847]/5">
+                  <div className="rounded-2xl border border-[#8B4411]/20 bg-[#8B4411]/5 px-4 py-3 text-sm text-[var(--text-secondary)]">
+                    Need a travel appointment? Text <a href="sms:2247229644" className="font-semibold text-[#8B4411] underline underline-offset-4">224-722-9644</a> for a travel quote before booking.
+                  </div>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#8B4411]/20 bg-[#8B4411]/5 px-4 py-3 text-sm text-[var(--text-secondary)]">
                     <input
                       type="checkbox"
                       checked={sameDayAppointment}
                       onChange={(event) => setSameDayAppointment(event.target.checked)}
-                      className="mt-0.5 h-4 w-4 accent-[#8B6914] dark:accent-[#D4A847]"
+                      className="mt-0.5 h-4 w-4 accent-[#8B4411]"
                     />
                     <span>
-                      Same-day appointment requested <strong>(+$50)</strong>.
+                      Same-day appointment requested. The <strong>{formatCurrency(SAME_DAY_FEE)}</strong> same-day fee is added to today&apos;s booking fee.
                     </span>
                   </label>
                   {isMakeupService ? (
@@ -743,7 +728,7 @@ function BookingPageContent() {
                         <input
                           value={occasion}
                           onChange={(event) => setOccasion(event.target.value)}
-                          className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
+                          className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none"
                         />
                       </div>
                       <div className="space-y-3">
@@ -751,10 +736,10 @@ function BookingPageContent() {
                           Do you have a reference/inspiration photo? (Please
                           upload or describe your desired look)
                         </label>
-                        <label className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-[#8B6914]/30 bg-[#8B6914]/5 px-5 py-4 text-sm text-[var(--text-secondary)] dark:border-[#D4A847]/30 dark:bg-[#D4A847]/5">
+                        <label className="flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-[#8B4411]/30 bg-[#8B4411]/5 px-5 py-4 text-sm text-[var(--text-secondary)]">
                           <UploadCloud
                             size={18}
-                            className="text-[#8B6914] dark:text-[#D4A847]"
+                            className="text-[#8B4411]"
                           />
                           {uploadingReference
                             ? "Uploading inspiration photo..."
@@ -772,7 +757,7 @@ function BookingPageContent() {
                           />
                         </label>
                         {referenceImageUrl && (
-                          <div className="relative h-40 overflow-hidden rounded-2xl border border-black/5 dark:border-white/10">
+                          <div className="relative h-40 overflow-hidden rounded-2xl border border-black/5">
                             <Image
                               src={referenceImageUrl}
                               alt="Reference upload preview"
@@ -787,7 +772,7 @@ function BookingPageContent() {
                           onChange={(event) =>
                             setReferenceDescription(event.target.value)
                           }
-                          className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
+                          className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none"
                         />
                       </div>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -800,7 +785,7 @@ function BookingPageContent() {
                             onChange={(event) =>
                               setLookType(event.target.value as MakeupLookType)
                             }
-                            className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
+                            className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none"
                           >
                             {LOOK_OPTIONS.map((option) => (
                               <option key={option} value={option}>
@@ -818,7 +803,7 @@ function BookingPageContent() {
                             onChange={(event) =>
                               setSkinType(event.target.value as MakeupSkinType)
                             }
-                            className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
+                            className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none"
                           >
                             {SKIN_OPTIONS.map((option) => (
                               <option key={option} value={option}>
@@ -838,7 +823,7 @@ function BookingPageContent() {
                           onChange={(event) =>
                             setSkinConditionsOrAllergies(event.target.value)
                           }
-                          className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
+                          className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none"
                         />
                       </div>
                       <div className="space-y-2">
@@ -848,7 +833,7 @@ function BookingPageContent() {
                         <textarea
                           value={notes}
                           onChange={(event) => setNotes(event.target.value)}
-                          className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
+                          className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none"
                         />
                       </div>
                     </>
@@ -860,7 +845,7 @@ function BookingPageContent() {
                       <textarea
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}
-                        className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
+                        className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none"
                       />
                     </div>
                   )}
@@ -916,36 +901,26 @@ function BookingPageContent() {
                           : "-"}
                       </span>
                     </div>
-                    {locationOutsideTravelRadius && (
-                      <div className="flex justify-between">
-                        <span className="text-[var(--text-secondary)]">
-                          Travel fee
-                        </span>
-                        <span className="font-medium">
-                          {formatCurrency(travelFee)}
-                        </span>
-                      </div>
-                    )}
                     {sameDayAppointment && (
                       <div className="flex justify-between">
                         <span className="text-[var(--text-secondary)]">Same-day appointment</span>
-                        <span className="font-medium">{formatCurrency(50)}</span>
+                        <span className="font-medium">{formatCurrency(SAME_DAY_FEE)}</span>
                       </div>
                     )}
-                    <div className="border-t border-black/5 pt-4 dark:border-white/5">
+                    <div className="border-t border-black/5 pt-4">
                       <div className="flex justify-between text-lg font-bold">
-                        <span className="text-[#1A1008] dark:text-white">
+                        <span className="text-[#4A2109]">
                           Full appointment total
                         </span>
-                        <span className="text-[#8B6914] dark:text-[#F0D080]">
+                        <span className="text-[#8B4411]">
                           {selectedServiceDetail
                             ? formatCurrency(bookingTotal)
                             : "-"}
                         </span>
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-[#8B6914]/10 px-4 py-3 text-sm text-[var(--text-secondary)] dark:bg-[#D4A847]/10">
-                      Today&apos;s retainer: <span className="font-bold text-[var(--text-primary)]">{formatCurrency(RETAINER_AMOUNT)}</span>
+                    <div className="rounded-2xl bg-[#8B4411]/10 px-4 py-3 text-sm text-[var(--text-secondary)]">
+                      Today&apos;s booking fee: <span className="font-bold text-[var(--text-primary)]">{formatCurrency(bookingFee)}</span>
                     </div>
                   </div>
                 </Glass>
@@ -953,7 +928,7 @@ function BookingPageContent() {
                   form="booking-form"
                   type="submit"
                   disabled={saving || uploadingReference || !formReady}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-5 font-bold text-white transition-all hover:shadow-xl hover:shadow-[#8B6914]/20 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B4411] py-5 font-bold text-white transition-all hover:shadow-xl hover:shadow-[#8B4411]/20 disabled:opacity-50"
                 >
                   {saving
                     ? paymentMethod === "in_person"
@@ -961,7 +936,7 @@ function BookingPageContent() {
                       : "Preparing secure checkout..."
                     : paymentMethod === "in_person"
                       ? "Confirm appointment — pay in person"
-                      : `Review ${formatCurrency(RETAINER_AMOUNT)} retainer`}
+                      : `Review ${formatCurrency(bookingFee)} booking fee`}
                   <ChevronRight size={20} />
                 </button>
                 <button
@@ -979,15 +954,15 @@ function BookingPageContent() {
               <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-4 backdrop-blur-sm sm:items-center sm:justify-center" role="dialog" aria-modal="true" aria-labelledby="retainer-title">
                 <Glass level="heavy" className="w-full max-w-md p-6 shadow-2xl sm:p-8">
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-accent)]">Secure your appointment</p>
-                  <h2 id="retainer-title" className="mt-3 font-serif text-3xl text-[var(--text-primary)]">Pay {formatCurrency(RETAINER_AMOUNT)} today</h2>
-                  <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">Your retainer secures this appointment. Remaining balance of <strong className="text-[var(--text-primary)]">{formatCurrency(Math.max(bookingTotal - RETAINER_AMOUNT, 0))}</strong> is due at your appointment.</p>
-                  <div className="mt-6 rounded-2xl bg-black/5 p-4 text-sm dark:bg-white/5">
+                  <h2 id="retainer-title" className="mt-3 font-serif text-3xl text-[var(--text-primary)]">Pay {formatCurrency(bookingFee)} today</h2>
+                  <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">Your booking fee secures this appointment. Remaining balance of <strong className="text-[var(--text-primary)]">{formatCurrency(Math.max(bookingTotal - bookingFee, 0))}</strong> is due at your appointment.</p>
+                  <div className="mt-6 rounded-2xl bg-black/5 p-4 text-sm">
                     <div className="flex justify-between gap-4"><span>Service total</span><span className="font-medium">{formatCurrency(bookingTotal)}</span></div>
-                    <div className="mt-2 flex justify-between gap-4"><span>Retainer due today</span><span className="font-bold text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(RETAINER_AMOUNT)}</span></div>
+                    <div className="mt-2 flex justify-between gap-4"><span>Booking fee due today</span><span className="font-bold text-[#8B4411]">{formatCurrency(bookingFee)}</span></div>
                   </div>
                   <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <button type="button" onClick={() => setShowRetainerModal(false)} className="rounded-full px-5 py-3 text-sm font-medium text-[var(--text-secondary)]">Back</button>
-                    <button type="button" onClick={() => void confirmRetainerPayment()} className="rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">Pay {formatCurrency(RETAINER_AMOUNT)} retainer</button>
+                    <button type="button" onClick={() => void confirmRetainerPayment()} className="rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white">Pay {formatCurrency(bookingFee)} booking fee</button>
                   </div>
                 </Glass>
               </div>

@@ -54,7 +54,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
           {service.prepNotes && service.prepNotes.length > 0 && (
             <section className="space-y-6">
               <h2 className="font-serif text-3xl text-[var(--text-primary)]">Preparation Notes</h2>
-              <div className="rounded-3xl border border-black/5 bg-black/5 p-8 dark:border-white/5 dark:bg-white/5">
+              <div className="rounded-3xl border border-black/5 bg-black/5 p-8">
                 <ul className="space-y-4">
                   {service.prepNotes.map((note, i) => (
                     <li key={i} className="flex gap-3 text-sm text-[var(--text-secondary)]">
@@ -98,7 +98,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
               
               <Link
                 href={`/book?service=${service.id}`}
-                className="flex w-full items-center justify-center rounded-full bg-[#8B6914] py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02] dark:bg-[#D4A847] dark:text-[#1A1008]"
+                className="flex w-full items-center justify-center rounded-full bg-[#8B4411] py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
               >
                 Book Now
               </Link>

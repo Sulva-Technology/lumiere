@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -107,9 +107,9 @@ export function CheckoutClient() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
-          <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">Order confirmed</h1>
+          <h1 className="font-serif text-4xl text-[#4A2109]">Order confirmed</h1>
           <p className="mt-4 text-[var(--text-secondary)]">Your payment completed successfully. We&apos;ve recorded your order and will begin fulfillment shortly.</p>
-          <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
+          <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white">
             Continue Shopping
           </Link>
         </Glass>
@@ -121,13 +121,13 @@ export function CheckoutClient() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
-          <h1 className="font-serif text-4xl text-[#1A1008] dark:text-white">{canceled ? 'Checkout paused' : 'Your bag is empty'}</h1>
+          <h1 className="font-serif text-4xl text-[#4A2109]">{canceled ? 'Checkout paused' : 'Your bag is empty'}</h1>
           <p className="mt-4 text-[var(--text-secondary)]">
             {canceled
               ? 'Your payment was not completed. Add items back to your bag whenever you are ready to try again.'
               : 'Add a few beauty essentials to your cart before heading to checkout.'}
           </p>
-          <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">
+          <Link href="/shop" className="mt-8 inline-flex rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white">
             Return to Shop
           </Link>
         </Glass>
@@ -145,7 +145,7 @@ export function CheckoutClient() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_0.42fr]">
         <Glass level="heavy" className="p-6 sm:p-8">
-          <h1 className="font-serif text-3xl text-[#1A1008] dark:text-white">Checkout</h1>
+          <h1 className="font-serif text-3xl text-[#4A2109]">Checkout</h1>
           <p className="mt-2 text-[var(--text-secondary)]">Secure checkout starts here, and every line is revalidated on the server before payment is accepted.</p>
 
           <form className="mt-8 space-y-4" onSubmit={handleCheckout}>
@@ -166,7 +166,7 @@ export function CheckoutClient() {
               <option value="US">United States</option>
             </select>
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="space-y-3 pt-2">
               <button
@@ -182,7 +182,7 @@ export function CheckoutClient() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-full bg-[#8B6914] py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                className="w-full rounded-full bg-[#8B4411] py-4 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {loading ? 'Redirecting to secure checkout...' : `Continue to secure checkout - ${formatCurrency(total)}`}
               </button>
@@ -191,8 +191,8 @@ export function CheckoutClient() {
         </Glass>
 
         <Glass level="medium" className="h-fit p-6">
-          <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Order summary</h2>
-          <div className="mt-4 rounded-3xl border border-black/10 bg-white/30 p-4 text-sm text-[var(--text-secondary)] dark:border-white/10 dark:bg-white/5">
+          <h2 className="font-serif text-2xl text-[#4A2109]">Order summary</h2>
+          <div className="mt-4 rounded-3xl border border-black/10 bg-white/30 p-4 text-sm text-[var(--text-secondary)]">
             <p>Payment options are presented securely after checkout begins.</p>
             <p className="mt-2">Your order is only finalized after payment is verified and inventory is confirmed.</p>
           </div>
@@ -200,15 +200,15 @@ export function CheckoutClient() {
             {items.map((item) => (
               <div key={item.variantId} className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-medium text-[#1A1008] dark:text-white">{item.productName}</p>
+                  <p className="font-medium text-[#4A2109]">{item.productName}</p>
                   <p className="text-sm text-[var(--text-secondary)]">{item.variantTitle} · Qty {item.quantity}</p>
                 </div>
-                <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(item.price * item.quantity)}</p>
+                <p className="font-medium text-[#8B4411]">{formatCurrency(item.price * item.quantity)}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-6 space-y-2 border-t border-black/10 pt-6 text-sm dark:border-white/10">
+          <div className="mt-6 space-y-2 border-t border-black/10 pt-6 text-sm">
             <div className="flex justify-between">
               <span className="text-[var(--text-secondary)]">Subtotal</span>
               <span>{formatCurrency(subtotal)}</span>
@@ -217,7 +217,7 @@ export function CheckoutClient() {
               <span className="text-[var(--text-secondary)]">Shipping</span>
               <span>{shipping === 0 ? 'Free' : formatCurrency(shipping)}</span>
             </div>
-            <div className="flex justify-between font-serif text-xl text-[#1A1008] dark:text-white">
+            <div className="flex justify-between font-serif text-xl text-[#4A2109]">
               <span>Total</span>
               <span>{formatCurrency(total)}</span>
             </div>

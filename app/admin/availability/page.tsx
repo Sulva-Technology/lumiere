@@ -218,46 +218,46 @@ export default function AdminAvailabilityPage() {
   return (
     <div className="space-y-8 p-6">
       <header className="flex flex-col gap-2">
-        <h1 className="font-serif text-3xl font-medium text-[#1A1008] dark:text-[#F0D080]">Manage Availability</h1>
+        <h1 className="font-serif text-3xl font-medium text-[#4A2109]">Manage Availability</h1>
         <p className="text-[var(--text-secondary)]">Add one-off slots or save repeating weekly availability for itzlolabeauty.</p>
       </header>
 
-      {error && <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">{error}</div>}
+      {error && <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600">{error}</div>}
 
       <Glass level="heavy" className="p-6 sm:p-8">
         <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B6914] dark:text-[#D4A847]">Quick setup</p>
-          <h2 className="mt-2 font-serif text-2xl text-[#1A1008] dark:text-white">Set your working hours once</h2>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B4411]">Quick setup</p>
+          <h2 className="mt-2 font-serif text-2xl text-[#4A2109]">Set your working hours once</h2>
           <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">Creates bookable times for every active service in this date range. Existing times are kept, so it is safe to run again.</p>
         </div>
         <form onSubmit={handleCreateSchedule} className="space-y-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">From</label>
-              <input type="date" value={scheduleStartDate} onChange={(event) => setScheduleStartDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+              <input type="date" value={scheduleStartDate} onChange={(event) => setScheduleStartDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Until</label>
-              <input type="date" value={scheduleEndDate} onChange={(event) => setScheduleEndDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+              <input type="date" value={scheduleEndDate} onChange={(event) => setScheduleEndDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl bg-white/30 p-4 dark:bg-black/20">
-              <p className="font-medium text-[#1A1008] dark:text-white">Monday to Friday</p>
+            <div className="rounded-2xl bg-white/30 p-4">
+              <p className="font-medium text-[#4A2109]">Monday to Friday</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <input aria-label="Weekday start time" type="time" value={weekdayStartTime} onChange={(event) => setWeekdayStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
-                <input aria-label="Weekday end time" type="time" value={weekdayEndTime} onChange={(event) => setWeekdayEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
+                <input aria-label="Weekday start time" type="time" value={weekdayStartTime} onChange={(event) => setWeekdayStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
+                <input aria-label="Weekday end time" type="time" value={weekdayEndTime} onChange={(event) => setWeekdayEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
               </div>
             </div>
-            <div className="rounded-2xl bg-white/30 p-4 dark:bg-black/20">
-              <p className="font-medium text-[#1A1008] dark:text-white">Saturday and Sunday</p>
+            <div className="rounded-2xl bg-white/30 p-4">
+              <p className="font-medium text-[#4A2109]">Saturday and Sunday</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <input aria-label="Weekend start time" type="time" value={weekendStartTime} onChange={(event) => setWeekendStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
-                <input aria-label="Weekend end time" type="time" value={weekendEndTime} onChange={(event) => setWeekendEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none dark:bg-black/40" />
+                <input aria-label="Weekend start time" type="time" value={weekendStartTime} onChange={(event) => setWeekendStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
+                <input aria-label="Weekend end time" type="time" value={weekendEndTime} onChange={(event) => setWeekendEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
               </div>
             </div>
           </div>
-          <button type="submit" disabled={creatingSchedule || !primaryStylistId} className="rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]">
+          <button type="submit" disabled={creatingSchedule || !primaryStylistId} className="rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50">
             {creatingSchedule ? 'Turning on availability...' : 'Turn On Availability'}
           </button>
         </form>
@@ -265,14 +265,14 @@ export default function AdminAvailabilityPage() {
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1fr]">
         <Glass level="medium" className="p-6">
-          <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#1A1008] dark:text-white">
-            <Plus size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
+          <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#4A2109]">
+            <Plus size={20} className="text-[#8B4411]" />
             <h2>Add One Slot</h2>
           </div>
           <form onSubmit={handleCreateSlot} className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Service</label>
-              <select value={selectedService} onChange={(event) => setSelectedService(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40">
+              <select value={selectedService} onChange={(event) => setSelectedService(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
                 <option value="">Select a service...</option>
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
@@ -285,31 +285,31 @@ export default function AdminAvailabilityPage() {
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Date</label>
               <div className="relative">
                 <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none" />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Start Time</label>
               <div className="relative">
                 <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none" />
               </div>
             </div>
-            <button type="submit" disabled={creatingSlot} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6914] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]">
+            <button type="submit" disabled={creatingSlot} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B4411] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50">
               {creatingSlot ? 'Creating...' : 'Create Availability Slot'}
             </button>
           </form>
         </Glass>
 
         <Glass level="medium" className="p-6">
-          <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#1A1008] dark:text-white">
-            <Repeat size={20} className="text-[#8B6914] dark:text-[#D4A847]" />
+          <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#4A2109]">
+            <Repeat size={20} className="text-[#8B4411]" />
             <h2>Set Weekly Availability</h2>
           </div>
           <form onSubmit={handleCreateRule} className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Service</label>
-              <select value={ruleServiceId} onChange={(event) => setRuleServiceId(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40">
+              <select value={ruleServiceId} onChange={(event) => setRuleServiceId(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
                 <option value="">Select a service...</option>
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
@@ -320,7 +320,7 @@ export default function AdminAvailabilityPage() {
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Weekday</label>
-              <select value={ruleWeekday} onChange={(event) => setRuleWeekday(event.target.value)} className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40">
+              <select value={ruleWeekday} onChange={(event) => setRuleWeekday(event.target.value)} className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
                 {WEEKDAYS.map((weekday, index) => (
                   <option key={weekday} value={index}>
                     {weekday}
@@ -331,15 +331,15 @@ export default function AdminAvailabilityPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Start Time</label>
-                <input type="time" value={ruleStartTime} onChange={(event) => setRuleStartTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+                <input type="time" value={ruleStartTime} onChange={(event) => setRuleStartTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">End Time</label>
-                <input type="time" value={ruleEndTime} onChange={(event) => setRuleEndTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none dark:bg-black/40" />
+                <input type="time" value={ruleEndTime} onChange={(event) => setRuleEndTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
               </div>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">This creates a repeating weekly rule and automatically fills future bookable slots ahead for that window.</p>
-            <button type="submit" disabled={creatingRule} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1A1008] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-[#1A1008]">
+            <button type="submit" disabled={creatingRule} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#4A2109] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50">
               {creatingRule ? 'Saving rule...' : 'Save Weekly Availability'}
             </button>
           </form>
@@ -348,15 +348,15 @@ export default function AdminAvailabilityPage() {
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[0.9fr_1.1fr]">
         <Glass level="medium" className="p-6">
-          <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Weekly Rules</h2>
+          <h2 className="font-serif text-xl text-[#4A2109]">Weekly Rules</h2>
           <div className="mt-6 space-y-3">
             {activeRules.length > 0 ? (
               activeRules.map((rule) => {
                 const service = services.find((item) => item.id === rule.serviceId);
                 return (
-                  <div key={rule.id} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/30 p-4 dark:border-white/10 dark:bg-black/20">
+                  <div key={rule.id} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/30 p-4">
                     <div>
-                      <p className="font-medium text-[#1A1008] dark:text-white">{service?.name ?? 'Service'}</p>
+                      <p className="font-medium text-[#4A2109]">{service?.name ?? 'Service'}</p>
                       <p className="text-sm text-[var(--text-secondary)]">
                         {WEEKDAYS[rule.weekday]} · {rule.startTime} to {rule.endTime}
                       </p>
@@ -368,17 +368,17 @@ export default function AdminAvailabilityPage() {
                 );
               })
             ) : (
-              <p className="rounded-2xl bg-white/30 p-4 text-sm text-[var(--text-secondary)] dark:bg-black/20">No weekly availability rules yet.</p>
+              <p className="rounded-2xl bg-white/30 p-4 text-sm text-[var(--text-secondary)]">No weekly availability rules yet.</p>
             )}
           </div>
         </Glass>
 
         <Glass level="medium" className="p-6">
-          <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Upcoming Slots</h2>
+          <h2 className="font-serif text-xl text-[#4A2109]">Upcoming Slots</h2>
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[600px] text-left">
               <thead>
-                <tr className="border-b border-black/10 text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)] dark:border-white/10">
+                <tr className="border-b border-black/10 text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">
                   <th className="pb-3">Service</th>
                   <th className="pb-3">Date & Time</th>
                   <th className="pb-3">Status</th>
@@ -388,11 +388,11 @@ export default function AdminAvailabilityPage() {
               <tbody>
                 {availability.length > 0 ? (
                   availability.map((slot) => (
-                    <tr key={slot.id} className="border-b border-black/5 text-sm dark:border-white/5 last:border-0">
-                      <td className="py-4 font-medium text-[#1A1008] dark:text-white">{slot.booking_services?.name || 'Unknown Service'}</td>
+                    <tr key={slot.id} className="border-b border-black/5 text-sm last:border-0">
+                      <td className="py-4 font-medium text-[#4A2109]">{slot.booking_services?.name || 'Unknown Service'}</td>
                       <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(slot.starts_at)}</td>
                       <td className="py-4">
-                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${slot.has_booking ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : slot.is_reserved ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${slot.has_booking ? 'bg-orange-100 text-orange-700' : slot.is_reserved ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
                           {slot.has_booking ? 'Booked' : slot.is_reserved ? 'Reserved' : 'Available'}
                         </span>
                       </td>

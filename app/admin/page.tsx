@@ -35,7 +35,7 @@ export default function AdminDashboard() {
     return (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-40 animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" />
+          <div key={i} className="h-40 animate-pulse rounded-3xl bg-black/5" />
         ))}
       </div>
     );
@@ -54,20 +54,20 @@ export default function AdminDashboard() {
         {cards.map((card) => (
           <Glass key={card.label} level="medium" className="p-6">
             <p className="text-sm text-[var(--text-secondary)]">{card.label}</p>
-            <p className="mt-3 font-serif text-3xl text-[#8B6914] dark:text-[#F0D080]">{card.value}</p>
+            <p className="mt-3 font-serif text-3xl text-[#8B4411]">{card.value}</p>
           </Glass>
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_0.8fr]">
         <Glass level="medium" className="p-6">
-          <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Recent Orders</h2>
+          <h2 className="font-serif text-2xl text-[#4A2109]">Recent Orders</h2>
           <div className="mt-6 space-y-4">
             {metrics.recentOrders.length > 0 ? (
               metrics.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-start justify-between gap-4 rounded-2xl bg-white/10 p-4 dark:bg-black/10">
+                <div key={order.id} className="flex items-start justify-between gap-4 rounded-2xl bg-white/10 p-4">
                   <div className="min-w-0 flex-1">
-                    <TruncatedText value={order.orderNumber} className="font-medium text-[#1A1008] dark:text-white" mono />
+                    <TruncatedText value={order.orderNumber} className="font-medium text-[#4A2109]" mono />
                     <div className="mt-1 space-y-1">
                       <TruncatedText value={order.customerName} className="text-sm text-[var(--text-secondary)]" />
                       <TruncatedText value={order.email} className="text-xs text-[var(--text-secondary)]" />
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
                     <p className="text-xs text-[var(--text-secondary)]">{formatDateTime(order.createdAt)}</p>
                   </div>
                   <div className="min-w-[96px] text-right">
-                    <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(order.total)}</p>
+                    <p className="font-medium text-[#8B4411]">{formatCurrency(order.total)}</p>
                     <div className="mt-2 flex justify-end">
                       <AdminStatusBadge status={order.fulfillmentStatus} className="text-[10px]" />
                     </div>
@@ -83,25 +83,25 @@ export default function AdminDashboard() {
                 </div>
               ))
             ) : (
-              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)] dark:bg-black/10">No orders have been placed yet.</p>
+              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)]">No orders have been placed yet.</p>
             )}
           </div>
         </Glass>
 
         <Glass level="medium" className="p-6">
-          <h2 className="font-serif text-2xl text-[#1A1008] dark:text-white">Low Stock</h2>
+          <h2 className="font-serif text-2xl text-[#4A2109]">Low Stock</h2>
           <div className="mt-6 space-y-4">
             {metrics.lowStockProducts.length > 0 ? (
               metrics.lowStockProducts.map((item) => (
                 <div key={item.variantId}>
                   <div className="flex justify-between gap-4 text-sm">
-                    <span className="font-medium text-[#1A1008] dark:text-white">{item.label}</span>
-                    <span className="text-red-600 dark:text-red-400">{item.stockQuantity} left</span>
+                    <span className="font-medium text-[#4A2109]">{item.label}</span>
+                    <span className="text-red-600">{item.stockQuantity} left</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)] dark:bg-black/10">Inventory looks healthy right now.</p>
+              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)]">Inventory looks healthy right now.</p>
             )}
           </div>
         </Glass>

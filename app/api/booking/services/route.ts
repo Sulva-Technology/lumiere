@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { getBookingServices, getPublicStoreSettings } from "@/lib/data/public";
+import { getBookingServices } from "@/lib/data/public";
 
 export async function GET() {
   try {
-    const [services, store] = await Promise.all([
-      getBookingServices(),
-      getPublicStoreSettings(),
-    ]);
+    const services = await getBookingServices();
     return NextResponse.json(
-      { services, travelFee: store.travelFee },
+      { services },
       { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" } },
     );
   } catch (error) {

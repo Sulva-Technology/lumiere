@@ -40,14 +40,14 @@ export function ProductPageClient({ slug }: { slug: string }) {
   );
 
   if (loading) {
-    return <div className="mx-auto max-w-7xl px-4 py-8"><div className="h-[70vh] animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" /></div>;
+    return <div className="mx-auto max-w-7xl px-4 py-8"><div className="h-[70vh] animate-pulse rounded-3xl bg-black/5" /></div>;
   }
 
   if (error || !product || !selectedVariant) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
-          <h1 className="font-serif text-3xl text-[#1A1008] dark:text-white">Product unavailable</h1>
+          <h1 className="font-serif text-3xl text-[#4A2109]">Product unavailable</h1>
           <p className="mt-3 text-[var(--text-secondary)]">{error ?? 'This product could not be found.'}</p>
         </Glass>
       </div>
@@ -74,7 +74,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
               <button
                 key={image.id}
                 onClick={() => setActiveImage(index)}
-                className={`relative aspect-square overflow-hidden rounded-2xl ${activeImage === index ? 'ring-2 ring-[#8B6914] dark:ring-[#D4A847]' : 'opacity-70'}`}
+                className={`relative aspect-square overflow-hidden rounded-2xl ${activeImage === index ? 'ring-2 ring-[#8B4411]' : 'opacity-70'}`}
               >
                 <Image src={image.url} alt={image.alt ?? product.name} fill className="object-cover" referrerPolicy="no-referrer" />
               </button>
@@ -85,8 +85,8 @@ export function ProductPageClient({ slug }: { slug: string }) {
         <div className="space-y-6">
           <Glass level="heavy" className="p-8">
             <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-secondary)]">{product.categoryName ?? 'Collection'}</p>
-            <h1 className="mt-3 font-serif text-4xl text-[#1A1008] dark:text-white">{product.name}</h1>
-            <p className="mt-4 text-3xl font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(selectedVariant.price)}</p>
+            <h1 className="mt-3 font-serif text-4xl text-[#4A2109]">{product.name}</h1>
+            <p className="mt-4 text-3xl font-medium text-[#8B4411]">{formatCurrency(selectedVariant.price)}</p>
             <p className="mt-4 text-lg text-[var(--text-secondary)]">{product.description}</p>
 
             <div className="mt-8 space-y-3">
@@ -98,8 +98,8 @@ export function ProductPageClient({ slug }: { slug: string }) {
                     onClick={() => setSelectedVariantId(variant.id)}
                     className={`rounded-full px-5 py-3 text-sm font-medium transition-colors ${
                       selectedVariant.id === variant.id
-                        ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]'
-                        : 'bg-black/5 text-[var(--text-primary)] dark:bg-white/5'
+                        ? 'bg-[#8B4411] text-white'
+                        : 'bg-black/5 text-[var(--text-primary)]'
                     }`}
                   >
                     {variant.title}
@@ -121,7 +121,7 @@ export function ProductPageClient({ slug }: { slug: string }) {
                 })
               }
               disabled={!canAddToCart}
-              className="mt-8 w-full rounded-full bg-[#8B6914] py-4 text-lg font-medium text-white shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#D4A847] dark:text-[#1A1008]"
+              className="mt-8 w-full rounded-full bg-[#8B4411] py-4 text-lg font-medium text-white shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {canAddToCart ? 'Add to Cart' : 'Sold Out'}
             </button>
@@ -129,19 +129,19 @@ export function ProductPageClient({ slug }: { slug: string }) {
 
           <div className="space-y-4">
             <Glass level="medium" className="p-6">
-              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Details & Benefits</h2>
+              <h2 className="font-serif text-xl text-[#4A2109]">Details & Benefits</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
                 {product.details.length > 0 ? product.details.map((detail) => <li key={detail}>{detail}</li>) : <li>More product details coming soon.</li>}
               </ul>
             </Glass>
             <Glass level="medium" className="p-6">
-              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Usage & Care</h2>
+              <h2 className="font-serif text-xl text-[#4A2109]">Usage & Care</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
                 {product.careInstructions.length > 0 ? product.careInstructions.map((detail) => <li key={detail}>{detail}</li>) : <li>Usage guidance will be shared with your order.</li>}
               </ul>
             </Glass>
             <Glass level="medium" className="p-6">
-              <h2 className="font-serif text-xl text-[#1A1008] dark:text-white">Shipping & Returns</h2>
+              <h2 className="font-serif text-xl text-[#4A2109]">Shipping & Returns</h2>
               <ul className="mt-4 space-y-2 text-[var(--text-secondary)]">
                 {product.shippingNotes.length > 0 ? product.shippingNotes.map((detail) => <li key={detail}>{detail}</li>) : <li>Shipping and return details will be confirmed at checkout.</li>}
               </ul>

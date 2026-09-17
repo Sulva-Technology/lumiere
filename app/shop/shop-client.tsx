@@ -52,7 +52,7 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
             <button
               onClick={() => router.push('/shop')}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                activeCategory === 'all' ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]' : 'glass-subtle'
+                activeCategory === 'all' ? 'bg-[#8B4411] text-white' : 'glass-subtle'
               }`}
             >
               All
@@ -62,7 +62,7 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
                 key={category.id}
                 onClick={() => router.push(`/shop?category=${encodeURIComponent(category.slug)}`)}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  activeCategory === category.slug ? 'bg-[#8B6914] text-white dark:bg-[#D4A847] dark:text-[#1A1008]' : 'glass-subtle'
+                  activeCategory === category.slug ? 'bg-[#8B4411] text-white' : 'glass-subtle'
                 }`}
               >
                 {category.name}
@@ -75,17 +75,17 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
       {loading ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="aspect-[3/4] animate-pulse rounded-3xl bg-black/5 dark:bg-white/5" />
+            <div key={index} className="aspect-[3/4] animate-pulse rounded-3xl bg-black/5" />
           ))}
         </div>
       ) : error ? (
         <Glass level="heavy" className="p-8 text-center">
-          <p className="font-serif text-2xl text-[#1A1008] dark:text-white">Collection unavailable</p>
+          <p className="font-serif text-2xl text-[#4A2109]">Collection unavailable</p>
           <p className="mt-2 text-[var(--text-secondary)]">{error}</p>
         </Glass>
       ) : products.length === 0 ? (
         <Glass level="heavy" className="p-8 text-center">
-          <p className="font-serif text-2xl text-[#1A1008] dark:text-white">No products in this category yet</p>
+          <p className="font-serif text-2xl text-[#4A2109]">No products in this category yet</p>
           <p className="mt-2 text-[var(--text-secondary)]">Try another category or come back as new beauty drops go live.</p>
         </Glass>
       ) : (
@@ -110,19 +110,19 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
                 <div className="flex flex-1 flex-col justify-between p-5">
                   <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">{product.categoryName ?? 'Collection'}</p>
-                    <Link href={`/product/${product.slug}`} className="mt-2 block font-serif text-2xl text-[#1A1008] dark:text-white">
+                    <Link href={`/product/${product.slug}`} className="mt-2 block font-serif text-2xl text-[#4A2109]">
                       {product.name}
                     </Link>
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">{product.description}</p>
                   </div>
                   <div className="mt-6 flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(product.price)}</p>
+                      <p className="font-medium text-[#8B4411]">{formatCurrency(product.price)}</p>
                       <p className="text-xs text-[var(--text-secondary)]">{product.available ? 'In stock' : 'Sold out'}</p>
                     </div>
                     <Link
                       href={`/product/${product.slug}`}
-                      className="rounded-full bg-[#8B6914] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]"
+                      className="rounded-full bg-[#8B4411] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                     >
                       View Product
                     </Link>

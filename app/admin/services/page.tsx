@@ -104,7 +104,7 @@ export default function AdminServicesPage() {
     <div className="space-y-6 pb-10">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[#D4A847]">Booking Setup</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#8B4411]">Booking Setup</p>
           <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Services</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">Add, edit, or retire the services people can book from the public experience.</p>
         </div>
@@ -132,7 +132,7 @@ export default function AdminServicesPage() {
               <input type="checkbox" checked={form.active} onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))} />
               Active
             </label>
-            <button type="submit" disabled={saving} className="w-full rounded-2xl bg-[#D4A847] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60">{saving ? 'Saving...' : form.id ? 'Save Changes' : 'Create Service'}</button>
+            <button type="submit" disabled={saving} className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60">{saving ? 'Saving...' : form.id ? 'Save Changes' : 'Create Service'}</button>
             {form.id && <button type="button" onClick={() => setForm(INITIAL_FORM)} className="w-full rounded-2xl border border-white/10 px-5 py-3 text-sm font-medium text-white/75 transition-colors hover:bg-white/5">Cancel Editing</button>}
           </form>
         </Glass>

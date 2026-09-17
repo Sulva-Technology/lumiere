@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-[var(--text-secondary)] mb-8">Could not find requested resource</p>
       <Link 
         href="/"
-        className="px-8 py-4 rounded-full bg-[#8B6914] dark:bg-[#D4A847] text-white dark:text-[#1A1008] font-medium hover:opacity-90 transition-opacity"
+        className="px-8 py-4 rounded-full bg-[#8B4411] text-white font-medium hover:opacity-90 transition-opacity"
       >
         Return Home
       </Link>

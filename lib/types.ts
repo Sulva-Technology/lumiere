@@ -352,7 +352,6 @@ export type HomeSectionVisibility = {
   hero: boolean;
   gallery: boolean;
   policies: boolean;
-  faq: boolean;
 };
 
 export interface StoreSettings {

@@ -108,7 +108,7 @@ export default function AdminGalleryPage() {
     <div className="space-y-6 pb-10">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[#D4A847]">Homepage Portfolio</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#8B4411]">Homepage Portfolio</p>
           <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Gallery</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">Upload your best work, add a label, then choose its order on the homepage.</p>
         </div>
@@ -120,7 +120,7 @@ export default function AdminGalleryPage() {
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#F0D080]">{form.id ? <Pencil size={18} /> : <Plus size={18} />}</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#8B4411]">{form.id ? <Pencil size={18} /> : <Plus size={18} />}</div>
             <div><h2 className="font-serif text-2xl text-[#F7E7C1]">{form.id ? 'Edit Image' : 'Add Image'}</h2><p className="text-sm text-white/55">Only active images appear on the homepage.</p></div>
           </div>
           <form className="mt-6 space-y-4" onSubmit={save}>
@@ -136,7 +136,7 @@ export default function AdminGalleryPage() {
             <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Category, e.g. Soft Glam" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" />
             <input value={form.alt} onChange={(event) => setForm({ ...form, alt: event.target.value })} placeholder="Describe the image for accessibility" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
             <div className="grid grid-cols-[1fr_auto] gap-3"><input value={form.sortOrder} onChange={(event) => setForm({ ...form, sortOrder: event.target.value })} type="number" min="0" placeholder="Order" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none" /><label className="flex items-center gap-2 rounded-2xl border border-white/10 px-4 text-sm text-white/80"><input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} />Live</label></div>
-            <button type="submit" disabled={saving || uploading} className="w-full rounded-2xl bg-[#D4A847] px-5 py-3 font-medium text-[#140d05] disabled:opacity-60">{saving ? 'Saving...' : form.id ? 'Save Changes' : 'Add to Gallery'}</button>
+            <button type="submit" disabled={saving || uploading} className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] disabled:opacity-60">{saving ? 'Saving...' : form.id ? 'Save Changes' : 'Add to Gallery'}</button>
             {form.id && <button type="button" onClick={() => setForm(EMPTY_FORM)} className="w-full rounded-2xl border border-white/10 px-5 py-3 text-sm text-white/70 hover:bg-white/5">Cancel Editing</button>}
           </form>
         </Glass>

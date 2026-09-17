@@ -90,7 +90,7 @@ export default function AdminOrdersPage() {
     <div className="space-y-5 pb-10">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[#9ab18f]">Operations</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#C99361]">Operations</p>
           <h1 className="mt-2 font-serif text-4xl text-[#eef2ea]">Orders</h1>
           <p className="mt-2 text-sm text-[#d7e0d0]/75">Track payment state, customer details, and fulfillment progress in one clean queue.</p>
         </div>
@@ -106,7 +106,7 @@ export default function AdminOrdersPage() {
       )}
 
       <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
-        <div className="hidden grid-cols-[minmax(0,1.05fr)_minmax(0,1.45fr)_minmax(0,1fr)_minmax(56px,0.4fr)_minmax(90px,0.6fr)_minmax(0,1fr)_minmax(210px,1.05fr)] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:grid">
+        <div className="hidden grid-cols-[minmax(0,1.05fr)_minmax(0,1.45fr)_minmax(0,1fr)_minmax(56px,0.4fr)_minmax(90px,0.6fr)_minmax(0,1fr)_minmax(210px,1.05fr)] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#C99361]/65 xl:grid">
           <span>Order</span>
           <span>Customer</span>
           <span>Created</span>
@@ -124,14 +124,14 @@ export default function AdminOrdersPage() {
                 className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.45fr)_minmax(0,1fr)_minmax(56px,0.4fr)_minmax(90px,0.6fr)_minmax(0,1fr)_minmax(210px,1.05fr)] xl:items-center xl:gap-5 xl:px-6"
               >
                 <div className="mb-4 min-w-0 xl:mb-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Order</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Order</p>
                   <div className="mt-1 xl:mt-0">
                     <TruncatedText value={order.orderNumber} className="font-semibold text-[#eef2ea]" mono />
                   </div>
                 </div>
 
                 <div className="mb-4 min-w-0 xl:mb-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Customer</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Customer</p>
                   <div className="mt-1 space-y-1 xl:mt-0">
                     <TruncatedText value={order.customerName} className="text-lg text-[#eef2ea]" />
                     <TruncatedText value={order.email} className="text-sm text-[#d7e0d0]/55" />
@@ -139,22 +139,22 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="mb-4 min-w-0 xl:mb-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Created</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Created</p>
                   <p className="mt-1 text-sm text-[#d7e0d0]/72 xl:mt-0">{formatDateTime(order.createdAt)}</p>
                 </div>
 
                 <div className="mb-4 min-w-0 xl:mb-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Items</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Items</p>
                   <p className="mt-1 text-[#eef2ea] xl:mt-0">{order.itemsCount}</p>
                 </div>
 
                 <div className="mb-4 min-w-0 xl:mb-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Total</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Total</p>
                   <p className="mt-1 font-semibold text-[#d7e0d0] xl:mt-0">{formatCurrency(order.total)}</p>
                 </div>
 
                 <div className="mb-4 min-w-0 xl:mb-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Payment</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Payment</p>
                   <div className="mt-1 space-y-2 xl:mt-0">
                     <AdminStatusBadge status={order.paymentStatus} />
                     <div className="min-w-0">
@@ -164,7 +164,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#9ab18f]/65 xl:hidden">Actions</p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Actions</p>
                   <div className="mt-1 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.42)] p-3 xl:mt-0">
                     <select
                       value={order.fulfillmentStatus}

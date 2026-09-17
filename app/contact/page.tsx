@@ -28,7 +28,7 @@ export default async function ContactPage() {
             <input placeholder="Email address" type="email" className="w-full rounded-full bg-[var(--input-bg)] px-5 py-3 outline-none" />
             <input placeholder="Subject" className="w-full rounded-full bg-[var(--input-bg)] px-5 py-3 outline-none" />
             <textarea placeholder="How can we help?" className="min-h-36 w-full rounded-3xl bg-[var(--input-bg)] px-5 py-4 outline-none" />
-            <button type="button" className="rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 dark:bg-[#D4A847] dark:text-[#1A1008]">
+            <button type="button" className="rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90">
               Submit
             </button>
           </form>

@@ -213,7 +213,7 @@ export default function AdminProductsPage() {
     <div className="space-y-6 pb-10">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[#D4A847]">Catalog Control</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#8B4411]">Catalog Control</p>
           <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Products</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">Create, review, and remove live storefront products with a tighter, production-ready workflow.</p>
         </div>
@@ -231,7 +231,7 @@ export default function AdminProductsPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#F0D080]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#8B4411]">
               <Plus size={18} />
             </div>
             <div>
@@ -288,7 +288,7 @@ export default function AdminProductsPage() {
                   <p className="text-sm font-medium text-white">Product image</p>
                   <p className="mt-1 text-xs text-white/45">Upload from your device or paste a hosted image URL.</p>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#F0D080]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(212,168,71,0.14)] text-[#8B4411]">
                   <ImagePlus size={18} />
                 </div>
               </div>
@@ -418,7 +418,7 @@ export default function AdminProductsPage() {
             <button
               type="submit"
               disabled={saving || uploadingImage}
-              className="w-full rounded-2xl bg-[#D4A847] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {saving ? 'Saving product...' : selectedProductId ? 'Save Changes' : 'Create Product'}
             </button>
@@ -448,7 +448,7 @@ export default function AdminProductsPage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/45">
                         <span>{product.categoryName ?? 'Uncategorized'}</span>
-                        {product.featured && <span className="rounded-full bg-[rgba(212,168,71,0.14)] px-2 py-1 tracking-[0.18em] text-[#F0D080]">Featured</span>}
+                        {product.featured && <span className="rounded-full bg-[rgba(212,168,71,0.14)] px-2 py-1 tracking-[0.18em] text-[#8B4411]">Featured</span>}
                       </div>
                       <h2 className="mt-3 font-serif text-3xl text-[#F7E7C1]">{product.name}</h2>
                       <p className="mt-2 max-w-3xl text-sm leading-7 text-white/60">{product.description || 'No description yet.'}</p>
@@ -495,7 +495,7 @@ export default function AdminProductsPage() {
                             <p className="mt-1 text-xs uppercase tracking-[0.22em] text-white/40">{variant.sku}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium text-[#F0D080]">{formatCurrency(variant.price)}</p>
+                            <p className="font-medium text-[#8B4411]">{formatCurrency(variant.price)}</p>
                             <p className="text-xs text-white/50">{variant.stockQuantity} in stock</p>
                           </div>
                         </div>

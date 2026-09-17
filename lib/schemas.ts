@@ -24,7 +24,6 @@ const homeSectionVisibilitySchema = z.object({
   hero: z.boolean().default(true),
   gallery: z.boolean().default(true),
   policies: z.boolean().default(true),
-  faq: z.boolean().default(true),
 });
 
 export const cartLineInputSchema = z.object({
@@ -232,7 +231,6 @@ export const storeSettingsSchema = z.object({
   supportPhone: z.string().trim().max(40).optional().or(z.literal("")),
   bookingContactEmail: z.string().email().optional().or(z.literal("")),
   announcementBar: z.string().trim().max(280).optional().or(z.literal("")),
-  travelFee: z.coerce.number().min(0).max(10000).optional(),
   homeFavoritesEnabled: z.boolean().optional(),
   homeShopSectionTitle: z.string().trim().max(160).optional().or(z.literal("")),
   homeShopSectionLinkLabel: z

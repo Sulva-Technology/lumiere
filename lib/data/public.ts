@@ -599,10 +599,11 @@ export async function createBookingCheckout(
   ]);
   const service = services.find((item) => item.id === input.serviceId);
   if (!service) throw new Error("Selected service is unavailable.");
-  const travelFee = input.locationOutsideTravelRadius ? store.travelFee : 0;
+  // Travel is quoted directly by the artist and is never added automatically.
+  const travelFee = 0;
   const sameDayFee = input.sameDayAppointment ? 50 : 0;
   const appointmentTotal = service.price + travelFee + sameDayFee;
-  const retainerAmount = 35;
+  const retainerAmount = 35 + sameDayFee;
   const remainingBalance = Math.max(appointmentTotal - retainerAmount, 0);
   const isInPersonPayment = input.paymentMethod === "in_person";
   const isMakeupService = service.serviceType === "makeup";
@@ -620,9 +621,6 @@ export async function createBookingCheckout(
     notes:
       [
         input.notes?.trim(),
-        input.locationOutsideTravelRadius
-          ? "Travel notice: Client confirmed appointment location is more than 15 miles from the artist."
-          : null,
         input.sameDayAppointment
           ? "Same-day appointment add-on selected."
           : null,
@@ -1168,13 +1166,13 @@ export async function getPublicStoreSettings() {
     supportPhone: "+1 (555) 123-4567",
     bookingContactEmail: "ogunjobiniyiola906@gmail.com",
     announcementBar: null,
-    travelFee: 20,
+    travelFee: 0,
     homeFavoritesEnabled: true,
     homeShopSectionTitle: "Shop",
     homeShopSectionLinkLabel: "Shop Collection",
     homeShopSectionLinkHref: "/shop",
     homeShopSectionItems: [],
-    homeSectionVisibility: { hero: true, gallery: true, policies: true, faq: true },
+    homeSectionVisibility: { hero: true, gallery: true, policies: true },
   };
 
   try {

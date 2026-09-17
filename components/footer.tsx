@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { useTheme } from '@/components/theme-provider';
 
 type FooterProps = {
   brandName: string;
@@ -12,19 +11,12 @@ type FooterProps = {
 
 export function Footer({ brandName }: FooterProps) {
   const pathname = usePathname();
-  const { theme } = useTheme();
 
   if (pathname?.startsWith('/admin')) return null;
 
   return (
     <footer
-      className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(58,77,57,0.16)] backdrop-blur-xl dark:border-[rgba(154,177,143,0.12)]"
-      style={{
-        background:
-          theme === 'dark'
-            ? 'linear-gradient(180deg, rgba(18,41,28,0.96) 0%, rgba(12,29,20,0.98) 100%)'
-            : 'linear-gradient(180deg, rgba(231,237,225,0.94) 0%, rgba(219,228,214,0.96) 100%)',
-      }}
+      className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(139,68,17,0.16)] bg-[#F5F5DD]"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(139,105,20,0.45)] to-transparent" />
 
@@ -41,52 +33,35 @@ export function Footer({ brandName }: FooterProps) {
         </div>
 
         <div className="md:justify-self-center">
-          <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Explore</h4>
+          <h4 className="mb-4 font-serif text-lg text-[#4A2109]">Explore</h4>
           <div className="flex flex-col gap-3">
-            <Link href="/" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+            <Link href="/" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Home
             </Link>
-            <Link href="/book" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+            <Link href="/book" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Book Now
             </Link>
-            <Link href="/services" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+            <Link href="/services" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Services
             </Link>
-            <Link href="/contact" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+            <Link href="/contact" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Contact
             </Link>
           </div>
         </div>
 
         <div>
-          <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
+          <h4 className="mb-4 font-serif text-lg text-[#4A2109]">Information</h4>
           <div className="flex flex-col gap-3">
-            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
+            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Terms & Conditions
-            </Link>
-            <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              FAQ
             </Link>
           </div>
         </div>
 
-        {/* <div>
-          <h4 className="mb-4 font-serif text-lg text-[#1b3121] dark:text-[var(--text-primary)]">Information</h4>
-          <div className="flex flex-col gap-3">
-            <Link href="/faq" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              FAQ
-            </Link>
-            <Link href="/privacy-policy" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#496052] transition-colors hover:text-[#3A4D39] dark:text-[var(--text-secondary)] dark:hover:text-[#9ab18f]">
-              Terms of Service
-            </Link>
-          </div>
-        </div> */}
       </div>
 
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(58,77,57,0.16)] px-6 py-6 text-sm text-[#496052] sm:flex-row sm:items-center sm:justify-between dark:border-[rgba(154,177,143,0.12)] dark:text-[var(--text-secondary)]">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[rgba(139,68,17,0.16)] px-6 py-6 text-sm text-[#6A3A1C] sm:flex-row sm:items-center sm:justify-between">
         <p>Copyright {new Date().getFullYear()} {brandName}. All rights reserved.</p>
         <p className="text-xs uppercase tracking-[0.22em]">Luxury Glam. Book confidently.</p>
       </div>

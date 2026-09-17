@@ -10,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
           '/book',
           '/about',
           '/contact',
-          '/faq',
           '/privacy-policy',
           '/terms-of-service',
           '/sitemap.xml',
@@ -25,7 +24,6 @@ export default function robots(): MetadataRoute.Robots {
           '/llms.txt',
           '/book',
           '/about',
-          '/faq',
           '/contact',
           '/privacy-policy',
           '/terms-of-service'

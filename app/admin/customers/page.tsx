@@ -54,7 +54,7 @@ export default function AdminCustomersPage() {
       <div className="mt-6 overflow-x-auto">
         <table className="w-full min-w-[760px] table-fixed text-left">
           <thead>
-            <tr className="border-b border-[rgba(154,177,143,0.14)] text-xs uppercase tracking-[0.2em] text-[#9ab18f]/65">
+            <tr className="border-b border-[rgba(154,177,143,0.14)] text-xs uppercase tracking-[0.2em] text-[#C99361]/65">
               <th className="pb-3 pr-4">Customer</th>
               <th className="pb-3 pr-4">Phone</th>
               <th className="pb-3 pr-4">Orders</th>
