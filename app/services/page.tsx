@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import ServicesClient from './services-client';
 import { getBookingServices } from '@/lib/data/public';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Luxury Makeup Services | Itz Lola Beauty',
   description: 'Explore Soft Glam and Full Glam makeup appointments in Arizona.',

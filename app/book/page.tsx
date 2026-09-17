@@ -26,6 +26,7 @@ import type {
 } from "@/lib/types";
 
 type Step = "service" | "availability" | "details";
+const RETAINER_AMOUNT = 35;
 
 const LOOK_OPTIONS: MakeupLookType[] = [
   "Soft glam",
@@ -93,6 +94,7 @@ function BookingPageContent() {
     useState("");
   const [uploadingReference, setUploadingReference] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showRetainerModal, setShowRetainerModal] = useState(false);
   const [reservation, setReservation] = useState<BookingReservation | null>(
     null,
   );
@@ -152,12 +154,7 @@ function BookingPageContent() {
     !!fullName &&
     !!phone &&
     !!email &&
-    !!selectedAvailability &&
-    (!isMakeupService ||
-      (!!occasion &&
-        !!referenceDescription &&
-        !!appointmentDateTimeNeeded &&
-        !!skinConditionsOrAllergies));
+    !!selectedAvailability;
 
   useEffect(() => {
     if (!selectedStylist || !selectedService) return void setAvailability([]);
@@ -281,8 +278,14 @@ function BookingPageContent() {
     }
   }
 
-  async function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!formReady) return;
+    setShowRetainerModal(true);
+  }
+
+  async function confirmRetainerPayment() {
+    setShowRetainerModal(false);
     setSaving(true);
     setError(null);
     try {
@@ -351,11 +354,11 @@ function BookingPageContent() {
             </div>
           </div>
           <h2 className="font-serif text-4xl text-[#1A1008] dark:text-white">
-            Payment Received
+            Retainer Received
           </h2>
           <p className="mt-4 text-lg text-[var(--text-secondary)]">
             {statusMessage ??
-              "Your appointment is being finalized. Confirmation details will follow shortly."}
+              "Your $35 retainer is received. Remaining balance is due at your appointment."}
           </p>
           {reservation?.id && (
             <p className="mt-6 text-sm text-[var(--text-secondary)]">
@@ -442,10 +445,7 @@ function BookingPageContent() {
                       </div>
                       <Icon className="shrink-0 text-[#8B6914] opacity-40 dark:text-[#D4A847]" />
                     </div>
-                    <div className="mt-8 flex items-center justify-between border-t border-black/5 pt-4 dark:border-white/5">
-                      <p className="text-sm font-medium text-[var(--text-secondary)]">
-                        {service.durationMinutes} minutes
-                      </p>
+                    <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4 dark:border-white/5">
                       <p className="font-serif text-2xl text-[#8B6914] dark:text-[#F0D080]">
                         {formatCurrency(service.price)}
                       </p>
@@ -743,7 +743,6 @@ function BookingPageContent() {
                         <input
                           value={occasion}
                           onChange={(event) => setOccasion(event.target.value)}
-                          required
                           className="w-full rounded-2xl bg-black/5 px-5 py-3 outline-none dark:bg-white/5"
                         />
                       </div>
@@ -788,7 +787,6 @@ function BookingPageContent() {
                           onChange={(event) =>
                             setReferenceDescription(event.target.value)
                           }
-                          required
                           className="min-h-[120px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
                         />
                       </div>
@@ -840,7 +838,6 @@ function BookingPageContent() {
                           onChange={(event) =>
                             setSkinConditionsOrAllergies(event.target.value)
                           }
-                          required
                           className="min-h-[110px] w-full rounded-3xl bg-black/5 px-5 py-4 outline-none dark:bg-white/5"
                         />
                       </div>
@@ -938,7 +935,7 @@ function BookingPageContent() {
                     <div className="border-t border-black/5 pt-4 dark:border-white/5">
                       <div className="flex justify-between text-lg font-bold">
                         <span className="text-[#1A1008] dark:text-white">
-                          Total
+                          Full appointment total
                         </span>
                         <span className="text-[#8B6914] dark:text-[#F0D080]">
                           {selectedServiceDetail
@@ -946,6 +943,9 @@ function BookingPageContent() {
                             : "-"}
                         </span>
                       </div>
+                    </div>
+                    <div className="rounded-2xl bg-[#8B6914]/10 px-4 py-3 text-sm text-[var(--text-secondary)] dark:bg-[#D4A847]/10">
+                      Today&apos;s retainer: <span className="font-bold text-[var(--text-primary)]">{formatCurrency(RETAINER_AMOUNT)}</span>
                     </div>
                   </div>
                 </Glass>
@@ -961,7 +961,7 @@ function BookingPageContent() {
                       : "Preparing secure checkout..."
                     : paymentMethod === "in_person"
                       ? "Confirm appointment — pay in person"
-                      : "Continue to secure checkout"}
+                      : `Review ${formatCurrency(RETAINER_AMOUNT)} retainer`}
                   <ChevronRight size={20} />
                 </button>
                 <button
@@ -974,6 +974,23 @@ function BookingPageContent() {
             </div>
             {error && (
               <p className="mt-4 text-center text-sm text-red-500">{error}</p>
+            )}
+            {showRetainerModal && selectedServiceDetail && (
+              <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-4 backdrop-blur-sm sm:items-center sm:justify-center" role="dialog" aria-modal="true" aria-labelledby="retainer-title">
+                <Glass level="heavy" className="w-full max-w-md p-6 shadow-2xl sm:p-8">
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-accent)]">Secure your appointment</p>
+                  <h2 id="retainer-title" className="mt-3 font-serif text-3xl text-[var(--text-primary)]">Pay {formatCurrency(RETAINER_AMOUNT)} today</h2>
+                  <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">Your retainer secures this appointment. Remaining balance of <strong className="text-[var(--text-primary)]">{formatCurrency(Math.max(bookingTotal - RETAINER_AMOUNT, 0))}</strong> is due at your appointment.</p>
+                  <div className="mt-6 rounded-2xl bg-black/5 p-4 text-sm dark:bg-white/5">
+                    <div className="flex justify-between gap-4"><span>Service total</span><span className="font-medium">{formatCurrency(bookingTotal)}</span></div>
+                    <div className="mt-2 flex justify-between gap-4"><span>Retainer due today</span><span className="font-bold text-[#8B6914] dark:text-[#F0D080]">{formatCurrency(RETAINER_AMOUNT)}</span></div>
+                  </div>
+                  <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <button type="button" onClick={() => setShowRetainerModal(false)} className="rounded-full px-5 py-3 text-sm font-medium text-[var(--text-secondary)]">Back</button>
+                    <button type="button" onClick={() => void confirmRetainerPayment()} className="rounded-full bg-[#8B6914] px-6 py-3 font-medium text-white dark:bg-[#D4A847] dark:text-[#1A1008]">Pay {formatCurrency(RETAINER_AMOUNT)} retainer</button>
+                  </div>
+                </Glass>
+              </div>
             )}
           </div>
         )}

@@ -15,7 +15,6 @@ export default async function ContactPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <Glass level="heavy" className="p-8">
           <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-accent)]">Contact</p>
-          <h1 className="headline-strong mt-4 font-serif text-4xl">We&apos;re Here to Help</h1>
           <div className="mt-6 space-y-4 text-[var(--text-secondary)]">
             <p>Support: {store.supportEmail}</p>
             <p>Bookings: {store.bookingContactEmail}</p>

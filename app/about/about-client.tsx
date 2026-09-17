@@ -7,7 +7,7 @@ import { Glass } from '@/components/ui/glass';
 
 const founderIntro = "Hi, I’m Lola, the makeup artist and creative behind itzlolabeauty.";
 const founderMission = "For me, makeup has never been just about the finished look. It’s about how you feel while getting ready and the confidence you leave with. My style is all about enhancing you: beautiful skin, soft details, and polished glam that still feels like you.";
-const founderClose = "Every face is different, so every look is tailored to your features, style, and occasion. When you’re in my chair, I want the experience to feel just as good as the makeup - comfortable, intentional, and confidence-building. See you in my chair.";
+const founderClose = "I want the experience to feel just as good as the makeup. Comfortable, intentional, and confident. I can’t wait to have you in my chair! ♡";
 
 export default function AboutClient() {
   return (
@@ -19,7 +19,7 @@ export default function AboutClient() {
               <div className="relative h-10 w-10 overflow-hidden rounded-full">
                 <Image src="/images/logo.jpeg" alt="itzlolabeauty logo" fill className="object-cover" sizes="40px" />
               </div>
-              Itz Lola Beauty
+              Itzlolabeauty
             </div>
             <div className="space-y-4">
               <p className="max-w-2xl text-lg leading-relaxed text-[var(--text-secondary)]">{founderIntro}</p>

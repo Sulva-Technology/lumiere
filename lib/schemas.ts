@@ -61,16 +61,16 @@ export const createBookingSchema = z.object({
   paymentMethod: z.enum(["online", "in_person"]).optional().default("online"),
   makeupIntake: z
     .object({
-      appointmentDateTimeNeeded: z.string().trim().min(2).max(160),
-      occasion: z.string().trim().min(2).max(160),
-      referenceDescription: z.string().trim().min(2).max(1500),
+      appointmentDateTimeNeeded: z.string().trim().max(160).optional(),
+      occasion: z.string().trim().max(160).optional(),
+      referenceDescription: z.string().trim().max(1500).optional(),
       referenceImageUrl: z.string().trim().url().nullable().optional(),
       referenceImageAssetId: z.string().uuid().nullable().optional(),
-      lookType: z.enum(makeupLookTypes),
-      skinType: z.enum(makeupSkinTypes),
-      skinConditionsOrAllergies: z.string().trim().min(2).max(1000),
-      lashesPreference: z.enum(makeupLashesPreferences),
-      hadProfessionalMakeupBefore: z.enum(makeupHistoryAnswers),
+      lookType: z.enum(makeupLookTypes).optional(),
+      skinType: z.enum(makeupSkinTypes).optional(),
+      skinConditionsOrAllergies: z.string().trim().max(1000).optional(),
+      lashesPreference: z.enum(makeupLashesPreferences).optional(),
+      hadProfessionalMakeupBefore: z.enum(makeupHistoryAnswers).optional(),
       priorExperienceNotes: z.string().trim().max(1000).nullable().optional(),
       productPreferencesOrRestrictions: z
         .string()

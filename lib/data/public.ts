@@ -601,13 +601,11 @@ export async function createBookingCheckout(
   if (!service) throw new Error("Selected service is unavailable.");
   const travelFee = input.locationOutsideTravelRadius ? store.travelFee : 0;
   const sameDayFee = input.sameDayAppointment ? 50 : 0;
-  const totalAmount = service.price + travelFee + sameDayFee;
+  const appointmentTotal = service.price + travelFee + sameDayFee;
+  const retainerAmount = 35;
+  const remainingBalance = Math.max(appointmentTotal - retainerAmount, 0);
   const isInPersonPayment = input.paymentMethod === "in_person";
   const isMakeupService = service.serviceType === "makeup";
-
-  if (isMakeupService && !input.makeupIntake) {
-    throw new Error("Complete the makeup booking form before continuing.");
-  }
 
   const normalizedIntake =
     isMakeupService && input.makeupIntake ? input.makeupIntake : null;
@@ -673,13 +671,16 @@ export async function createBookingCheckout(
       reservation_id: reservation.id,
       provider: isInPersonPayment ? "in_person" : "hosted_checkout",
       status: "pending",
-      amount: totalAmount,
+      amount: retainerAmount,
       currency: "usd",
       method_family: isInPersonPayment ? "in_person" : "hosted_checkout",
       expires_at: isInPersonPayment ? null : reservation.expires_at,
       metadata: {
         kind: "booking",
         serviceName: service.name,
+        appointmentTotal,
+        retainerAmount,
+        remainingBalance,
         travelFee,
         sameDayFee,
         makeupIntake: normalizedIntake,
@@ -693,7 +694,7 @@ export async function createBookingCheckout(
   logEvent("info", "booking.payment_created", {
     paymentId: payment.id,
     reservationId: reservation.id,
-    amount: totalAmount,
+    amount: retainerAmount,
   });
 
   if (isInPersonPayment) {
@@ -716,35 +717,12 @@ export async function createBookingCheckout(
         paymentId: payment.id,
         availabilityId: input.availabilityId,
       },
-      lines: [
-        {
-          name: service.name,
-          description: `Scheduled for ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(slot.starts_at))}`,
-          amount: service.price,
-          quantity: 1,
-        },
-        ...(travelFee > 0
-          ? [
-              {
-                name: "Travel fee",
-                description:
-                  "Appointment location is more than 15 miles from the artist.",
-                amount: travelFee,
-                quantity: 1,
-              },
-            ]
-          : []),
-        ...(sameDayFee > 0
-          ? [
-              {
-                name: "Same-day appointment",
-                description: "Priority same-day booking add-on.",
-                amount: sameDayFee,
-                quantity: 1,
-              },
-            ]
-          : []),
-      ],
+      lines: [{
+        name: "Appointment retainer",
+        description: `${service.name} - ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(slot.starts_at))}. Remaining balance due at appointment: $${remainingBalance.toFixed(2)}.`,
+        amount: retainerAmount,
+        quantity: 1,
+      }],
     });
 
     await supabase

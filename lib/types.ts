@@ -136,16 +136,16 @@ export type MakeupHistoryAnswer = "Yes" | "No";
 export type BookingServiceType = "makeup" | "content";
 
 export interface MakeupBookingIntake {
-  appointmentDateTimeNeeded: string;
-  occasion: string;
-  referenceDescription: string;
+  appointmentDateTimeNeeded?: string;
+  occasion?: string;
+  referenceDescription?: string;
   referenceImageUrl?: string | null;
   referenceImageAssetId?: string | null;
-  lookType: MakeupLookType;
-  skinType: MakeupSkinType;
-  skinConditionsOrAllergies: string;
-  lashesPreference: MakeupLashesPreference;
-  hadProfessionalMakeupBefore: MakeupHistoryAnswer;
+  lookType?: MakeupLookType;
+  skinType?: MakeupSkinType;
+  skinConditionsOrAllergies?: string;
+  lashesPreference?: MakeupLashesPreference;
+  hadProfessionalMakeupBefore?: MakeupHistoryAnswer;
   priorExperienceNotes?: string | null;
   productPreferencesOrRestrictions?: string | null;
 }
