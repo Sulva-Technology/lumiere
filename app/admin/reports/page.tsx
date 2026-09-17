@@ -72,8 +72,8 @@ export default function AdminReportsPage() {
     <div className="space-y-5 pb-10">
       <div>
         <p className="text-xs uppercase tracking-[0.28em] text-[#C99361]">Operations</p>
-        <h1 className="mt-2 font-serif text-4xl text-[#eef2ea]">Payments & Reconciliation</h1>
-        <p className="mt-2 text-sm text-[#d7e0d0]/75">Track pending, paid, failed, cancelled, and expired payment records from one queue.</p>
+        <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Payments & Reconciliation</h1>
+        <p className="mt-2 text-sm text-[#e8d3bd]/75">Track pending, paid, failed, cancelled, and expired payment records from one queue.</p>
       </div>
 
       {error && (
@@ -82,8 +82,8 @@ export default function AdminReportsPage() {
         </Glass>
       )}
 
-      <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
-        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] gap-5 border-b border-[rgba(154,177,143,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#C99361]/65 xl:grid">
+      <Glass level="medium" className="overflow-hidden border border-[rgba(201,147,97,0.16)] bg-[rgba(38,22,10,0.88)] p-0">
+        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] gap-5 border-b border-[rgba(201,147,97,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#C99361]/65 xl:grid">
           <span>Payment</span>
           <span>Target</span>
           <span>Status</span>
@@ -95,18 +95,18 @@ export default function AdminReportsPage() {
 
         {payments.length > 0 ? (
           payments.map((payment) => (
-            <div key={payment.id} className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] xl:items-center xl:gap-5 xl:px-6">
+            <div key={payment.id} className="border-b border-[rgba(201,147,97,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] xl:items-center xl:gap-5 xl:px-6">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Payment</p>
                 <div className="mt-1 xl:mt-0">
-                  <TruncatedText value={payment.id} className="font-medium text-[#eef2ea]" mono />
+                  <TruncatedText value={payment.id} className="font-medium text-[#F7E7C1]" mono />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Target</p>
                 <div className="mt-1 space-y-1 xl:mt-0">
-                  <p className="text-[#eef2ea]/85">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
-                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-[#d7e0d0]/48" mono />
+                  <p className="text-[#F7E7C1]/85">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
+                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-[#e8d3bd]/48" mono />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
@@ -117,20 +117,20 @@ export default function AdminReportsPage() {
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Amount</p>
-                <p className="mt-1 font-medium text-[#d7e0d0] xl:mt-0">{formatCurrency(payment.amount)}</p>
+                <p className="mt-1 font-medium text-[#e8d3bd] xl:mt-0">{formatCurrency(payment.amount)}</p>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Reference</p>
                 <div className="mt-1 space-y-1 xl:mt-0">
-                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-[#d7e0d0]/68" mono />
+                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-[#e8d3bd]/68" mono />
                   {payment.sessionReference && payment.sessionReference !== payment.providerReference ? (
-                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-[#d7e0d0]/44" mono />
+                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-[#e8d3bd]/44" mono />
                   ) : null}
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Updated</p>
-                <p className="mt-1 text-sm text-[#d7e0d0]/68 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
+                <p className="mt-1 text-sm text-[#e8d3bd]/68 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
               </div>
               <div className="mt-4 flex justify-end gap-2 xl:mt-0">
                 <ActionIconButton

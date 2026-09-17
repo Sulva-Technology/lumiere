@@ -30,7 +30,7 @@ export default async function HomePage() {
       },
       {
         '@type': 'ItemList',
-        'name': 'Studio Services',
+        'name': 'Services',
         'itemListElement': [
           {
             '@type': 'Service',

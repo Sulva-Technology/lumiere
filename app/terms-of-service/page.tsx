@@ -6,15 +6,15 @@ export default async function TermsOfServicePage() {
 
   return (
     <InfoPage
-      eyebrow="Booking Policies"
+      eyebrow="Appointment Terms"
       title="Terms & Conditions"
       intro={`Please review these appointment terms before booking with ${store.storeName}.`}
       sections={[
         {
-          title: 'Booking Deposit',
+          title: 'Booking & Retainer Fee',
           body: [
-            'A non-refundable $35 deposit is required to secure your appointment date.',
-            'Your deposit is applied to your service total.',
+            'A non-refundable $35 retainer fee is required to secure your appointment date.',
+            'Your retainer is applied toward your total service balance.',
           ],
         },
         {
@@ -25,17 +25,15 @@ export default async function TermsOfServicePage() {
           ],
         },
         {
-          title: 'Rescheduling & No-Show Policy',
+          title: 'No-Show Policy',
           body: [
-            'To reschedule, please contact us at least 24 hours before your scheduled appointment. Your deposit may be transferred to one new appointment date with proper notice.',
-            'Failure to show up without notice results in loss of the deposit and a charge for the service.',
+            'Failure to show up without notice will result in a charge of the full service amount and loss of the retainer.',
           ],
         },
         {
-          title: 'Travel, Same-Day & Photo Use',
+          title: 'Photography & Social Media',
           body: [
-            'Travel appointments are quoted directly by the artist. Text 224-722-9644 before booking to request a travel quote.',
-            'Same-day appointments include a $50 booking-fee add-on. The artist may photograph completed looks for portfolio and promotional use unless you request otherwise.',
+            'The artist reserves the right to take photos and video for portfolio and promotional use unless the client requests otherwise.',
           ],
         },
       ]}

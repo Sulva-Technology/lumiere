@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 
 const STATUS_TONES: Record<string, string> = {
-  paid: 'border border-emerald-300/20 bg-emerald-400/12 text-emerald-100',
+  paid: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
   processing: 'border border-sky-300/20 bg-sky-400/12 text-sky-100',
   confirmed: 'border border-sky-300/20 bg-sky-400/12 text-sky-100',
-  delivered: 'border border-emerald-300/20 bg-emerald-400/12 text-emerald-100',
+  delivered: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
   shipped: 'border border-violet-300/20 bg-violet-400/12 text-violet-100',
   pending: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
   pending_payment: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
@@ -16,7 +16,7 @@ const STATUS_TONES: Record<string, string> = {
   payment_failed: 'border border-rose-300/20 bg-rose-400/12 text-rose-100',
   failed: 'border border-rose-300/20 bg-rose-400/12 text-rose-100',
   unfulfilled: 'border border-white/10 bg-white/6 text-white/65',
-  completed: 'border border-emerald-300/20 bg-emerald-400/12 text-emerald-100',
+  completed: 'border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] text-[#f4ddb2]',
 };
 
 type AdminStatusBadgeProps = {

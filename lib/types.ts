@@ -210,11 +210,22 @@ export interface BookingService {
 export interface AvailabilityRule {
   id: string;
   stylistId: string;
-  serviceId: string;
+  /** null means the rule applies to every active service. */
+  serviceId: string | null;
   weekday: number;
   startTime: string;
   endTime: string;
   active: boolean;
+}
+
+export interface AvailabilityDayOverride {
+  id: string;
+  stylistId: string;
+  /** Calendar date in yyyy-mm-dd form. */
+  day: string;
+  isOff: boolean;
+  startTime: string | null;
+  endTime: string | null;
 }
 
 export interface StylistSummary {

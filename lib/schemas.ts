@@ -213,12 +213,47 @@ export const adminBookingServiceSchema = z.object({
 export const adminAvailabilityRuleSchema = z.object({
   id: z.string().uuid().optional(),
   stylistId: z.string().uuid(),
-  serviceId: z.string().uuid(),
+  serviceId: z.string().uuid().nullable().optional(),
   weekday: z.coerce.number().int().min(0).max(6),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
   active: z.boolean().optional().default(true),
 });
+
+export const adminAvailabilityWeekSchema = z.object({
+  stylistId: z.string().uuid(),
+  days: z
+    .array(
+      z.object({
+        weekday: z.coerce.number().int().min(0).max(6),
+        off: z.boolean(),
+        startTime: z.string().regex(/^\d{2}:\d{2}$/),
+        endTime: z.string().regex(/^\d{2}:\d{2}$/),
+      }),
+    )
+    .min(1)
+    .max(7),
+});
+
+export const adminAvailabilityOverrideSchema = z
+  .object({
+    stylistId: z.string().uuid(),
+    day: z.string().date(),
+    mode: z.enum(["off", "hours"]),
+    startTime: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .optional(),
+    endTime: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .optional(),
+  })
+  .refine(
+    (value) =>
+      value.mode === "off" || (Boolean(value.startTime) && Boolean(value.endTime)),
+    { message: "Give both a start and an end time.", path: ["startTime"] },
+  );
 
 export const adminMediaLifecycleSchema = z.object({
   assetId: z.string().uuid(),

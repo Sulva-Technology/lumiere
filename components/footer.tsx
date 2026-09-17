@@ -23,7 +23,7 @@ export function Footer({ brandName }: FooterProps) {
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-14 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)_minmax(0,0.9fr)] lg:gap-16 lg:py-16">
         <div className="max-w-2xl">
           <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full border border-[rgba(58,77,57,0.16)] bg-white/80 shadow-[0_12px_40px_rgba(16,24,16,0.08)]">
+            <div className="relative h-16 w-16 overflow-hidden rounded-full border border-[rgba(139,68,17,0.16)] bg-white/80 shadow-[0_12px_40px_rgba(20,13,5,0.08)]">
               <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="64px" />
             </div>
             <div>

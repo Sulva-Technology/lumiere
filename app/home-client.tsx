@@ -24,7 +24,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
           <div className="absolute inset-0 z-0">
             <Image
               src="/images/home.jpeg"
-              alt="Itz Lola Beauty Studio - Luxury Makeup in Arizona"
+              alt="Luxury makeup artistry in Arizona by Lola"
               fill
               className="object-cover object-top"
               priority
@@ -96,10 +96,9 @@ export default function Home({ settings, gallery }: HomeClientProps) {
           <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Booking Policies</h2>
           <div className="space-y-6">
             {[
-              { title: 'Booking & Retainer', text: 'A non-refundable $35 retainer is required to secure your appointment date.' },
-              { title: 'Late Arrival', text: 'A 10-minute grace period is allowed. After that, a $20 late fee applies; appointments more than 15 minutes late are cancelled.' },
-              { title: 'No-Show Policy', text: 'A missed appointment without notice results in loss of the retainer and a charge for the service.' },
-              { title: 'Photos & Social Media', text: 'The artist may photograph completed looks for portfolio and promotional use unless you let us know otherwise.' },
+              { title: 'Payments', text: 'All payments must be made in cash or Zelle. No exceptions. A non-refundable $35 booking fee is required to secure your appointment. This booking fee is applied toward your total service cost.' },
+              { title: 'Rescheduling', text: 'Need to reschedule? Please text 224-722-9644 at least 24 hours before your scheduled appointment. Your deposit will be transferred to your new appointment if you provide at least 24 hours notice.' },
+              { title: 'Travel Policy', text: 'Travel fees are determined based on the service location. To receive a travel quote, please text 224-722-9644 with the address where you would like your makeup service to be provided.' },
             ].map((policy) => (
               <div key={policy.title} className="space-y-2">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-accent)]">{policy.title}</h3>

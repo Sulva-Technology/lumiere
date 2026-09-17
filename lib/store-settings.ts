@@ -7,7 +7,7 @@ export const defaultHomeShopSectionItems: HomeShopSectionItem[] = [
   },
   {
     title: 'Founder Guided Experience',
-    description: 'Move from booking to confirmation through a refined studio flow shaped by the creative direction behind itzlolabeauty.',
+    description: 'Move from booking to confirmation through a refined booking flow shaped by the creative direction behind itzlolabeauty.',
   },
 ];
 

@@ -48,13 +48,13 @@ export default function AdminCustomersPage() {
   }
 
   return (
-    <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-6 text-white">
-      <h1 className="font-serif text-3xl text-[#eef2ea]">Customers</h1>
+    <Glass level="medium" className="overflow-hidden border border-[rgba(201,147,97,0.16)] bg-[rgba(38,22,10,0.88)] p-6 text-white">
+      <h1 className="font-serif text-3xl text-[#F7E7C1]">Customers</h1>
       {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
       <div className="mt-6 overflow-x-auto">
         <table className="w-full min-w-[760px] table-fixed text-left">
           <thead>
-            <tr className="border-b border-[rgba(154,177,143,0.14)] text-xs uppercase tracking-[0.2em] text-[#C99361]/65">
+            <tr className="border-b border-[rgba(201,147,97,0.14)] text-xs uppercase tracking-[0.2em] text-[#C99361]/65">
               <th className="pb-3 pr-4">Customer</th>
               <th className="pb-3 pr-4">Phone</th>
               <th className="pb-3 pr-4">Orders</th>
@@ -67,20 +67,20 @@ export default function AdminCustomersPage() {
           <tbody>
             {customers.length > 0 ? (
               customers.map((customer) => (
-                <tr key={customer.id} className="border-b border-[rgba(154,177,143,0.12)] text-sm last:border-0">
+                <tr key={customer.id} className="border-b border-[rgba(201,147,97,0.12)] text-sm last:border-0">
                   <td className="py-4 pr-4">
                     <div className="min-w-0 space-y-1">
-                      <TruncatedText value={customer.name} className="font-medium text-[#eef2ea]" />
-                      <TruncatedText value={customer.email} className="text-[#d7e0d0]/55" />
+                      <TruncatedText value={customer.name} className="font-medium text-[#F7E7C1]" />
+                      <TruncatedText value={customer.email} className="text-[#e8d3bd]/55" />
                     </div>
                   </td>
-                  <td className="py-4 pr-4 text-[#d7e0d0]/65">
-                    <TruncatedText value={customer.phone} className="text-[#d7e0d0]/65" />
+                  <td className="py-4 pr-4 text-[#e8d3bd]/65">
+                    <TruncatedText value={customer.phone} className="text-[#e8d3bd]/65" />
                   </td>
-                  <td className="py-4 pr-4 text-[#eef2ea]/85">{customer.ordersCount}</td>
-                  <td className="py-4 pr-4 text-[#eef2ea]/85">{customer.bookingsCount}</td>
-                  <td className="py-4 pr-4 font-medium text-[#d7e0d0]">{formatCurrency(customer.totalSpent)}</td>
-                  <td className="py-4 pr-4 text-[#d7e0d0]/65">{customer.lastActiveAt ? formatDateTime(customer.lastActiveAt) : '—'}</td>
+                  <td className="py-4 pr-4 text-[#F7E7C1]/85">{customer.ordersCount}</td>
+                  <td className="py-4 pr-4 text-[#F7E7C1]/85">{customer.bookingsCount}</td>
+                  <td className="py-4 pr-4 font-medium text-[#e8d3bd]">{formatCurrency(customer.totalSpent)}</td>
+                  <td className="py-4 pr-4 text-[#e8d3bd]/65">{customer.lastActiveAt ? formatDateTime(customer.lastActiveAt) : '—'}</td>
                   <td className="py-4 text-right">
                     <ActionIconButton
                       title="Delete customer"

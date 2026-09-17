@@ -349,7 +349,7 @@ function BookingPageContent() {
       <div className="mx-auto max-w-4xl px-4 py-20">
         <Glass level="heavy" className="p-10 text-center">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-500">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#8B4411]/12 text-[#8B4411]">
               <Check size={40} />
             </div>
           </div>
@@ -982,10 +982,10 @@ function BookingPageContent() {
               <h2 id="terms-modal-title" className="mt-2 font-serif text-3xl text-[var(--text-primary)]">Terms &amp; Conditions</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">Please review and accept the booking terms before continuing to your appointment details.</p>
               <div className="mt-6 space-y-4 text-sm leading-relaxed text-[var(--text-secondary)]">
-                <p><strong className="text-[var(--text-primary)]">Deposit:</strong> A non-refundable $35 deposit secures your date and is applied to your service total.</p>
-                <p><strong className="text-[var(--text-primary)]">Late arrivals:</strong> There is a 10-minute grace period. Appointments over 15 minutes late are cancelled.</p>
-                <p><strong className="text-[var(--text-primary)]">Rescheduling:</strong> Contact us at least 24 hours ahead to transfer your deposit once.</p>
-                <p><strong className="text-[var(--text-primary)]">Travel &amp; same-day:</strong> Text 224-722-9644 for travel quotes. Same-day bookings add $50 to today&apos;s deposit.</p>
+                <p><strong className="text-[var(--text-primary)]">Booking &amp; retainer fee:</strong> A non-refundable $35 retainer fee is required to secure your appointment date and is applied toward your total service balance.</p>
+                <p><strong className="text-[var(--text-primary)]">Late policy:</strong> A 10-minute grace period is allowed. After that, a $20 late fee will be applied. Appointments exceeding 15 minutes late will be cancelled.</p>
+                <p><strong className="text-[var(--text-primary)]">No-show policy:</strong> Failure to show up without notice will result in a charge of the full service amount and loss of the retainer.</p>
+                <p><strong className="text-[var(--text-primary)]">Photography &amp; social media:</strong> The artist reserves the right to take photos and video for portfolio and promotional use unless the client requests otherwise.</p>
               </div>
               <Link href="/terms-of-service" target="_blank" className="mt-5 inline-block text-sm font-semibold text-[#8B4411] underline underline-offset-4">Read full terms &amp; conditions</Link>
               <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#8B4411]/20 bg-[#8B4411]/5 p-4 text-sm text-[var(--text-secondary)]">

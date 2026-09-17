@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Clock, Plus, Repeat, Trash2 } from 'lucide-react';
+import { Calendar, Check, Clock, Repeat, Trash2 } from 'lucide-react';
 import { Glass } from '@/components/ui/glass';
-import { formatDateTime } from '@/lib/format';
-import type { AvailabilityRule, BookingService, StylistSummary } from '@/lib/types';
+import type { AvailabilityDayOverride, AvailabilityRule, StylistSummary } from '@/lib/types';
 
 interface AvailabilitySlot {
   id: string;
@@ -17,77 +16,104 @@ interface AvailabilitySlot {
   stylists: { name: string } | null;
 }
 
-const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+interface DayForm {
+  weekday: number;
+  off: boolean;
+  startTime: string;
+  endTime: string;
+}
 
-function nextMonthRange() {
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DEFAULT_START = '09:00';
+const DEFAULT_END = '17:00';
+
+function todayKey() {
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  };
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function buildWeek(rules: AvailabilityRule[]): DayForm[] {
+  return WEEKDAYS.map((_, weekday) => {
+    const windows = rules.filter((rule) => rule.weekday === weekday && rule.active);
+    if (windows.length === 0) {
+      return { weekday, off: true, startTime: DEFAULT_START, endTime: DEFAULT_END };
+    }
+    return {
+      weekday,
+      off: false,
+      startTime: windows.reduce((earliest, rule) => (rule.startTime < earliest ? rule.startTime : earliest), windows[0].startTime),
+      endTime: windows.reduce((latest, rule) => (rule.endTime > latest ? rule.endTime : latest), windows[0].endTime),
+    };
+  });
+}
+
+/** Slot dates are read exactly as they are stored, so nothing shifts when she is travelling. */
+function slotDateKey(startsAt: string) {
+  return startsAt.slice(0, 10);
+}
+
+function formatDayLabel(dayKey: string) {
+  return new Date(`${dayKey}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 export default function AdminAvailabilityPage() {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
-  const [services, setServices] = useState<BookingService[]>([]);
+  const [overrides, setOverrides] = useState<AvailabilityDayOverride[]>([]);
   const [stylists, setStylists] = useState<StylistSummary[]>([]);
+  const [week, setWeek] = useState<DayForm[]>(() => buildWeek([]));
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [busyDay, setBusyDay] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const [selectedService, setSelectedService] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [creatingSlot, setCreatingSlot] = useState(false);
-
-  const [ruleServiceId, setRuleServiceId] = useState('');
-  const [ruleWeekday, setRuleWeekday] = useState('3');
-  const [ruleStartTime, setRuleStartTime] = useState('13:00');
-  const [ruleEndTime, setRuleEndTime] = useState('16:00');
-  const [creatingRule, setCreatingRule] = useState(false);
-  const [scheduleRange] = useState(nextMonthRange);
-  const [scheduleStartDate, setScheduleStartDate] = useState(scheduleRange.start);
-  const [scheduleEndDate, setScheduleEndDate] = useState(scheduleRange.end);
-  const [weekdayStartTime, setWeekdayStartTime] = useState('16:00');
-  const [weekdayEndTime, setWeekdayEndTime] = useState('21:00');
-  const [weekendStartTime, setWeekendStartTime] = useState('07:00');
-  const [weekendEndTime, setWeekendEndTime] = useState('19:00');
-  const [creatingSchedule, setCreatingSchedule] = useState(false);
+  const [overrideDate, setOverrideDate] = useState('');
+  const [overrideMode, setOverrideMode] = useState<'off' | 'hours'>('off');
+  const [overrideStart, setOverrideStart] = useState(DEFAULT_START);
+  const [overrideEnd, setOverrideEnd] = useState(DEFAULT_END);
 
   const primaryStylistId = stylists[0]?.id ?? '';
-  const activeRules = useMemo(() => rules.filter((rule) => rule.active), [rules]);
+  const generalRules = useMemo(
+    () => rules.filter((rule) => rule.active && rule.serviceId === null),
+    [rules],
+  );
 
   async function loadData() {
     try {
-      const [availabilityRes, rulesRes, servicesRes, stylistsRes] = await Promise.all([
+      const [availabilityRes, rulesRes, overridesRes, stylistsRes] = await Promise.all([
         fetch('/api/admin/availability'),
         fetch('/api/admin/availability/rules'),
-        fetch('/api/admin/services'),
+        fetch('/api/admin/availability/overrides'),
         fetch('/api/booking/stylists'),
       ]);
 
-      const [availabilityJson, rulesJson, servicesJson, stylistsJson] = await Promise.all([
+      const [availabilityJson, rulesJson, overridesJson, stylistsJson] = await Promise.all([
         availabilityRes.json(),
         rulesRes.json(),
-        servicesRes.json(),
+        overridesRes.json(),
         stylistsRes.json(),
       ]);
 
-      if (!availabilityRes.ok) throw new Error(availabilityJson.error ?? 'Failed to load availability.');
-      if (!rulesRes.ok) throw new Error(rulesJson.error ?? 'Failed to load recurring availability.');
-      if (!servicesRes.ok) throw new Error(servicesJson.error ?? 'Failed to load services.');
-      if (!stylistsRes.ok) throw new Error(stylistsJson.error ?? 'Failed to load artists.');
+      if (!availabilityRes.ok) throw new Error(availabilityJson.error ?? 'Could not load your open times.');
+      if (!rulesRes.ok) throw new Error(rulesJson.error ?? 'Could not load your working week.');
+      if (!overridesRes.ok) throw new Error(overridesJson.error ?? 'Could not load your changed days.');
+      if (!stylistsRes.ok) throw new Error(stylistsJson.error ?? 'Could not load your profile.');
 
+      const loadedRules: AvailabilityRule[] = rulesJson.data.rules;
       setAvailability(availabilityJson.data.availability);
-      setRules(rulesJson.data.rules);
-      setServices(servicesJson.data.services);
+      setRules(loadedRules);
+      setOverrides(overridesJson.data.overrides);
       setStylists(stylistsJson.stylists);
-      setRuleServiceId((current) => current || servicesJson.data.services[0]?.id || '');
-      setSelectedService((current) => current || servicesJson.data.services[0]?.id || '');
+      setWeek(buildWeek(loadedRules.filter((rule) => rule.active && rule.serviceId === null)));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to load availability.');
+      setError(loadError instanceof Error ? loadError.message : 'Could not load your availability.');
     } finally {
       setLoading(false);
     }
@@ -97,319 +123,431 @@ export default function AdminAvailabilityPage() {
     void loadData();
   }, []);
 
-  async function handleCreateSlot(event: React.FormEvent) {
-    event.preventDefault();
-    if (!selectedService || !date || !time || !primaryStylistId) return;
-
-    setCreatingSlot(true);
-    setError(null);
-    try {
-      const service = services.find((item) => item.id === selectedService);
-      if (!service) throw new Error('Service not found.');
-
-      const response = await fetch('/api/admin/availability', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          stylistId: primaryStylistId,
-          serviceId: selectedService,
-          startsAt: new Date(`${date}T${time}`).toISOString(),
-          durationMinutes: service.durationMinutes,
-        }),
-      });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Failed to create slot.');
-
-      await loadData();
-      setDate('');
-      setTime('');
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to create slot.');
-    } finally {
-      setCreatingSlot(false);
+  function changeSummary(result: { removed?: number; kept?: number }) {
+    const removed = result.removed ?? 0;
+    const kept = result.kept ?? 0;
+    const parts = [`Saved. ${removed} open time${removed === 1 ? '' : 's'} turned off.`];
+    if (kept > 0) {
+      parts.push(`${kept} time${kept === 1 ? '' : 's'} already taken by clients were kept.`);
     }
+    return parts.join(' ');
   }
 
-  async function handleCreateSchedule(event: React.FormEvent) {
+  function updateDay(weekday: number, patch: Partial<DayForm>) {
+    setWeek((current) => current.map((day) => (day.weekday === weekday ? { ...day, ...patch } : day)));
+  }
+
+  async function handleSaveWeek(event: React.FormEvent) {
     event.preventDefault();
     if (!primaryStylistId) return;
 
-    setCreatingSchedule(true);
+    const broken = week.find((day) => !day.off && day.endTime <= day.startTime);
+    if (broken) {
+      setError(`${WEEKDAYS[broken.weekday]}: the finish time must be later than the start time.`);
+      setNotice(null);
+      return;
+    }
+
+    setSaving(true);
     setError(null);
+    setNotice(null);
     try {
-      const response = await fetch('/api/admin/availability/schedule', {
+      const response = await fetch('/api/admin/availability/week', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           stylistId: primaryStylistId,
-          startDate: scheduleStartDate,
-          endDate: scheduleEndDate,
-          weekdayStartTime,
-          weekdayEndTime,
-          weekendStartTime,
-          weekendEndTime,
+          days: week.map((day) => ({
+            weekday: day.weekday,
+            off: day.off,
+            startTime: day.startTime,
+            endTime: day.endTime,
+          })),
         }),
       });
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Failed to create the schedule.');
+      if (!response.ok) throw new Error(json.error ?? 'Could not save your week.');
 
       await loadData();
-    } catch (scheduleError) {
-      setError(scheduleError instanceof Error ? scheduleError.message : 'Failed to create the schedule.');
+      setNotice(changeSummary(json.data));
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Could not save your week.');
     } finally {
-      setCreatingSchedule(false);
+      setSaving(false);
     }
   }
 
-  async function handleDeleteSlot(id: string) {
-    try {
-      const response = await fetch(`/api/admin/availability?id=${id}`, { method: 'DELETE' });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Failed to delete slot.');
-      setAvailability((current) => current.filter((slot) => slot.id !== id));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to delete slot.');
-    }
-  }
-
-  async function handleCreateRule(event: React.FormEvent) {
+  async function handleSetOverride(event: React.FormEvent) {
     event.preventDefault();
-    if (!ruleServiceId || !primaryStylistId) return;
+    if (!primaryStylistId || !overrideDate) return;
 
-    setCreatingRule(true);
+    if (overrideMode === 'hours' && overrideEnd <= overrideStart) {
+      setError('The finish time must be later than the start time.');
+      setNotice(null);
+      return;
+    }
+
+    setBusyDay(overrideDate);
     setError(null);
+    setNotice(null);
     try {
-      const response = await fetch('/api/admin/availability/rules', {
+      const response = await fetch('/api/admin/availability/overrides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           stylistId: primaryStylistId,
-          serviceId: ruleServiceId,
-          weekday: Number(ruleWeekday),
-          startTime: ruleStartTime,
-          endTime: ruleEndTime,
-          active: true,
+          day: overrideDate,
+          mode: overrideMode,
+          startTime: overrideMode === 'hours' ? overrideStart : undefined,
+          endTime: overrideMode === 'hours' ? overrideEnd : undefined,
         }),
       });
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Failed to save recurring availability.');
+      if (!response.ok) throw new Error(json.error ?? 'Could not save that day.');
 
       await loadData();
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to save recurring availability.');
+      setNotice(changeSummary(json.data));
+      setOverrideDate('');
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Could not save that day.');
     } finally {
-      setCreatingRule(false);
+      setBusyDay(null);
     }
   }
 
-  async function handleDeleteRule(id: string) {
+  async function handleDayOff(dayKey: string) {
+    if (!primaryStylistId) return;
+
+    setBusyDay(dayKey);
+    setError(null);
+    setNotice(null);
     try {
-      const response = await fetch(`/api/admin/availability/rules?id=${id}`, { method: 'DELETE' });
+      const response = await fetch('/api/admin/availability/overrides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stylistId: primaryStylistId, day: dayKey, mode: 'off' }),
+      });
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error ?? 'Failed to delete recurring availability.');
-      setRules((current) => current.filter((rule) => rule.id !== id));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to delete recurring availability.');
+      if (!response.ok) throw new Error(json.error ?? 'Could not turn that day off.');
+
+      await loadData();
+      setNotice(changeSummary(json.data));
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Could not turn that day off.');
+    } finally {
+      setBusyDay(null);
     }
   }
 
-  if (loading) return <div className="p-8 text-center">Loading availability dashboard...</div>;
+  async function handleUndoOverride(id: string) {
+    setBusyDay(id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await fetch(`/api/admin/availability/overrides?id=${id}`, { method: 'DELETE' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? 'Could not undo that day change.');
+
+      await loadData();
+      setNotice('Undone. That day follows your normal week again.');
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Could not undo that day change.');
+    } finally {
+      setBusyDay(null);
+    }
+  }
+
+  const daySummaries = useMemo(() => {
+    const map = new Map<string, { open: number; booked: number }>();
+    for (const slot of availability) {
+      const key = slotDateKey(slot.starts_at);
+      const entry = map.get(key) ?? { open: 0, booked: 0 };
+      if (slot.has_booking || slot.is_reserved) {
+        entry.booked += 1;
+      } else {
+        entry.open += 1;
+      }
+      map.set(key, entry);
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, 21)
+      .map(([dayKey, counts]) => ({ dayKey, ...counts }));
+  }, [availability]);
+
+  if (loading) return <div className="p-8 text-center text-white/70">Loading your availability...</div>;
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 pb-10">
       <header className="flex flex-col gap-2">
-        <h1 className="font-serif text-3xl font-medium text-[#4A2109]">Manage Availability</h1>
-        <p className="text-[var(--text-secondary)]">Add one-off slots or save repeating weekly availability for itzlolabeauty.</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-[#8B4411]">Booking Setup</p>
+        <h1 className="font-serif text-4xl text-[#F7E7C1]">When you are available</h1>
+        <p className="max-w-2xl text-sm text-white/60">
+          Set your normal week below. Everything you leave on shows up on your booking page for clients to choose.
+        </p>
       </header>
 
-      {error && <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600">{error}</div>}
+      {error && (
+        <Glass level="medium" className="border border-red-500/20 p-4 text-sm text-red-200">
+          {error}
+        </Glass>
+      )}
+      {notice && (
+        <Glass
+          level="medium"
+          className="flex items-center gap-3 border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] p-4 text-sm text-[#f4ddb2]"
+        >
+          <Check size={18} className="shrink-0 text-[#c99361]" />
+          <span>{notice}</span>
+        </Glass>
+      )}
 
-      <Glass level="heavy" className="p-6 sm:p-8">
-        <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B4411]">Quick setup</p>
-          <h2 className="mt-2 font-serif text-2xl text-[#4A2109]">Set your working hours once</h2>
-          <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">Creates bookable times for every active service in this date range. Existing times are kept, so it is safe to run again.</p>
+      <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5 sm:p-6">
+        <div className="mb-6 flex items-center gap-3">
+          <Repeat size={20} className="text-[#c99361]" />
+          <div>
+            <h2 className="font-serif text-2xl text-[#F7E7C1]">Your normal week</h2>
+            <p className="mt-1 text-sm text-white/60">Turn a day off, or change its hours. Clients only see what is on.</p>
+          </div>
         </div>
-        <form onSubmit={handleCreateSchedule} className="space-y-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">From</label>
-              <input type="date" value={scheduleStartDate} onChange={(event) => setScheduleStartDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Until</label>
-              <input type="date" value={scheduleEndDate} onChange={(event) => setScheduleEndDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl bg-white/30 p-4">
-              <p className="font-medium text-[#4A2109]">Monday to Friday</p>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <input aria-label="Weekday start time" type="time" value={weekdayStartTime} onChange={(event) => setWeekdayStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
-                <input aria-label="Weekday end time" type="time" value={weekdayEndTime} onChange={(event) => setWeekdayEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
+
+        <form onSubmit={handleSaveWeek} className="space-y-3">
+          {week.map((day) => (
+            <div
+              key={day.weekday}
+              className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <span className="w-28 font-medium text-[#F7E7C1]">{WEEKDAYS[day.weekday]}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={!day.off}
+                  aria-label={`${WEEKDAYS[day.weekday]} availability`}
+                  onClick={() => updateDay(day.weekday, { off: !day.off })}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-colors ${
+                    day.off
+                      ? 'border border-white/15 bg-white/5 text-white/55 hover:bg-white/10'
+                      : 'bg-[#8B4411] text-[#140d05] hover:opacity-90'
+                  }`}
+                >
+                  {day.off ? 'Off' : 'Working'}
+                </button>
               </div>
+
+              {day.off ? (
+                <p className="text-sm text-white/45 sm:pr-2">No appointments this day</p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Clock size={16} className="text-white/40" />
+                  <label className="sr-only" htmlFor={`start-${day.weekday}`}>
+                    {WEEKDAYS[day.weekday]} start time
+                  </label>
+                  <input
+                    id={`start-${day.weekday}`}
+                    type="time"
+                    value={day.startTime}
+                    onChange={(event) => updateDay(day.weekday, { startTime: event.target.value })}
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                  />
+                  <span className="text-white/40">to</span>
+                  <label className="sr-only" htmlFor={`end-${day.weekday}`}>
+                    {WEEKDAYS[day.weekday]} finish time
+                  </label>
+                  <input
+                    id={`end-${day.weekday}`}
+                    type="time"
+                    value={day.endTime}
+                    onChange={(event) => updateDay(day.weekday, { endTime: event.target.value })}
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                  />
+                </div>
+              )}
             </div>
-            <div className="rounded-2xl bg-white/30 p-4">
-              <p className="font-medium text-[#4A2109]">Saturday and Sunday</p>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <input aria-label="Weekend start time" type="time" value={weekendStartTime} onChange={(event) => setWeekendStartTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
-                <input aria-label="Weekend end time" type="time" value={weekendEndTime} onChange={(event) => setWeekendEndTime(event.target.value)} required className="w-full rounded-xl bg-white/40 px-3 py-2 text-sm outline-none" />
-              </div>
-            </div>
-          </div>
-          <button type="submit" disabled={creatingSchedule || !primaryStylistId} className="rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50">
-            {creatingSchedule ? 'Turning on availability...' : 'Turn On Availability'}
+          ))}
+
+          <button
+            type="submit"
+            disabled={saving || !primaryStylistId}
+            className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto sm:px-8"
+          >
+            {saving ? 'Saving your week...' : 'Save my week'}
           </button>
         </form>
       </Glass>
 
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_1fr]">
-        <Glass level="medium" className="p-6">
-          <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#4A2109]">
-            <Plus size={20} className="text-[#8B4411]" />
-            <h2>Add One Slot</h2>
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5 sm:p-6">
+          <div className="mb-6 flex items-center gap-3">
+            <Calendar size={20} className="text-[#c99361]" />
+            <div>
+              <h2 className="font-serif text-2xl text-[#F7E7C1]">One date that is different</h2>
+              <p className="mt-1 text-sm text-white/60">
+                Keep your normal week as it is. You can also open a day you are normally off.
+              </p>
+            </div>
           </div>
-          <form onSubmit={handleCreateSlot} className="space-y-4">
+
+          <form onSubmit={handleSetOverride} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Service</label>
-              <select value={selectedService} onChange={(event) => setSelectedService(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
-                <option value="">Select a service...</option>
-                {services.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name} ({service.durationMinutes}m)
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="override-date" className="text-xs uppercase tracking-[0.2em] text-white/50">
+                Which date
+              </label>
+              <input
+                id="override-date"
+                type="date"
+                required
+                min={todayKey()}
+                value={overrideDate}
+                onChange={(event) => setOverrideDate(event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
+              />
             </div>
+
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Date</label>
-              <div className="relative">
-                <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none" />
+              <span className="text-xs uppercase tracking-[0.2em] text-white/50">What changes</span>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setOverrideMode('off')}
+                  aria-pressed={overrideMode === 'off'}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+                    overrideMode === 'off'
+                      ? 'bg-[#8B4411] text-[#140d05]'
+                      : 'border border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  Day off
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOverrideMode('hours')}
+                  aria-pressed={overrideMode === 'hours'}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+                    overrideMode === 'hours'
+                      ? 'bg-[#8B4411] text-[#140d05]'
+                      : 'border border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  Different hours
+                </button>
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Start Time</label>
-              <div className="relative">
-                <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none" />
+
+            {overrideMode === 'hours' && (
+              <div className="flex items-center gap-3">
+                <Clock size={16} className="text-white/40" />
+                <label className="sr-only" htmlFor="override-start">
+                  Start time
+                </label>
+                <input
+                  id="override-start"
+                  type="time"
+                  value={overrideStart}
+                  onChange={(event) => setOverrideStart(event.target.value)}
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                />
+                <span className="text-white/40">to</span>
+                <label className="sr-only" htmlFor="override-end">
+                  Finish time
+                </label>
+                <input
+                  id="override-end"
+                  type="time"
+                  value={overrideEnd}
+                  onChange={(event) => setOverrideEnd(event.target.value)}
+                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                />
               </div>
-            </div>
-            <button type="submit" disabled={creatingSlot} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8B4411] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50">
-              {creatingSlot ? 'Creating...' : 'Create Availability Slot'}
+            )}
+
+            <button
+              type="submit"
+              disabled={!overrideDate || busyDay === overrideDate}
+              className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {busyDay === overrideDate ? 'Saving...' : 'Set this date'}
             </button>
           </form>
-        </Glass>
 
-        <Glass level="medium" className="p-6">
-          <div className="mb-6 flex items-center gap-2 font-serif text-xl text-[#4A2109]">
-            <Repeat size={20} className="text-[#8B4411]" />
-            <h2>Set Weekly Availability</h2>
-          </div>
-          <form onSubmit={handleCreateRule} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Service</label>
-              <select value={ruleServiceId} onChange={(event) => setRuleServiceId(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
-                <option value="">Select a service...</option>
-                {services.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Weekday</label>
-              <select value={ruleWeekday} onChange={(event) => setRuleWeekday(event.target.value)} className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
-                {WEEKDAYS.map((weekday, index) => (
-                  <option key={weekday} value={index}>
-                    {weekday}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">Start Time</label>
-                <input type="time" value={ruleStartTime} onChange={(event) => setRuleStartTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70">End Time</label>
-                <input type="time" value={ruleEndTime} onChange={(event) => setRuleEndTime(event.target.value)} required className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
-              </div>
-            </div>
-            <p className="text-sm text-[var(--text-secondary)]">This creates a repeating weekly rule and automatically fills future bookable slots ahead for that window.</p>
-            <button type="submit" disabled={creatingRule} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#4A2109] py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50">
-              {creatingRule ? 'Saving rule...' : 'Save Weekly Availability'}
-            </button>
-          </form>
-        </Glass>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[0.9fr_1.1fr]">
-        <Glass level="medium" className="p-6">
-          <h2 className="font-serif text-xl text-[#4A2109]">Weekly Rules</h2>
-          <div className="mt-6 space-y-3">
-            {activeRules.length > 0 ? (
-              activeRules.map((rule) => {
-                const service = services.find((item) => item.id === rule.serviceId);
-                return (
-                  <div key={rule.id} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/30 p-4">
-                    <div>
-                      <p className="font-medium text-[#4A2109]">{service?.name ?? 'Service'}</p>
-                      <p className="text-sm text-[var(--text-secondary)]">
-                        {WEEKDAYS[rule.weekday]} · {rule.startTime} to {rule.endTime}
-                      </p>
-                    </div>
-                    <button type="button" onClick={() => void handleDeleteRule(rule.id)} className="rounded-full p-2 text-red-500 transition-colors hover:bg-red-500/10">
-                      <Trash2 size={18} />
-                    </button>
+          <div className="mt-8 space-y-3">
+            <h3 className="text-xs uppercase tracking-[0.2em] text-white/50">Dates you changed</h3>
+            {overrides.length > 0 ? (
+              overrides.map((override) => (
+                <div
+                  key={override.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                >
+                  <div>
+                    <p className="font-medium text-[#F7E7C1]">{formatDayLabel(override.day)}</p>
+                    <p className="text-sm text-white/55">
+                      {override.isOff
+                        ? 'Day off'
+                        : `${override.startTime ?? ''} to ${override.endTime ?? ''}`}
+                    </p>
                   </div>
-                );
-              })
+                  <button
+                    type="button"
+                    onClick={() => void handleUndoOverride(override.id)}
+                    disabled={busyDay === override.id}
+                    className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                  >
+                    Undo
+                  </button>
+                </div>
+              ))
             ) : (
-              <p className="rounded-2xl bg-white/30 p-4 text-sm text-[var(--text-secondary)]">No weekly availability rules yet.</p>
+              <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/55">
+                No changed dates. Every day follows your normal week.
+              </p>
             )}
           </div>
         </Glass>
 
-        <Glass level="medium" className="p-6">
-          <h2 className="font-serif text-xl text-[#4A2109]">Upcoming Slots</h2>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left">
-              <thead>
-                <tr className="border-b border-black/10 text-xs uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-                  <th className="pb-3">Service</th>
-                  <th className="pb-3">Date & Time</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {availability.length > 0 ? (
-                  availability.map((slot) => (
-                    <tr key={slot.id} className="border-b border-black/5 text-sm last:border-0">
-                      <td className="py-4 font-medium text-[#4A2109]">{slot.booking_services?.name || 'Unknown Service'}</td>
-                      <td className="py-4 text-[var(--text-secondary)]">{formatDateTime(slot.starts_at)}</td>
-                      <td className="py-4">
-                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${slot.has_booking ? 'bg-orange-100 text-orange-700' : slot.is_reserved ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                          {slot.has_booking ? 'Booked' : slot.is_reserved ? 'Reserved' : 'Available'}
-                        </span>
-                      </td>
-                      <td className="py-4 text-right">
-                        <button onClick={() => void handleDeleteSlot(slot.id)} className="p-2 text-red-500 transition-colors hover:text-red-700" title="Delete Slot">
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-[var(--text-secondary)]">No availability slots found yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5 sm:p-6">
+          <div className="mb-6">
+            <h2 className="font-serif text-2xl text-[#F7E7C1]">What clients can book</h2>
+            <p className="mt-1 text-sm text-white/60">
+              Next three weeks. Turn a whole date off here if you cannot work it.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {daySummaries.length > 0 ? (
+              daySummaries.map((day) => (
+                <div
+                  key={day.dayKey}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                >
+                  <div>
+                    <p className="font-medium text-[#F7E7C1]">{formatDayLabel(day.dayKey)}</p>
+                    <p className="text-sm text-white/55">
+                      {day.open > 0
+                        ? `${day.open} open time${day.open === 1 ? '' : 's'}`
+                        : 'Nothing open'}
+                      {day.booked > 0
+                        ? ` · ${day.booked} already taken by clients`
+                        : ''}
+                    </p>
+                  </div>
+                  {day.open > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDayOff(day.dayKey)}
+                      disabled={busyDay === day.dayKey}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                    >
+                      <Trash2 size={15} />
+                      Turn off
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/55">
+                Nothing open yet. Turn on your days above and save.
+              </p>
+            )}
           </div>
         </Glass>
       </div>

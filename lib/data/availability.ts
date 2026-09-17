@@ -1,5 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { AvailabilityRule, BookingService } from "@/lib/types";
+import type {
+  AvailabilityDayOverride,
+  AvailabilityRule,
+} from "@/lib/types";
 
 function relationFirst<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -41,6 +44,34 @@ function nextWeekday(base: Date, weekday: number) {
   const delta = (weekday - copy.getDay() + 7) % 7;
   copy.setDate(copy.getDate() + delta);
   return copy;
+}
+
+/** Calendar key (yyyy-mm-dd) for a moment, read in the same clock the slots are built in. */
+function localDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function minutesOfDay(date: Date) {
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+function parseLocalDay(day: string) {
+  return new Date(`${day}T00:00:00`);
+}
+
+type DayWindow = { start: number; end: number };
+
+function mapOverride(row: any): AvailabilityDayOverride {
+  return {
+    id: row.id,
+    stylistId: row.stylist_id,
+    day: row.day,
+    isOff: row.is_off,
+    startTime: row.start_time ? String(row.start_time).slice(0, 5) : null,
+    endTime: row.end_time ? String(row.end_time).slice(0, 5) : null,
+  };
 }
 
 export async function getAvailabilityAdminRows() {
@@ -271,7 +302,7 @@ export async function getAvailabilityRules() {
 export async function upsertAvailabilityRule(input: {
   id?: string;
   stylistId: string;
-  serviceId: string;
+  serviceId?: string | null;
   weekday: number;
   startTime: string;
   endTime: string;
@@ -284,7 +315,7 @@ export async function upsertAvailabilityRule(input: {
   const supabase = createSupabaseAdminClient();
   const payload = {
     stylist_id: input.stylistId,
-    service_id: input.serviceId,
+    service_id: input.serviceId ?? null,
     weekday: input.weekday,
     start_time: `${input.startTime}:00`,
     end_time: `${input.endTime}:00`,
@@ -314,15 +345,317 @@ export async function deleteAvailabilityRule(id: string) {
   if (error) throw error;
 }
 
+export interface WeeklyAvailabilityDay {
+  weekday: number;
+  off: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+export interface AvailabilityChangeResult {
+  removed: number;
+  kept: number;
+}
+
+/** Booked or held slots must survive a schedule change, so she never loses a client. */
+async function protectedSlotIds(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  stylistId: string,
+) {
+  const nowIso = new Date().toISOString();
+  const [{ data: bookings }, { data: reservations }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("availability_id")
+      .eq("stylist_id", stylistId)
+      .gte("starts_at", nowIso),
+    supabase
+      .from("booking_reservations")
+      .select("availability_id")
+      .eq("stylist_id", stylistId)
+      .eq("reservation_status", "pending_payment")
+      .gt("expires_at", nowIso),
+  ]);
+
+  const ids = new Set<string>();
+  for (const row of [...(bookings ?? []), ...(reservations ?? [])]) {
+    if (row.availability_id) ids.add(row.availability_id as string);
+  }
+  return ids;
+}
+
+/** The weekly grid as a lookup: weekday -> window. A weekday with no window is a day off. */
+async function weeklyCoverage(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  stylistId: string,
+) {
+  const { data, error } = await supabase
+    .from("booking_availability_rules")
+    .select("weekday, start_time, end_time")
+    .eq("stylist_id", stylistId)
+    .eq("active", true)
+    .is("service_id", null);
+  if (error) throw error;
+
+  const coverage = new Map<number, DayWindow>();
+  for (const rule of data ?? []) {
+    const start = toMinutes(String(rule.start_time).slice(0, 5));
+    const end = toMinutes(String(rule.end_time).slice(0, 5));
+    const current = coverage.get(rule.weekday);
+    coverage.set(rule.weekday, {
+      start: current ? Math.min(current.start, start) : start,
+      end: current ? Math.max(current.end, end) : end,
+    });
+  }
+  return coverage;
+}
+
+/** Per-date changes as a lookup: date -> window, or null when the whole day is off. */
+async function dayOverrideWindows(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  stylistId: string,
+) {
+  const { data, error } = await supabase
+    .from("booking_availability_day_overrides")
+    .select("day, is_off, start_time, end_time")
+    .eq("stylist_id", stylistId);
+  if (error) throw error;
+
+  const overrides = new Map<string, DayWindow | null>();
+  for (const row of data ?? []) {
+    overrides.set(
+      row.day as string,
+      row.is_off
+        ? null
+        : {
+            start: toMinutes(String(row.start_time).slice(0, 5)),
+            end: toMinutes(String(row.end_time).slice(0, 5)),
+          },
+    );
+  }
+  return overrides;
+}
+
+/**
+ * Drop open slots the new schedule no longer covers, so the public booking page stops
+ * offering times she switched off. Slots with a booking or a pending hold are kept.
+ */
+async function pruneOpenSlots(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  stylistId: string,
+  range: { from: string; to?: string },
+): Promise<AvailabilityChangeResult> {
+  const [coverage, overrides, protectedIds] = await Promise.all([
+    weeklyCoverage(supabase, stylistId),
+    dayOverrideWindows(supabase, stylistId),
+    protectedSlotIds(supabase, stylistId),
+  ]);
+
+  // Nothing is configured yet, so there is no schedule to prune against.
+  if (coverage.size === 0 && overrides.size === 0) {
+    return { removed: 0, kept: 0 };
+  }
+
+  let slotsQuery = supabase
+    .from("booking_availability")
+    .select("id, starts_at, ends_at")
+    .eq("stylist_id", stylistId)
+    .gte("starts_at", range.from);
+  if (range.to) slotsQuery = slotsQuery.lte("starts_at", range.to);
+
+  const { data: slots, error } = await slotsQuery;
+  if (error) throw error;
+
+  const removeIds: string[] = [];
+  let kept = 0;
+
+  for (const slot of slots ?? []) {
+    const startsAt = new Date(slot.starts_at);
+    const endsAt = new Date(slot.ends_at);
+    const dayKey = localDateKey(startsAt);
+    const window = overrides.has(dayKey)
+      ? overrides.get(dayKey) ?? null
+      : coverage.get(startsAt.getDay()) ?? null;
+    const covered =
+      window !== null &&
+      minutesOfDay(startsAt) >= window.start &&
+      minutesOfDay(endsAt) <= window.end;
+
+    if (covered) continue;
+    if (protectedIds.has(slot.id)) {
+      kept += 1;
+      continue;
+    }
+    removeIds.push(slot.id);
+  }
+
+  for (let index = 0; index < removeIds.length; index += 100) {
+    const chunk = removeIds.slice(index, index + 100);
+    const { error: deleteError } = await supabase
+      .from("booking_availability")
+      .delete()
+      .in("id", chunk);
+    if (deleteError) throw deleteError;
+  }
+
+  return { removed: removeIds.length, kept };
+}
+
+function dayBounds(day: string) {
+  const start = parseLocalDay(day);
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+/**
+ * Save the whole working week at once: the grid is the source of truth, so previous
+ * general rules are replaced. Everything open that the new grid does not cover goes.
+ */
+export async function saveWeeklyHours(input: {
+  stylistId: string;
+  days: WeeklyAvailabilityDay[];
+}) {
+  const seen = new Set<number>();
+  for (const day of input.days) {
+    if (seen.has(day.weekday)) {
+      throw new Error("Each day can only be set once.");
+    }
+    seen.add(day.weekday);
+    if (!day.off && toMinutes(day.endTime) <= toMinutes(day.startTime)) {
+      throw new Error("The finish time must be later than the start time.");
+    }
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error: clearError } = await supabase
+    .from("booking_availability_rules")
+    .delete()
+    .eq("stylist_id", input.stylistId)
+    .is("service_id", null);
+  if (clearError) throw clearError;
+
+  const rows = input.days
+    .filter((day) => !day.off)
+    .map((day) => ({
+      stylist_id: input.stylistId,
+      service_id: null,
+      weekday: day.weekday,
+      start_time: `${day.startTime}:00`,
+      end_time: `${day.endTime}:00`,
+      active: true,
+    }));
+
+  if (rows.length > 0) {
+    const { error: insertError } = await supabase
+      .from("booking_availability_rules")
+      .insert(rows);
+    if (insertError) throw insertError;
+  }
+
+  const result = await pruneOpenSlots(supabase, input.stylistId, {
+    from: new Date().toISOString(),
+  });
+  await syncRecurringAvailabilityRules();
+
+  return { ...result, daysOn: rows.length };
+}
+
+export async function getDayOverrides(stylistId?: string) {
+  const supabase = createSupabaseAdminClient();
+  let query = supabase
+    .from("booking_availability_day_overrides")
+    .select("*")
+    .gte("day", localDateKey(new Date()))
+    .order("day");
+  if (stylistId) query = query.eq("stylist_id", stylistId);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).map(mapOverride);
+}
+
+/** Switch a single date off, or give it different hours, without touching the week. */
+export async function applyDayOverride(input: {
+  stylistId: string;
+  day: string;
+  mode: "off" | "hours";
+  startTime?: string;
+  endTime?: string;
+}) {
+  if (
+    input.mode === "hours" &&
+    (!input.startTime ||
+      !input.endTime ||
+      toMinutes(input.endTime) <= toMinutes(input.startTime))
+  ) {
+    throw new Error("The finish time must be later than the start time.");
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("booking_availability_day_overrides")
+    .upsert(
+      {
+        stylist_id: input.stylistId,
+        day: input.day,
+        is_off: input.mode === "off",
+        start_time: input.mode === "hours" ? `${input.startTime}:00` : null,
+        end_time: input.mode === "hours" ? `${input.endTime}:00` : null,
+      },
+      { onConflict: "stylist_id,day" },
+    )
+    .select("*")
+    .single();
+  if (error) throw error;
+
+  const result = await pruneOpenSlots(
+    supabase,
+    input.stylistId,
+    dayBounds(input.day),
+  );
+  await syncRecurringAvailabilityRules();
+
+  return { override: mapOverride(data), ...result };
+}
+
+/** Undo a per-date change; the date falls back to the weekly grid. */
+export async function deleteDayOverride(id: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: row, error: loadError } = await supabase
+    .from("booking_availability_day_overrides")
+    .select("id, stylist_id, day")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) throw loadError;
+  if (!row) throw new Error("That day change is no longer there.");
+
+  const { error } = await supabase
+    .from("booking_availability_day_overrides")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+
+  const result = await pruneOpenSlots(
+    supabase,
+    row.stylist_id,
+    dayBounds(row.day),
+  );
+  await syncRecurringAvailabilityRules();
+  return result;
+}
+
 export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
   const supabase = createSupabaseAdminClient();
-  const horizon = new Date();
+  const now = new Date();
+  const horizon = new Date(now);
   horizon.setDate(horizon.getDate() + weeksAhead * 7);
 
   const [
     { data: rules, error: rulesError },
     { data: services, error: servicesError },
     { data: existing, error: existingError },
+    { data: overrideRows, error: overrideError },
   ] = await Promise.all([
     supabase.from("booking_availability_rules").select("*").eq("active", true),
     supabase
@@ -332,13 +665,18 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
     supabase
       .from("booking_availability")
       .select("id, stylist_id, service_id, starts_at, ends_at")
-      .gte("starts_at", new Date().toISOString())
+      .gte("starts_at", now.toISOString())
       .lte("starts_at", horizon.toISOString()),
+    supabase
+      .from("booking_availability_day_overrides")
+      .select("stylist_id, day, is_off, start_time, end_time")
+      .gte("day", localDateKey(now)),
   ]);
 
   if (rulesError) throw rulesError;
   if (servicesError) throw servicesError;
   if (existingError) throw existingError;
+  if (overrideError) throw overrideError;
 
   const durationByService = new Map(
     (services ?? []).map((service: any) => [
@@ -346,6 +684,19 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
       service.duration_minutes,
     ]),
   );
+  const allServiceIds = Array.from(durationByService.keys());
+  const overrideIndex = new Map<
+    string,
+    { isOff: boolean; startTime: string | null; endTime: string | null }
+  >();
+  for (const row of overrideRows ?? []) {
+    overrideIndex.set(`${row.stylist_id}:${row.day}`, {
+      isOff: row.is_off,
+      startTime: row.start_time ? String(row.start_time).slice(0, 5) : null,
+      endTime: row.end_time ? String(row.end_time).slice(0, 5) : null,
+    });
+  }
+
   const existingWindows = (existing ?? []).map((slot: any) => ({
     stylistId: slot.stylist_id,
     serviceId: slot.service_id,
@@ -365,42 +716,48 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
     ends_at: string;
     is_available: true;
   }> = [];
-  const now = new Date();
+  const daysHandledByOverride = new Set<string>();
 
-  for (const rule of rules ?? []) {
-    const duration = durationByService.get(rule.service_id);
-    if (!duration) continue;
+  function fillWindow(
+    stylistId: string,
+    day: Date,
+    serviceIds: string[],
+    startTime: string,
+    endTime: string,
+  ) {
+    const windowStart = withTime(day, startTime);
+    const windowEnd = withTime(day, endTime);
 
-    let day = nextWeekday(now, rule.weekday);
-    while (day <= horizon) {
-      const ruleStart = withTime(day, rule.start_time.slice(0, 5));
-      const ruleEnd = withTime(day, rule.end_time.slice(0, 5));
-      let cursor = new Date(ruleStart);
+    for (const serviceId of serviceIds) {
+      const duration = durationByService.get(serviceId);
+      if (!duration) continue;
 
-      while (cursor.getTime() + duration * 60_000 <= ruleEnd.getTime()) {
+      let cursor = new Date(windowStart);
+
+      while (cursor.getTime() + duration * 60_000 <= windowEnd.getTime()) {
         if (cursor > now) {
           const slotEnd = new Date(cursor.getTime() + duration * 60_000);
-          const slotKey = `${rule.stylist_id}:${rule.service_id}:${cursor.toISOString()}`;
+          const slotKey = `${stylistId}:${serviceId}:${cursor.toISOString()}`;
           const overlaps = existingWindows.some(
             (window) =>
-              window.stylistId === rule.stylist_id &&
-              window.serviceId === rule.service_id &&
+              window.stylistId === stylistId &&
+              window.serviceId === serviceId &&
               window.start < slotEnd.getTime() &&
               window.end > cursor.getTime(),
           );
 
           if (!existingKeys.has(slotKey) && !overlaps) {
             inserts.push({
-              stylist_id: rule.stylist_id,
-              service_id: rule.service_id,
+              stylist_id: stylistId,
+              service_id: serviceId,
               starts_at: cursor.toISOString(),
               ends_at: slotEnd.toISOString(),
               is_available: true,
             });
             existingKeys.add(slotKey);
             existingWindows.push({
-              stylistId: rule.stylist_id,
-              serviceId: rule.service_id,
+              stylistId,
+              serviceId,
               start: cursor.getTime(),
               end: slotEnd.getTime(),
             });
@@ -409,10 +766,74 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
 
         cursor = new Date(cursor.getTime() + 30 * 60_000); // 30-minute steps for more flexible start times
       }
+    }
+  }
+
+  for (const rule of rules ?? []) {
+    let day = nextWeekday(now, rule.weekday);
+
+    while (day <= horizon) {
+      const overrideKey = `${rule.stylist_id}:${localDateKey(day)}`;
+      const override = overrideIndex.get(overrideKey);
+
+      if (override?.isOff) {
+        day = new Date(day);
+        day.setDate(day.getDate() + 7);
+        continue;
+      }
+
+      if (override) {
+        // Different hours for this one date: build them once, from every active service.
+        if (daysHandledByOverride.has(overrideKey)) {
+          day = new Date(day);
+          day.setDate(day.getDate() + 7);
+          continue;
+        }
+        daysHandledByOverride.add(overrideKey);
+        if (override.startTime && override.endTime) {
+          fillWindow(
+            rule.stylist_id,
+            day,
+            allServiceIds,
+            override.startTime,
+            override.endTime,
+          );
+        }
+      } else {
+        // A rule with no service applies to every active service.
+        fillWindow(
+          rule.stylist_id,
+          day,
+          rule.service_id ? [rule.service_id] : allServiceIds,
+          rule.start_time.slice(0, 5),
+          rule.end_time.slice(0, 5),
+        );
+      }
 
       day = new Date(day);
       day.setDate(day.getDate() + 7);
     }
+  }
+
+  // A changed date can also land on a weekday she is normally off, so those are built
+  // separately — a rule loop never reaches them.
+  for (const [overrideKey, override] of overrideIndex) {
+    if (override.isOff || daysHandledByOverride.has(overrideKey)) continue;
+    if (!override.startTime || !override.endTime) continue;
+
+    const separator = overrideKey.lastIndexOf(":");
+    const stylistId = overrideKey.slice(0, separator);
+    const day = parseLocalDay(overrideKey.slice(separator + 1));
+    if (day < startOfDay(now) || day > horizon) continue;
+
+    daysHandledByOverride.add(overrideKey);
+    fillWindow(
+      stylistId,
+      day,
+      allServiceIds,
+      override.startTime,
+      override.endTime,
+    );
   }
 
   if (inserts.length > 0) {
@@ -422,3 +843,4 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
     if (insertError) throw insertError;
   }
 }
+

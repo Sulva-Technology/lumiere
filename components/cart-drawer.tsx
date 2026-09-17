@@ -36,7 +36,7 @@ export function CartDrawer() {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 bottom-0 z-[70] w-full max-w-md"
           >
-            <div className="flex h-full flex-col border-l border-[rgba(58,77,57,0.2)] bg-[rgba(247,247,242,0.95)] shadow-[-8px_0_32px_rgba(58,77,57,0.14)] backdrop-blur-[32px]">
+            <div className="flex h-full flex-col border-l border-[rgba(139,68,17,0.2)] bg-[rgba(247,247,242,0.95)] shadow-[-8px_0_32px_rgba(139,68,17,0.14)] backdrop-blur-[32px]">
               <div className="flex items-center justify-between border-b border-black/5 p-6">
                 <h2 className="font-serif text-2xl text-[var(--text-primary)]">Your Bag</h2>
                 <button onClick={closeCart} className="rounded-full bg-black/5 p-2 transition-colors hover:bg-black/10">
@@ -62,7 +62,7 @@ export function CartDrawer() {
 
               <div className="flex-1 space-y-6 overflow-y-auto p-6">
                 {items.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-[rgba(58,77,57,0.22)] p-8 text-center">
+                  <div className="rounded-3xl border border-dashed border-[rgba(139,68,17,0.22)] p-8 text-center">
                     <p className="font-serif text-2xl text-[var(--text-primary)]">Your bag is empty</p>
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">Add a few staples from the collection to get started.</p>
                   </div>
@@ -133,7 +133,7 @@ export function CartDrawer() {
                   </Link>
                   <button
                     onClick={closeCart}
-                    className="w-full rounded-full border border-[rgba(58,77,57,0.28)] py-4 font-medium text-[#8B4411] transition-colors hover:bg-[rgba(58,77,57,0.06)]"
+                    className="w-full rounded-full border border-[rgba(139,68,17,0.28)] py-4 font-medium text-[#8B4411] transition-colors hover:bg-[rgba(139,68,17,0.06)]"
                   >
                     Continue Shopping
                   </button>

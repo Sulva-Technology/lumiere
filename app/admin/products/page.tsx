@@ -469,7 +469,7 @@ export default function AdminProductsPage() {
                       </button>
                       <span
                         className={`rounded-full px-3 py-2 text-xs font-medium ${
-                          product.active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/8 text-white/55'
+                          product.active ? 'bg-[rgba(212,168,71,0.16)] text-[#F7E7C1]' : 'bg-white/8 text-white/55'
                         }`}
                       >
                         {product.active ? 'Live' : 'Hidden'}

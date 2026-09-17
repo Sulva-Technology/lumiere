@@ -88,8 +88,8 @@ export default function AdminBookingsPage() {
     <div className="space-y-5 pb-10">
       <div>
         <p className="text-xs uppercase tracking-[0.28em] text-[#C99361]">Operations</p>
-        <h1 className="mt-2 font-serif text-4xl text-[#eef2ea]">Bookings</h1>
-        <p className="mt-2 text-sm text-[#d7e0d0]/75">See confirmed appointments and unresolved payment holds in one clean operations queue.</p>
+        <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Bookings</h1>
+        <p className="mt-2 text-sm text-[#e8d3bd]/75">See confirmed appointments and unresolved payment holds in one clean operations queue.</p>
       </div>
 
       {error && (
@@ -98,20 +98,20 @@ export default function AdminBookingsPage() {
         </Glass>
       )}
 
-      <Glass level="medium" className="overflow-hidden border border-[rgba(154,177,143,0.16)] bg-[rgba(22,33,26,0.88)] p-0">
+      <Glass level="medium" className="overflow-hidden border border-[rgba(201,147,97,0.16)] bg-[rgba(38,22,10,0.88)] p-0">
         {bookings.length > 0 ? (
           bookings.map((booking) => (
             <div
               key={`${booking.entryType}-${booking.id}`}
-              className="border-b border-[rgba(154,177,143,0.12)] px-5 py-5 last:border-b-0"
+              className="border-b border-[rgba(201,147,97,0.12)] px-5 py-5 last:border-b-0"
             >
               <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(240px,0.95fr)] xl:items-start xl:gap-5 xl:px-1">
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Reference</p>
                   <div className="mt-2">
-                    <TruncatedText value={booking.bookingReference ?? booking.reservationId ?? 'Pending'} className="font-medium leading-8 text-[#eef2ea]" mono />
+                    <TruncatedText value={booking.bookingReference ?? booking.reservationId ?? 'Pending'} className="font-medium leading-8 text-[#F7E7C1]" mono />
                   </div>
-                  <div className="mt-3 inline-flex rounded-full border border-[rgba(154,177,143,0.16)] bg-[rgba(108,139,103,0.14)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#d7e0d0]">
+                  <div className="mt-3 inline-flex rounded-full border border-[rgba(201,147,97,0.16)] bg-[rgba(139,68,17,0.14)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#e8d3bd]">
                     {booking.entryType === 'booking' ? 'Confirmed Booking' : 'Payment Hold'}
                   </div>
                 </div>
@@ -120,11 +120,11 @@ export default function AdminBookingsPage() {
                   <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Client</p>
                   <div className="mt-2 space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.18)] p-2 text-[#d7e0d0]">
+                      <div className="mt-0.5 rounded-full bg-[rgba(139,68,17,0.18)] p-2 text-[#e8d3bd]">
                         <UserRound size={14} />
                       </div>
                       <div className="min-w-0">
-                        <TruncatedText value={booking.clientName} className="text-lg font-medium text-[#eef2ea]" />
+                        <TruncatedText value={booking.clientName} className="text-lg font-medium text-[#F7E7C1]" />
                       </div>
                     </div>
                   </div>
@@ -133,31 +133,31 @@ export default function AdminBookingsPage() {
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Service</p>
                   <div className="mt-2">
-                    <TruncatedText value={booking.serviceName} className="text-base text-[#eef2ea]/90" />
+                    <TruncatedText value={booking.serviceName} className="text-base text-[#F7E7C1]/90" />
                   </div>
                 </div>
 
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">When / Hold</p>
                   <div className="mt-2 flex items-start gap-3">
-                    <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.12)] p-2 text-[#d7e0d0]/80">
+                    <div className="mt-0.5 rounded-full bg-[rgba(139,68,17,0.12)] p-2 text-[#e8d3bd]/80">
                       <CalendarDays size={14} />
                     </div>
-                    <p className="text-sm leading-6 text-[#d7e0d0]/75">{formatDateTime(booking.startsAt)}</p>
+                    <p className="text-sm leading-6 text-[#e8d3bd]/75">{formatDateTime(booking.startsAt)}</p>
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_170px] xl:grid-cols-1">
-                  <div className="min-w-0 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.5)] p-4">
+                  <div className="min-w-0 rounded-3xl border border-[rgba(201,147,97,0.14)] bg-[rgba(20,13,5,0.5)] p-4">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Payment</p>
                     <div className="mt-3 flex items-start gap-3">
-                      <div className="mt-0.5 rounded-full bg-[rgba(108,139,103,0.12)] p-2 text-[#d7e0d0]/80">
+                      <div className="mt-0.5 rounded-full bg-[rgba(139,68,17,0.12)] p-2 text-[#e8d3bd]/80">
                         <CreditCard size={14} />
                       </div>
                       <div className="min-w-0">
                         <AdminStatusBadge status={booking.paymentStatus} className="max-w-full" />
                         <div className="mt-1">
-                          <TruncatedText value={booking.paymentReference} fallback="Awaiting reference" className="text-xs leading-5 text-[#d7e0d0]/48" mono />
+                          <TruncatedText value={booking.paymentReference} fallback="Awaiting reference" className="text-xs leading-5 text-[#e8d3bd]/48" mono />
                         </div>
                       </div>
                     </div>
@@ -168,13 +168,13 @@ export default function AdminBookingsPage() {
 
                   <div className="min-w-0">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65">Action</p>
-                    <div className="mt-3 rounded-3xl border border-[rgba(154,177,143,0.14)] bg-[rgba(12,21,16,0.42)] p-3">
+                    <div className="mt-3 rounded-3xl border border-[rgba(201,147,97,0.14)] bg-[rgba(20,13,5,0.42)] p-3">
                       {booking.entryType === 'booking' ? (
                         <>
                           <select
                             value={booking.status}
                             onChange={(event) => updateStatus(booking.id, event.target.value)}
-                            className="w-full rounded-2xl border border-[rgba(154,177,143,0.16)] bg-[rgba(108,139,103,0.08)] px-4 py-3 text-sm text-[#eef2ea] outline-none transition-colors focus:border-[rgba(154,177,143,0.34)]"
+                            className="w-full rounded-2xl border border-[rgba(201,147,97,0.16)] bg-[rgba(139,68,17,0.08)] px-4 py-3 text-sm text-[#F7E7C1] outline-none transition-colors focus:border-[rgba(201,147,97,0.34)]"
                           >
                             <option value="confirmed">Confirmed</option>
                             <option value="completed">Completed</option>

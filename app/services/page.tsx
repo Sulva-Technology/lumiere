@@ -18,7 +18,7 @@ export default async function ServicesPage() {
       <div className="mx-auto max-w-7xl">
         <header className="mb-16 text-center space-y-4">
           <h1 className="font-serif text-5xl md:text-6xl text-[var(--text-primary)]">
-            Studio Services
+            Services
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-[var(--text-secondary)]">
             Explore our curated menu of high-end makeup artistry for your next occasion.

@@ -41,7 +41,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
               <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {service.included.map((item, i) => (
                   <li key={i} className="flex gap-3 text-sm text-[var(--text-secondary)]">
-                    <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+                    <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8B4411]/10 text-[#8B4411]">
                       <Check size={12} />
                     </div>
                     {item}

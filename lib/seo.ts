@@ -57,7 +57,7 @@ export function createLocalBusinessSchema() {
       addressCountry: BUSINESS_LOCATION.country,
     },
     description:
-      'itzlolabeauty is an Arizona-based beauty studio offering luxury makeup artistry and glam appointments.',
+      'itzlolabeauty is an Arizona-based makeup artist offering luxury makeup artistry and glam appointments.',
   };
 }
 
