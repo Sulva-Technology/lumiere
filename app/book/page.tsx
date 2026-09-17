@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Calendar,
@@ -648,6 +649,19 @@ function BookingPageContent() {
                 payment.
               </p>
             </header>
+            <section aria-labelledby="booking-terms-title" className="mx-auto max-w-3xl rounded-3xl border border-[#8B4411]/20 bg-white p-6 sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B4411]">Before you continue</p>
+              <h2 id="booking-terms-title" className="mt-2 font-serif text-2xl text-[var(--text-primary)]">Terms &amp; Conditions</h2>
+              <div className="mt-5 grid gap-4 text-sm leading-relaxed text-[var(--text-secondary)] sm:grid-cols-2">
+                <p><strong className="text-[var(--text-primary)]">Deposit:</strong> A non-refundable $35 deposit secures your date and is applied to your service total.</p>
+                <p><strong className="text-[var(--text-primary)]">Late arrivals:</strong> There is a 10-minute grace period; appointments over 15 minutes late are cancelled.</p>
+                <p><strong className="text-[var(--text-primary)]">Changes:</strong> Contact us at least 24 hours ahead to transfer your deposit once.</p>
+                <p><strong className="text-[var(--text-primary)]">Travel &amp; same-day:</strong> Text 224-722-9644 for travel quotes. Same-day bookings add $50 to today&apos;s deposit.</p>
+              </div>
+              <Link href="/terms-of-service" className="mt-5 inline-block text-sm font-semibold text-[#8B4411] underline underline-offset-4">
+                Read full terms &amp; conditions
+              </Link>
+            </section>
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
               <Glass level="heavy" className="p-8">
                 <form
