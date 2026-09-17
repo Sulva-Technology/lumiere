@@ -27,6 +27,13 @@ const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 const DEFAULT_START = '09:00';
 const DEFAULT_END = '17:00';
 
+const LABEL_CLASS = 'text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]';
+const INPUT_CLASS = 'rounded-2xl bg-white/10 px-4 py-3 text-sm text-[var(--text-primary)] outline-none';
+const BUTTON_PRIMARY =
+  'rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50';
+const BUTTON_QUIET =
+  'rounded-2xl border border-[#8B4411]/20 bg-white/40 px-4 py-2 text-sm font-medium text-[#713813] transition-colors hover:bg-white/70 disabled:opacity-50';
+
 function todayKey() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -80,10 +87,6 @@ export default function AdminAvailabilityPage() {
   const [overrideEnd, setOverrideEnd] = useState(DEFAULT_END);
 
   const primaryStylistId = stylists[0]?.id ?? '';
-  const generalRules = useMemo(
-    () => rules.filter((rule) => rule.active && rule.serviceId === null),
-    [rules],
-  );
 
   async function loadData() {
     try {
@@ -275,39 +278,32 @@ export default function AdminAvailabilityPage() {
       .map(([dayKey, counts]) => ({ dayKey, ...counts }));
   }, [availability]);
 
-  if (loading) return <div className="p-8 text-center text-white/70">Loading your availability...</div>;
+  if (loading) return <div className="p-8 text-center text-[var(--text-secondary)]">Loading your availability...</div>;
 
   return (
-    <div className="space-y-8 pb-10">
-      <header className="flex flex-col gap-2">
-        <p className="text-xs uppercase tracking-[0.28em] text-[#8B4411]">Booking Setup</p>
-        <h1 className="font-serif text-4xl text-[#F7E7C1]">When you are available</h1>
-        <p className="max-w-2xl text-sm text-white/60">
+    <div className="space-y-8 pb-12">
+      <header className="space-y-2">
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#8B4411]">Booking Setup</p>
+        <h1 className="font-serif text-3xl text-[#4A2109] md:text-4xl">When you are available</h1>
+        <p className="max-w-2xl text-sm text-[var(--text-secondary)]">
           Set your normal week below. Everything you leave on shows up on your booking page for clients to choose.
         </p>
       </header>
 
-      {error && (
-        <Glass level="medium" className="border border-red-500/20 p-4 text-sm text-red-200">
-          {error}
-        </Glass>
-      )}
+      {error && <div className="rounded-2xl bg-red-500/10 p-4 text-sm text-red-600">{error}</div>}
       {notice && (
-        <Glass
-          level="medium"
-          className="flex items-center gap-3 border border-[rgba(212,168,71,0.22)] bg-[rgba(212,168,71,0.12)] p-4 text-sm text-[#f4ddb2]"
-        >
-          <Check size={18} className="shrink-0 text-[#c99361]" />
+        <div className="flex items-center gap-3 rounded-2xl border border-[#8B4411]/20 bg-[#f6e7d3] p-4 text-sm text-[#713813]">
+          <Check size={18} className="shrink-0 text-[#8B4411]" />
           <span>{notice}</span>
-        </Glass>
+        </div>
       )}
 
-      <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5 sm:p-6">
+      <Glass level="medium" className="p-6 sm:p-8">
         <div className="mb-6 flex items-center gap-3">
-          <Repeat size={20} className="text-[#c99361]" />
+          <Repeat size={20} className="text-[#8B4411]" />
           <div>
-            <h2 className="font-serif text-2xl text-[#F7E7C1]">Your normal week</h2>
-            <p className="mt-1 text-sm text-white/60">Turn a day off, or change its hours. Clients only see what is on.</p>
+            <h2 className="font-serif text-2xl text-[#4A2109]">Your normal week</h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">Turn a day off, or change its hours. Clients only see what is on.</p>
           </div>
         </div>
 
@@ -315,10 +311,10 @@ export default function AdminAvailabilityPage() {
           {week.map((day) => (
             <div
               key={day.weekday}
-              className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-2xl bg-white/10 p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-3">
-                <span className="w-28 font-medium text-[#F7E7C1]">{WEEKDAYS[day.weekday]}</span>
+                <span className="w-28 font-medium text-[#4A2109]">{WEEKDAYS[day.weekday]}</span>
                 <button
                   type="button"
                   role="switch"
@@ -327,8 +323,8 @@ export default function AdminAvailabilityPage() {
                   onClick={() => updateDay(day.weekday, { off: !day.off })}
                   className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-colors ${
                     day.off
-                      ? 'border border-white/15 bg-white/5 text-white/55 hover:bg-white/10'
-                      : 'bg-[#8B4411] text-[#140d05] hover:opacity-90'
+                      ? 'bg-white/40 text-[var(--text-secondary)] hover:bg-white/60'
+                      : 'bg-[#8B4411] text-white hover:opacity-90'
                   }`}
                 >
                   {day.off ? 'Off' : 'Working'}
@@ -336,10 +332,10 @@ export default function AdminAvailabilityPage() {
               </div>
 
               {day.off ? (
-                <p className="text-sm text-white/45 sm:pr-2">No appointments this day</p>
+                <p className="text-sm text-[var(--text-secondary)] sm:pr-2">No appointments this day</p>
               ) : (
                 <div className="flex items-center gap-3">
-                  <Clock size={16} className="text-white/40" />
+                  <Clock size={16} className="text-[var(--text-secondary)]" />
                   <label className="sr-only" htmlFor={`start-${day.weekday}`}>
                     {WEEKDAYS[day.weekday]} start time
                   </label>
@@ -348,9 +344,9 @@ export default function AdminAvailabilityPage() {
                     type="time"
                     value={day.startTime}
                     onChange={(event) => updateDay(day.weekday, { startTime: event.target.value })}
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                    className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
                   />
-                  <span className="text-white/40">to</span>
+                  <span className="text-[var(--text-secondary)]">to</span>
                   <label className="sr-only" htmlFor={`end-${day.weekday}`}>
                     {WEEKDAYS[day.weekday]} finish time
                   </label>
@@ -359,30 +355,26 @@ export default function AdminAvailabilityPage() {
                     type="time"
                     value={day.endTime}
                     onChange={(event) => updateDay(day.weekday, { endTime: event.target.value })}
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                    className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
                   />
                 </div>
               )}
             </div>
           ))}
 
-          <button
-            type="submit"
-            disabled={saving || !primaryStylistId}
-            className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto sm:px-8"
-          >
+          <button type="submit" disabled={saving || !primaryStylistId} className={`${BUTTON_PRIMARY} w-full sm:w-auto sm:px-8`}>
             {saving ? 'Saving your week...' : 'Save my week'}
           </button>
         </form>
       </Glass>
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5 sm:p-6">
+        <Glass level="medium" className="p-6">
           <div className="mb-6 flex items-center gap-3">
-            <Calendar size={20} className="text-[#c99361]" />
+            <Calendar size={20} className="text-[#8B4411]" />
             <div>
-              <h2 className="font-serif text-2xl text-[#F7E7C1]">One date that is different</h2>
-              <p className="mt-1 text-sm text-white/60">
+              <h2 className="font-serif text-2xl text-[#4A2109]">One date that is different</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
                 Keep your normal week as it is. You can also open a day you are normally off.
               </p>
             </div>
@@ -390,7 +382,7 @@ export default function AdminAvailabilityPage() {
 
           <form onSubmit={handleSetOverride} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="override-date" className="text-xs uppercase tracking-[0.2em] text-white/50">
+              <label htmlFor="override-date" className={LABEL_CLASS}>
                 Which date
               </label>
               <input
@@ -400,12 +392,12 @@ export default function AdminAvailabilityPage() {
                 min={todayKey()}
                 value={overrideDate}
                 onChange={(event) => setOverrideDate(event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
+                className={`${INPUT_CLASS} w-full`}
               />
             </div>
 
             <div className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.2em] text-white/50">What changes</span>
+              <span className={LABEL_CLASS}>What changes</span>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <button
                   type="button"
@@ -413,8 +405,8 @@ export default function AdminAvailabilityPage() {
                   aria-pressed={overrideMode === 'off'}
                   className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                     overrideMode === 'off'
-                      ? 'bg-[#8B4411] text-[#140d05]'
-                      : 'border border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+                      ? 'bg-[#4A2109] text-white'
+                      : 'bg-white/40 text-[#713813] hover:bg-white/60'
                   }`}
                 >
                   Day off
@@ -425,8 +417,8 @@ export default function AdminAvailabilityPage() {
                   aria-pressed={overrideMode === 'hours'}
                   className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                     overrideMode === 'hours'
-                      ? 'bg-[#8B4411] text-[#140d05]'
-                      : 'border border-white/15 bg-white/5 text-white/70 hover:bg-white/10'
+                      ? 'bg-[#4A2109] text-white'
+                      : 'bg-white/40 text-[#713813] hover:bg-white/60'
                   }`}
                 >
                   Different hours
@@ -436,7 +428,7 @@ export default function AdminAvailabilityPage() {
 
             {overrideMode === 'hours' && (
               <div className="flex items-center gap-3">
-                <Clock size={16} className="text-white/40" />
+                <Clock size={16} className="text-[var(--text-secondary)]" />
                 <label className="sr-only" htmlFor="override-start">
                   Start time
                 </label>
@@ -445,9 +437,9 @@ export default function AdminAvailabilityPage() {
                   type="time"
                   value={overrideStart}
                   onChange={(event) => setOverrideStart(event.target.value)}
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                  className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
                 />
-                <span className="text-white/40">to</span>
+                <span className="text-[var(--text-secondary)]">to</span>
                 <label className="sr-only" htmlFor="override-end">
                   Finish time
                 </label>
@@ -456,31 +448,24 @@ export default function AdminAvailabilityPage() {
                   type="time"
                   value={overrideEnd}
                   onChange={(event) => setOverrideEnd(event.target.value)}
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                  className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
                 />
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={!overrideDate || busyDay === overrideDate}
-              className="w-full rounded-2xl bg-[#8B4411] px-5 py-3 font-medium text-[#140d05] transition-opacity hover:opacity-90 disabled:opacity-60"
-            >
+            <button type="submit" disabled={!overrideDate || busyDay === overrideDate} className={`${BUTTON_PRIMARY} w-full`}>
               {busyDay === overrideDate ? 'Saving...' : 'Set this date'}
             </button>
           </form>
 
           <div className="mt-8 space-y-3">
-            <h3 className="text-xs uppercase tracking-[0.2em] text-white/50">Dates you changed</h3>
+            <h3 className={LABEL_CLASS}>Dates you changed</h3>
             {overrides.length > 0 ? (
               overrides.map((override) => (
-                <div
-                  key={override.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
-                >
+                <div key={override.id} className="flex items-center justify-between gap-3 rounded-2xl bg-white/10 p-4">
                   <div>
-                    <p className="font-medium text-[#F7E7C1]">{formatDayLabel(override.day)}</p>
-                    <p className="text-sm text-white/55">
+                    <p className="font-medium text-[#4A2109]">{formatDayLabel(override.day)}</p>
+                    <p className="text-sm text-[var(--text-secondary)]">
                       {override.isOff
                         ? 'Day off'
                         : `${override.startTime ?? ''} to ${override.endTime ?? ''}`}
@@ -490,24 +475,24 @@ export default function AdminAvailabilityPage() {
                     type="button"
                     onClick={() => void handleUndoOverride(override.id)}
                     disabled={busyDay === override.id}
-                    className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                    className={BUTTON_QUIET}
                   >
                     Undo
                   </button>
                 </div>
               ))
             ) : (
-              <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/55">
+              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)]">
                 No changed dates. Every day follows your normal week.
               </p>
             )}
           </div>
         </Glass>
 
-        <Glass level="medium" className="border border-[#6d4a13]/35 bg-[#1a1108] p-5 sm:p-6">
+        <Glass level="medium" className="p-6">
           <div className="mb-6">
-            <h2 className="font-serif text-2xl text-[#F7E7C1]">What clients can book</h2>
-            <p className="mt-1 text-sm text-white/60">
+            <h2 className="font-serif text-2xl text-[#4A2109]">What clients can book</h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
               Next three weeks. Turn a whole date off here if you cannot work it.
             </p>
           </div>
@@ -515,19 +500,12 @@ export default function AdminAvailabilityPage() {
           <div className="space-y-3">
             {daySummaries.length > 0 ? (
               daySummaries.map((day) => (
-                <div
-                  key={day.dayKey}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
-                >
+                <div key={day.dayKey} className="flex items-center justify-between gap-3 rounded-2xl bg-white/10 p-4">
                   <div>
-                    <p className="font-medium text-[#F7E7C1]">{formatDayLabel(day.dayKey)}</p>
-                    <p className="text-sm text-white/55">
-                      {day.open > 0
-                        ? `${day.open} open time${day.open === 1 ? '' : 's'}`
-                        : 'Nothing open'}
-                      {day.booked > 0
-                        ? ` · ${day.booked} already taken by clients`
-                        : ''}
+                    <p className="font-medium text-[#4A2109]">{formatDayLabel(day.dayKey)}</p>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      {day.open > 0 ? `${day.open} open time${day.open === 1 ? '' : 's'}` : 'Nothing open'}
+                      {day.booked > 0 ? ` · ${day.booked} already taken by clients` : ''}
                     </p>
                   </div>
                   {day.open > 0 && (
@@ -535,7 +513,7 @@ export default function AdminAvailabilityPage() {
                       type="button"
                       onClick={() => void handleDayOff(day.dayKey)}
                       disabled={busyDay === day.dayKey}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                      className={`${BUTTON_QUIET} inline-flex items-center gap-2`}
                     >
                       <Trash2 size={15} />
                       Turn off
@@ -544,7 +522,7 @@ export default function AdminAvailabilityPage() {
                 </div>
               ))
             ) : (
-              <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/55">
+              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)]">
                 Nothing open yet. Turn on your days above and save.
               </p>
             )}

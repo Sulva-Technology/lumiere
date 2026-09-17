@@ -71,19 +71,19 @@ export default function AdminReportsPage() {
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <p className="text-xs uppercase tracking-[0.28em] text-[#C99361]">Operations</p>
-        <h1 className="mt-2 font-serif text-4xl text-[#F7E7C1]">Payments & Reconciliation</h1>
-        <p className="mt-2 text-sm text-[#e8d3bd]/75">Track pending, paid, failed, cancelled, and expired payment records from one queue.</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-[#8B4411]">Operations</p>
+        <h1 className="mt-2 font-serif text-4xl text-[#4A2109]">Payments & Reconciliation</h1>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">Track pending, paid, failed, cancelled, and expired payment records from one queue.</p>
       </div>
 
       {error && (
-        <Glass level="medium" className="border border-red-500/20 p-4 text-sm text-red-300">
+        <Glass level="medium" className="p-4 text-sm text-red-600">
           {error}
         </Glass>
       )}
 
-      <Glass level="medium" className="overflow-hidden border border-[rgba(201,147,97,0.16)] bg-[rgba(38,22,10,0.88)] p-0">
-        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] gap-5 border-b border-[rgba(201,147,97,0.14)] px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#C99361]/65 xl:grid">
+      <Glass level="medium" className="overflow-hidden p-0">
+        <div className="hidden grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] gap-5 border-b border-black/5 px-6 py-5 text-xs uppercase tracking-[0.24em] text-[#8B4411]/75 xl:grid">
           <span>Payment</span>
           <span>Target</span>
           <span>Status</span>
@@ -95,42 +95,42 @@ export default function AdminReportsPage() {
 
         {payments.length > 0 ? (
           payments.map((payment) => (
-            <div key={payment.id} className="border-b border-[rgba(201,147,97,0.12)] px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] xl:items-center xl:gap-5 xl:px-6">
+            <div key={payment.id} className="border-b border-black/5 px-5 py-5 last:border-b-0 xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.8fr)_minmax(0,0.72fr)_minmax(90px,0.62fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_192px] xl:items-center xl:gap-5 xl:px-6">
               <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Payment</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8B4411]/75 xl:hidden">Payment</p>
                 <div className="mt-1 xl:mt-0">
-                  <TruncatedText value={payment.id} className="font-medium text-[#F7E7C1]" mono />
+                  <TruncatedText value={payment.id} className="font-medium text-[#4A2109]" mono />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Target</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8B4411]/75 xl:hidden">Target</p>
                 <div className="mt-1 space-y-1 xl:mt-0">
-                  <p className="text-[#F7E7C1]/85">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
-                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-[#e8d3bd]/48" mono />
+                  <p className="text-[#4A2109]/85">{payment.orderId ? 'Order' : payment.bookingId ? 'Booking' : 'Reservation'}</p>
+                  <TruncatedText value={payment.orderId ?? payment.bookingId ?? payment.reservationId} className="text-xs text-[var(--text-secondary)]" mono />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Status</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8B4411]/75 xl:hidden">Status</p>
                 <div className="mt-1 xl:mt-0">
                   <AdminStatusBadge status={payment.status} />
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Amount</p>
-                <p className="mt-1 font-medium text-[#e8d3bd] xl:mt-0">{formatCurrency(payment.amount)}</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8B4411]/75 xl:hidden">Amount</p>
+                <p className="mt-1 font-medium text-[#713813] xl:mt-0">{formatCurrency(payment.amount)}</p>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Reference</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8B4411]/75 xl:hidden">Reference</p>
                 <div className="mt-1 space-y-1 xl:mt-0">
-                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-[#e8d3bd]/68" mono />
+                  <TruncatedText value={payment.providerReference} fallback="Pending assignment" className="text-sm text-[var(--text-secondary)]" mono />
                   {payment.sessionReference && payment.sessionReference !== payment.providerReference ? (
-                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-[#e8d3bd]/44" mono />
+                    <TruncatedText value={`Session: ${payment.sessionReference}`} className="text-xs text-[var(--text-secondary)]/70" mono />
                   ) : null}
                 </div>
               </div>
               <div className="mt-4 min-w-0 xl:mt-0">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#C99361]/65 xl:hidden">Updated</p>
-                <p className="mt-1 text-sm text-[#e8d3bd]/68 xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8B4411]/75 xl:hidden">Updated</p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)] xl:mt-0">{formatDateTime(payment.updatedAt)}</p>
               </div>
               <div className="mt-4 flex justify-end gap-2 xl:mt-0">
                 <ActionIconButton
@@ -152,7 +152,7 @@ export default function AdminReportsPage() {
             </div>
           ))
         ) : (
-          <div className="px-6 py-16 text-center text-sm text-white/60">No payment records have been created yet.</div>
+          <div className="px-6 py-16 text-center text-sm text-[var(--text-secondary)]">No payment records have been created yet.</div>
         )}
       </Glass>
     </div>
