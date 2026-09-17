@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
-import { useCart } from './cart-context';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -17,7 +16,6 @@ const NAV_LINKS = [
 ];
 
 export function NavBar({ brandName }: { brandName: string }) {
-  const { openCart, itemCount } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -78,19 +76,6 @@ export function NavBar({ brandName }: { brandName: string }) {
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-
-          <button
-            onClick={openCart}
-            className="glass-subtle relative rounded-full p-2 transition-colors hover:bg-black/5"
-            aria-label="Open cart"
-          >
-            <ShoppingBag size={20} className="text-[var(--text-primary)]" />
-            {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#8B4411] px-1 text-[10px] font-semibold text-white">
-                {itemCount}
-              </span>
-            )}
           </button>
 
           <Link
