@@ -11,10 +11,10 @@ export default async function TermsOfServicePage() {
       intro={`Please review these appointment terms before booking with ${store.storeName}.`}
       sections={[
         {
-          title: 'Booking & Retainer Fee',
+          title: 'Booking Deposit',
           body: [
-            'A non-refundable retainer fee of $35 is required to secure your appointment date.',
-            'The retainer is applied to your service total.',
+            'A non-refundable $35 deposit is required to secure your appointment date.',
+            'Your deposit is applied to your service total.',
           ],
         },
         {
@@ -27,8 +27,8 @@ export default async function TermsOfServicePage() {
         {
           title: 'Rescheduling & No-Show Policy',
           body: [
-            'To reschedule, please contact us at least 24 hours before your scheduled appointment. Your retainer may be transferred to one new appointment date with proper notice.',
-            'Failure to show up without notice results in loss of the retainer and a charge for the service.',
+            'To reschedule, please contact us at least 24 hours before your scheduled appointment. Your deposit may be transferred to one new appointment date with proper notice.',
+            'Failure to show up without notice results in loss of the deposit and a charge for the service.',
           ],
         },
         {

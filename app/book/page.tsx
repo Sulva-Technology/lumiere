@@ -350,11 +350,11 @@ function BookingPageContent() {
             </div>
           </div>
           <h2 className="font-serif text-4xl text-[#4A2109]">
-            Retainer Received
+            Deposit Received
           </h2>
           <p className="mt-4 text-lg text-[var(--text-secondary)]">
             {statusMessage ??
-              "Your $35 retainer is received. Remaining balance is due at your appointment."}
+              "Your deposit has been received. The remaining balance is due at your appointment."}
           </p>
           {reservation?.id && (
             <p className="mt-6 text-sm text-[var(--text-secondary)]">
@@ -716,7 +716,7 @@ function BookingPageContent() {
                       className="mt-0.5 h-4 w-4 accent-[#8B4411]"
                     />
                     <span>
-                      Same-day appointment requested. The <strong>{formatCurrency(SAME_DAY_FEE)}</strong> same-day fee is added to today&apos;s booking fee.
+                      Same-day appointment requested. The <strong>{formatCurrency(SAME_DAY_FEE)}</strong> same-day fee is added to today&apos;s deposit.
                     </span>
                   </label>
                   {isMakeupService ? (
@@ -920,7 +920,7 @@ function BookingPageContent() {
                       </div>
                     </div>
                     <div className="rounded-2xl bg-[#8B4411]/10 px-4 py-3 text-sm text-[var(--text-secondary)]">
-                      Today&apos;s booking fee: <span className="font-bold text-[var(--text-primary)]">{formatCurrency(bookingFee)}</span>
+                      Deposit due today: <span className="font-bold text-[var(--text-primary)]">{formatCurrency(bookingFee)}</span>
                     </div>
                   </div>
                 </Glass>
@@ -936,7 +936,7 @@ function BookingPageContent() {
                       : "Preparing secure checkout..."
                     : paymentMethod === "in_person"
                       ? "Confirm appointment — pay in person"
-                      : `Review ${formatCurrency(bookingFee)} booking fee`}
+                      : `Review ${formatCurrency(bookingFee)} deposit`}
                   <ChevronRight size={20} />
                 </button>
                 <button
@@ -954,15 +954,16 @@ function BookingPageContent() {
               <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-4 backdrop-blur-sm sm:items-center sm:justify-center" role="dialog" aria-modal="true" aria-labelledby="retainer-title">
                 <Glass level="heavy" className="w-full max-w-md p-6 shadow-2xl sm:p-8">
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-accent)]">Secure your appointment</p>
-                  <h2 id="retainer-title" className="mt-3 font-serif text-3xl text-[var(--text-primary)]">Pay {formatCurrency(bookingFee)} today</h2>
-                  <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">Your booking fee secures this appointment. Remaining balance of <strong className="text-[var(--text-primary)]">{formatCurrency(Math.max(bookingTotal - bookingFee, 0))}</strong> is due at your appointment.</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B4411]">Appointment deposit</p>
+                  <h2 id="retainer-title" className="mt-3 font-serif text-3xl text-[var(--text-primary)]">Pay {formatCurrency(bookingFee)} deposit today</h2>
+                  <p className="mt-4 leading-relaxed text-[var(--text-secondary)]">This deposit secures your appointment and is applied to your service total. Remaining balance of <strong className="text-[var(--text-primary)]">{formatCurrency(Math.max(bookingTotal - bookingFee, 0))}</strong> is due at your appointment.</p>
                   <div className="mt-6 rounded-2xl bg-black/5 p-4 text-sm">
                     <div className="flex justify-between gap-4"><span>Service total</span><span className="font-medium">{formatCurrency(bookingTotal)}</span></div>
-                    <div className="mt-2 flex justify-between gap-4"><span>Booking fee due today</span><span className="font-bold text-[#8B4411]">{formatCurrency(bookingFee)}</span></div>
+                    <div className="mt-2 flex justify-between gap-4"><span>Deposit due today</span><span className="font-bold text-[#8B4411]">{formatCurrency(bookingFee)}</span></div>
                   </div>
                   <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <button type="button" onClick={() => setShowRetainerModal(false)} className="rounded-full px-5 py-3 text-sm font-medium text-[var(--text-secondary)]">Back</button>
-                    <button type="button" onClick={() => void confirmRetainerPayment()} className="rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white">Pay {formatCurrency(bookingFee)} booking fee</button>
+                    <button type="button" onClick={() => void confirmRetainerPayment()} className="rounded-full bg-[#8B4411] px-6 py-3 font-medium text-white">Pay {formatCurrency(bookingFee)} deposit</button>
                   </div>
                 </Glass>
               </div>

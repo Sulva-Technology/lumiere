@@ -716,7 +716,7 @@ export async function createBookingCheckout(
         availabilityId: input.availabilityId,
       },
       lines: [{
-        name: "Appointment retainer",
+        name: "Appointment deposit",
         description: `${service.name} - ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(slot.starts_at))}. Remaining balance due at appointment: $${remainingBalance.toFixed(2)}.`,
         amount: retainerAmount,
         quantity: 1,

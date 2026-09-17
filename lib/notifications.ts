@@ -222,7 +222,7 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
   const customerHtml = `
     <div style="background:#0c1510;padding:32px;font-family:Georgia,serif;color:#eef2ea;">
       <h1 style="margin:0 0 12px;font-size:32px;color:#eef2ea;">${escapeHtml(payload.storeName)}</h1>
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#c9d5c3;">Your appointment is confirmed. Your $35 retainer has been received; remaining balance is due at your appointment.</p>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#c9d5c3;">Your appointment is confirmed. Your deposit has been received; the remaining balance is due at your appointment.</p>
       <div style="padding:20px;border:1px solid rgba(154,177,143,0.2);border-radius:20px;background:#16211a;">
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.fullName)},</p>
         <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#c9d5c3;">Your booking <strong>${escapeHtml(payload.bookingReference)}</strong> is confirmed.</p>
