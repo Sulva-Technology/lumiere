@@ -69,6 +69,9 @@ function BookingPageContent() {
   const [selectedStylist, setSelectedStylist] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [selectedAvailability, setSelectedAvailability] = useState("");
+  const [pendingAvailability, setPendingAvailability] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -602,8 +605,9 @@ function BookingPageContent() {
                           key={slot.id}
                           type="button"
                           onClick={() => {
-                            setSelectedAvailability(slot.id);
-                            setCurrentStep("details");
+                            setPendingAvailability(slot.id);
+                            setTermsAccepted(false);
+                            setShowTermsModal(true);
                           }}
                           className="rounded-2xl border border-black/5 bg-white/5 px-4 py-4 text-center font-serif text-lg text-[var(--text-primary)] transition-all hover:border-[#8B4411] hover:bg-[#8B4411]/5"
                         >
@@ -649,19 +653,6 @@ function BookingPageContent() {
                 payment.
               </p>
             </header>
-            <section aria-labelledby="booking-terms-title" className="mx-auto max-w-3xl rounded-3xl border border-[#8B4411]/20 bg-white p-6 sm:p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B4411]">Before you continue</p>
-              <h2 id="booking-terms-title" className="mt-2 font-serif text-2xl text-[var(--text-primary)]">Terms &amp; Conditions</h2>
-              <div className="mt-5 grid gap-4 text-sm leading-relaxed text-[var(--text-secondary)] sm:grid-cols-2">
-                <p><strong className="text-[var(--text-primary)]">Deposit:</strong> A non-refundable $35 deposit secures your date and is applied to your service total.</p>
-                <p><strong className="text-[var(--text-primary)]">Late arrivals:</strong> There is a 10-minute grace period; appointments over 15 minutes late are cancelled.</p>
-                <p><strong className="text-[var(--text-primary)]">Changes:</strong> Contact us at least 24 hours ahead to transfer your deposit once.</p>
-                <p><strong className="text-[var(--text-primary)]">Travel &amp; same-day:</strong> Text 224-722-9644 for travel quotes. Same-day bookings add $50 to today&apos;s deposit.</p>
-              </div>
-              <Link href="/terms-of-service" className="mt-5 inline-block text-sm font-semibold text-[#8B4411] underline underline-offset-4">
-                Read full terms &amp; conditions
-              </Link>
-            </section>
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
               <Glass level="heavy" className="p-8">
                 <form
@@ -982,6 +973,30 @@ function BookingPageContent() {
                 </Glass>
               </div>
             )}
+          </div>
+        )}
+        {showTermsModal && pendingAvailability && (
+          <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-4 backdrop-blur-sm sm:items-center sm:justify-center" role="dialog" aria-modal="true" aria-labelledby="terms-modal-title">
+            <Glass level="heavy" className="max-h-[90vh] w-full max-w-xl overflow-y-auto p-6 shadow-2xl sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#8B4411]">One final step</p>
+              <h2 id="terms-modal-title" className="mt-2 font-serif text-3xl text-[var(--text-primary)]">Terms &amp; Conditions</h2>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">Please review and accept the booking terms before continuing to your appointment details.</p>
+              <div className="mt-6 space-y-4 text-sm leading-relaxed text-[var(--text-secondary)]">
+                <p><strong className="text-[var(--text-primary)]">Deposit:</strong> A non-refundable $35 deposit secures your date and is applied to your service total.</p>
+                <p><strong className="text-[var(--text-primary)]">Late arrivals:</strong> There is a 10-minute grace period. Appointments over 15 minutes late are cancelled.</p>
+                <p><strong className="text-[var(--text-primary)]">Rescheduling:</strong> Contact us at least 24 hours ahead to transfer your deposit once.</p>
+                <p><strong className="text-[var(--text-primary)]">Travel &amp; same-day:</strong> Text 224-722-9644 for travel quotes. Same-day bookings add $50 to today&apos;s deposit.</p>
+              </div>
+              <Link href="/terms-of-service" target="_blank" className="mt-5 inline-block text-sm font-semibold text-[#8B4411] underline underline-offset-4">Read full terms &amp; conditions</Link>
+              <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#8B4411]/20 bg-[#8B4411]/5 p-4 text-sm text-[var(--text-secondary)]">
+                <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-0.5 h-4 w-4 accent-[#8B4411]" />
+                <span>I have read and agree to the Terms &amp; Conditions.</span>
+              </label>
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => { setShowTermsModal(false); setPendingAvailability(null); }} className="rounded-full px-5 py-3 text-sm font-medium text-[var(--text-secondary)]">Choose another time</button>
+                <button type="button" disabled={!termsAccepted} onClick={() => { setSelectedAvailability(pendingAvailability); setShowTermsModal(false); setPendingAvailability(null); setCurrentStep("details"); }} className="rounded-full bg-[#8B4411] px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40">Continue to booking details</button>
+              </div>
+            </Glass>
           </div>
         )}
     </div>
