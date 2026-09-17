@@ -104,7 +104,7 @@ export function NavBar({ brandName }: { brandName: string }) {
 
       {isMobileMenuOpen && (
         <div className="mx-auto mt-3 max-w-7xl px-1 md:hidden">
-          <div className="rounded-2xl border border-[rgba(139,68,17,0.22)] bg-[#F5F5DD] p-2 shadow-xl backdrop-blur-2xl">
+          <div className="rounded-2xl border border-[rgba(139,68,17,0.22)] bg-white p-2 shadow-xl backdrop-blur-2xl">
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.label}

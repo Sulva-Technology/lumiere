@@ -11,10 +11,10 @@
   --color-forest-700: #8B4411;
   --color-forest-600: #a65a26;
   
-  --color-sage-100: #fffef3;
-  --color-sage-200: #F5F5DD;
-  --color-sage-300: #eee8ca;
-  --color-sage-400: #e4d9b8;
+  --color-sage-100: #ffffff;
+  --color-sage-200: #ffffff;
+  --color-sage-300: #ffffff;
+  --color-sage-400: #ffffff;
   
   --color-moss-light: #c99361;
   --color-moss-base: #a65a26;
@@ -23,35 +23,35 @@
 
 @layer base {
   :root {
-    --bg-gradient-start: #F5F5DD;
-    --bg-gradient-mid: #F5F5DD;
-    --bg-gradient-end: #F5F5DD;
+    --bg-gradient-start: #ffffff;
+    --bg-gradient-mid: #ffffff;
+    --bg-gradient-end: #ffffff;
     --text-primary: #4a2109;
     --text-secondary: rgba(74, 33, 9, 0.76);
     --text-accent: #8B4411;
     --heading-primary: #4a2109;
-    --surface-primary: rgba(255, 254, 243, 0.86);
-    --surface-elevated: rgba(255, 254, 243, 0.96);
+    --surface-primary: rgba(255, 255, 255, 0.94);
+    --surface-elevated: #ffffff;
     --border-soft: rgba(139, 68, 17, 0.18);
-    --input-bg: rgba(255, 254, 243, 0.9);
+    --input-bg: #ffffff;
     --shadow-soft: 0 14px 32px rgba(139, 68, 17, 0.08);
     
     /* Light Mode Glass */
-    --glass-heavy-bg: rgba(255, 254, 243, 0.88);
+    --glass-heavy-bg: rgba(255, 255, 255, 0.92);
     --glass-heavy-border: rgba(139, 68, 17, 0.22);
     --glass-heavy-shadow: 0 12px 28px rgba(139, 68, 17, 0.08);
     
-    --glass-medium-bg: rgba(255, 254, 243, 0.7);
+    --glass-medium-bg: rgba(255, 255, 255, 0.78);
     --glass-medium-border: rgba(139, 68, 17, 0.16);
     --glass-medium-shadow: 0 4px 16px rgba(139, 68, 17, 0.06);
     
-    --glass-subtle-bg: rgba(255, 254, 243, 0.76);
+    --glass-subtle-bg: rgba(255, 255, 255, 0.84);
     --glass-subtle-border: rgba(139, 68, 17, 0.14);
   }
 
   body {
     @apply font-sans antialiased;
-    background: #F5F5DD;
+    background: #ffffff;
     color: var(--text-primary);
     min-height: 100vh;
   }

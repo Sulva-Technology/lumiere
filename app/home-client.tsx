@@ -65,7 +65,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
           {gallery.slice(0, 5).map((item, index) => (
             <figure
               key={item.id}
-              className={`group relative overflow-hidden rounded-[24px] bg-[#F5F5DD] ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
+              className={`group relative overflow-hidden rounded-[24px] bg-white ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
             >
               <Image
                 src={item.imageUrl}

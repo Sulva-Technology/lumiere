@@ -16,7 +16,7 @@ export function Footer({ brandName }: FooterProps) {
 
   return (
     <footer
-      className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(139,68,17,0.16)] bg-[#F5F5DD]"
+      className="relative z-10 mt-auto overflow-hidden border-t border-[rgba(139,68,17,0.16)] bg-white"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(139,105,20,0.45)] to-transparent" />
 
