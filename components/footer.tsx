@@ -41,12 +41,6 @@ export function Footer({ brandName }: FooterProps) {
             <Link href="/#about" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               About Lola
             </Link>
-            <Link href="/#services" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
-              Services
-            </Link>
-            <Link href="/#portfolio" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
-              Portfolio
-            </Link>
             <Link href="/book" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Book Now
             </Link>
@@ -59,9 +53,6 @@ export function Footer({ brandName }: FooterProps) {
         <div>
           <h4 className="mb-4 font-serif text-lg text-[#4A2109]">Information</h4>
           <div className="flex flex-col gap-3">
-            <Link href="/#policies" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
-              Booking Policies
-            </Link>
             <Link href="/terms-of-service" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Terms & Conditions
             </Link>
