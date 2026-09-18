@@ -9,8 +9,10 @@ import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
-  // { label: 'Services', href: '/services' },
-  { label: 'About', href: '/about' },
+  { label: 'About', href: '/#about' },
+  { label: 'Services', href: '/#services' },
+  { label: 'Portfolio', href: '/#portfolio' },
+  { label: 'Policies', href: '/#policies' },
   { label: 'Book', href: '/book' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -38,14 +40,14 @@ export function NavBar({ brandName }: { brandName: string }) {
             : 'bg-transparent border-transparent'
         )}
       >
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           {NAV_LINKS.filter((item) => item.href !== '/').map((item) => (
             <Link
               key={item.label}
               href={item.href}
               className={cn(
                 'text-sm font-medium tracking-wide transition-colors',
-                pathname === item.href ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                pathname === item.href ? 'text-[var(--text-primary)] font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               )}
             >
               {item.label}
@@ -57,7 +59,7 @@ export function NavBar({ brandName }: { brandName: string }) {
           <Link href="/" className="flex items-center justify-center">
             <div className="glass-subtle flex items-center gap-2 rounded-full px-3 py-2 sm:gap-3 sm:px-6">
               <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[rgba(139,68,17,0.18)] bg-white/70 sm:h-10 sm:w-10">
-                <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill className="object-cover" sizes="40px" />
+                <Image src="/images/logo.jpeg" alt={`${brandName} logo`} fill quality={95} className="object-cover" sizes="40px" />
               </div>
               <span className="hidden font-serif text-base tracking-[0.16em] uppercase text-[var(--text-primary)] sm:inline sm:text-lg">
                 {brandName}

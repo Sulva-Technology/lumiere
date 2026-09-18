@@ -676,7 +676,9 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
   if (rulesError) throw rulesError;
   if (servicesError) throw servicesError;
   if (existingError) throw existingError;
-  if (overrideError) throw overrideError;
+  // If the day-overrides table doesn't exist yet (migration 018 pending),
+  // fall back to an empty list so availability still loads correctly.
+  const safeOverrideRows = overrideError ? [] : (overrideRows ?? []);
 
   const durationByService = new Map(
     (services ?? []).map((service: any) => [
@@ -689,7 +691,7 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
     string,
     { isOff: boolean; startTime: string | null; endTime: string | null }
   >();
-  for (const row of overrideRows ?? []) {
+  for (const row of safeOverrideRows) {
     overrideIndex.set(`${row.stylist_id}:${row.day}`, {
       isOff: row.is_off,
       startTime: row.start_time ? String(row.start_time).slice(0, 5) : null,
