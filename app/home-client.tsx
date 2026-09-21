@@ -70,7 +70,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
             <div className="space-y-4 text-base sm:text-lg leading-relaxed text-[var(--text-secondary)]">
               <p>{founderIntro}</p>
               <p>{founderMission}</p>
-              <p className="font-medium text-[var(--text-primary)]">{founderClose}</p>
+              <p>{founderClose}</p>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-2">
