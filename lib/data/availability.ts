@@ -677,7 +677,7 @@ export async function deleteDayOverride(id: string) {
   return result;
 }
 
-export async function syncRecurringAvailabilityRules(weeksAhead = 8) {
+export async function syncRecurringAvailabilityRules(weeksAhead = 13) {
   const supabase = createSupabaseAdminClient();
   const now = new Date();
   const horizon = new Date(now);

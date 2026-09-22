@@ -365,7 +365,7 @@ export async function getAvailability(
     .eq("is_available", true)
     .gte("starts_at", nowIso())
     .order("starts_at")
-    .limit(3000);
+    .limit(5000);
 
   if (stylistId) query = query.eq("stylist_id", stylistId);
   if (serviceId) query = query.eq("service_id", serviceId);

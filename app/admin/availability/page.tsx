@@ -274,7 +274,6 @@ export default function AdminAvailabilityPage() {
     }
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(0, 21)
       .map(([dayKey, counts]) => ({ dayKey, ...counts }));
   }, [availability]);
 
@@ -493,7 +492,7 @@ export default function AdminAvailabilityPage() {
           <div className="mb-6">
             <h2 className="font-serif text-2xl text-[#4A2109]">What clients can book</h2>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Next three weeks. Turn a whole date off here if you cannot work it.
+              Next 13 weeks. Turn a whole date off here if you cannot work it.
             </p>
           </div>
 
