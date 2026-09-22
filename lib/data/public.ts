@@ -369,6 +369,7 @@ export async function getAvailability(
     .limit(3000);
 
   if (stylistId) query = query.eq("stylist_id", stylistId);
+  if (serviceId) query = query.eq("service_id", serviceId);
 
   // 2. Fetch all confirmed bookings and pending reservations to check for buffers
   const [
