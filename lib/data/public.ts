@@ -366,7 +366,7 @@ export async function getAvailability(
     .eq("is_available", true)
     .gte("starts_at", nowIso())
     .order("starts_at")
-    .limit(500);
+    .limit(3000);
 
   if (stylistId) query = query.eq("stylist_id", stylistId);
 
@@ -444,7 +444,6 @@ export async function getAvailability(
       seenSlotWindows.add(windowKey);
       return true;
     })
-    .slice(0, 180)
     .map((slot) => ({
       id: slot.id,
       stylistId: slot.stylist_id,
