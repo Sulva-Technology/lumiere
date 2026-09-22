@@ -15,7 +15,6 @@ async function fetchAllRows<T extends Record<string, unknown>>(
   const PAGE = 1000;
   const all: T[] = [];
   let offset = 0;
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     console.log(`[fetchAllRows] fetching offset ${offset} to ${offset + PAGE - 1}`);
     const { data, error } = await (queryBuilder as any).range(offset, offset + PAGE - 1);
@@ -677,21 +676,50 @@ export async function deleteDayOverride(id: string) {
   return result;
 }
 
-export async function syncRecurringAvailabilityRules(weeksAhead = 13) {
+type AvailabilitySyncScope = {
+  stylistId?: string;
+  serviceId?: string;
+};
+
+/**
+ * Materialize recurring working hours into bookable slots.
+ *
+ * The optional scope keeps client booking requests fast: a customer only needs
+ * slots for the stylist and service they selected, while admin changes can
+ * still refresh the complete schedule.
+ */
+export async function syncRecurringAvailabilityRules(
+  weeksAhead = 13,
+  scope: AvailabilitySyncScope = {},
+) {
   const supabase = createSupabaseAdminClient();
   const now = new Date();
   const horizon = new Date(now);
   horizon.setDate(horizon.getDate() + weeksAhead * 7);
 
+  const rulesQuery = supabase
+    .from("booking_availability_rules")
+    .select("*")
+    .eq("active", true);
+  const servicesQuery = supabase
+    .from("booking_services")
+    .select("id, duration_minutes")
+    .eq("active", true);
+
+  if (scope.stylistId) rulesQuery.eq("stylist_id", scope.stylistId);
+  if (scope.serviceId) {
+    rulesQuery.or(
+      `service_id.is.null,service_id.eq.${scope.serviceId}`,
+    );
+    servicesQuery.eq("id", scope.serviceId);
+  }
+
   const [
     { data: rules, error: rulesError },
     { data: services, error: servicesError },
   ] = await Promise.all([
-    supabase.from("booking_availability_rules").select("*").eq("active", true),
-    supabase
-      .from("booking_services")
-      .select("id, duration_minutes")
-      .eq("active", true),
+    rulesQuery,
+    servicesQuery,
   ]);
 
   if (rulesError) throw rulesError;
@@ -702,25 +730,26 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 13) {
   // from being generated.
   let existing: any[] = [];
   try {
-    existing = await fetchAllRows(
-      supabase
-        .from("booking_availability")
-        .select("id, stylist_id, service_id, starts_at, ends_at")
-        .gte("starts_at", now.toISOString())
-        .lte("starts_at", horizon.toISOString()) as any,
-    );
+    const existingQuery = supabase
+      .from("booking_availability")
+      .select("id, stylist_id, service_id, starts_at, ends_at")
+      .gte("starts_at", now.toISOString())
+      .lte("starts_at", horizon.toISOString());
+    if (scope.stylistId) existingQuery.eq("stylist_id", scope.stylistId);
+    if (scope.serviceId) existingQuery.eq("service_id", scope.serviceId);
+    existing = await fetchAllRows(existingQuery as any);
   } catch (existingError) {
     throw existingError;
   }
 
   let safeOverrideRows: any[] = [];
   try {
-    safeOverrideRows = await fetchAllRows(
-      supabase
-        .from("booking_availability_day_overrides")
-        .select("stylist_id, day, is_off, start_time, end_time")
-        .gte("day", localDateKey(now)) as any,
-    );
+    const overridesQuery = supabase
+      .from("booking_availability_day_overrides")
+      .select("stylist_id, day, is_off, start_time, end_time")
+      .gte("day", localDateKey(now));
+    if (scope.stylistId) overridesQuery.eq("stylist_id", scope.stylistId);
+    safeOverrideRows = await fetchAllRows(overridesQuery as any);
   } catch {
     // If the day-overrides table doesn't exist yet (migration 018 pending),
     // fall back to an empty list so availability still loads correctly.

@@ -342,6 +342,10 @@ export async function getAvailability(
   stylistId?: string,
   serviceId?: string,
 ): Promise<AvailableSlot[]> {
+  // Keep the rolling booking window populated for clients. This is scoped to
+  // their selection so opening the booking calendar cannot trigger a costly
+  // full-schedule regeneration.
+  await syncRecurringAvailabilityRules(13, { stylistId, serviceId });
   const supabase = createSupabaseAdminClient();
   let requestedDurationMinutes = 0;
 
