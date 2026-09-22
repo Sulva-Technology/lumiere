@@ -396,7 +396,8 @@ export async function getAvailability(
   if (bookingsError) throw bookingsError;
   if (reservationError) throw reservationError;
 
-  const BUFFER_MS = 60 * 60_000; // 60 minutes
+  const PRE_BUFFER_MS = 30 * 60_000; // 30 minutes before
+  const POST_BUFFER_MS = 3 * 60 * 60_000; // 3 hours after
   const seenSlotWindows = new Set<string>();
 
   return (slots ?? [])
@@ -419,20 +420,24 @@ export async function getAvailability(
             reservationSlot.starts_at,
           ).getTime();
           const reservationEnd = new Date(reservationSlot.ends_at).getTime();
-          return slotStart < reservationEnd && slotEnd > reservationStart;
+
+          const expandedStart = reservationStart - PRE_BUFFER_MS;
+          const expandedEnd = reservationEnd + POST_BUFFER_MS;
+
+          return slotStart < expandedEnd && slotEnd > expandedStart;
         },
       );
       if (isBlockedByReservation) return false;
 
-      // Check for overlap with any confirmed booking + 60min buffer
+      // Check for overlap with any confirmed booking + asymmetric buffer
       const isBlockedByBooking = (confirmedBookings ?? []).some((booking) => {
         if (booking.stylist_id !== slot.stylist_id) return false;
         const bStart = new Date(booking.starts_at).getTime();
         const bEnd = new Date(booking.ends_at).getTime();
 
-        // Expanded booking window: [start - buffer, end + buffer]
-        const expandedStart = bStart - BUFFER_MS;
-        const expandedEnd = bEnd + BUFFER_MS;
+        // Expanded booking window: [start - pre_buffer, end + post_buffer]
+        const expandedStart = bStart - PRE_BUFFER_MS;
+        const expandedEnd = bEnd + POST_BUFFER_MS;
 
         // Overlap check: slot starts before booking ends AND slot ends after booking starts
         return slotStart < expandedEnd && slotEnd > expandedStart;
