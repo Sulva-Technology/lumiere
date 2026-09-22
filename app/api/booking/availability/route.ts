@@ -9,7 +9,8 @@ export async function GET(request: Request) {
     const availability = await getAvailability(stylistId, serviceId);
     return NextResponse.json({ availability });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to load availability.' }, { status: 500 });
+    console.error("API ERROR:", error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
 

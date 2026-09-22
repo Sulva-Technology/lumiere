@@ -342,7 +342,6 @@ export async function getAvailability(
   stylistId?: string,
   serviceId?: string,
 ): Promise<AvailableSlot[]> {
-  await syncRecurringAvailabilityRules();
   const supabase = createSupabaseAdminClient();
   let requestedDurationMinutes = 0;
 

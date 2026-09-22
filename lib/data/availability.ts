@@ -17,12 +17,21 @@ async function fetchAllRows<T extends Record<string, unknown>>(
   let offset = 0;
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    console.log(`[fetchAllRows] fetching offset ${offset} to ${offset + PAGE - 1}`);
     const { data, error } = await (queryBuilder as any).range(offset, offset + PAGE - 1);
-    if (error) throw error;
+    if (error) {
+      console.error(`[fetchAllRows] Error:`, error);
+      throw error;
+    }
+    console.log(`[fetchAllRows] got ${data ? data.length : 0} rows`);
     if (!data || data.length === 0) break;
     all.push(...(data as T[]));
     if (data.length < PAGE) break;
     offset += PAGE;
+    if (offset > 50000) {
+      console.error(`[fetchAllRows] Safety break triggered at 50,000 rows!`);
+      break;
+    }
   }
   return all;
 }
@@ -668,7 +677,7 @@ export async function deleteDayOverride(id: string) {
   return result;
 }
 
-export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
+export async function syncRecurringAvailabilityRules(weeksAhead = 8) {
   const supabase = createSupabaseAdminClient();
   const now = new Date();
   const horizon = new Date(now);
@@ -877,12 +886,23 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
   }
 
   // Batch inserts in chunks of 500 to avoid request-size limits and timeouts
+  const chunks = [];
   for (let i = 0; i < inserts.length; i += 500) {
-    const chunk = inserts.slice(i, i + 500);
-    const { error: insertError } = await supabase
-      .from("booking_availability")
-      .insert(chunk);
-    if (insertError) throw insertError;
+    chunks.push(inserts.slice(i, i + 500));
+  }
+
+  // Process chunks with concurrency limit to avoid exhausting connection pool
+  const CONCURRENCY = 5;
+  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+    const batch = chunks.slice(i, i + CONCURRENCY);
+    await Promise.all(
+      batch.map(async (chunk) => {
+        const { error: insertError } = await supabase
+          .from("booking_availability")
+          .insert(chunk);
+        if (insertError) throw insertError;
+      })
+    );
   }
 }
 
