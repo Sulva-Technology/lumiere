@@ -4,6 +4,29 @@ import type {
   AvailabilityRule,
 } from "@/lib/types";
 
+/**
+ * Supabase defaults to returning at most 1000 rows per query.
+ * This helper paginates through the full result set so syncing
+ * and querying work correctly when there are thousands of slots.
+ */
+async function fetchAllRows<T extends Record<string, unknown>>(
+  queryBuilder: ReturnType<ReturnType<typeof createSupabaseAdminClient>["from"]>["select"],
+): Promise<T[]> {
+  const PAGE = 1000;
+  const all: T[] = [];
+  let offset = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { data, error } = await (queryBuilder as any).range(offset, offset + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    all.push(...(data as T[]));
+    if (data.length < PAGE) break;
+    offset += PAGE;
+  }
+  return all;
+}
+
 function relationFirst<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
@@ -654,31 +677,46 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
   const [
     { data: rules, error: rulesError },
     { data: services, error: servicesError },
-    { data: existing, error: existingError },
-    { data: overrideRows, error: overrideError },
   ] = await Promise.all([
     supabase.from("booking_availability_rules").select("*").eq("active", true),
     supabase
       .from("booking_services")
       .select("id, duration_minutes")
       .eq("active", true),
-    supabase
-      .from("booking_availability")
-      .select("id, stylist_id, service_id, starts_at, ends_at")
-      .gte("starts_at", now.toISOString())
-      .lte("starts_at", horizon.toISOString()),
-    supabase
-      .from("booking_availability_day_overrides")
-      .select("stylist_id, day, is_off, start_time, end_time")
-      .gte("day", localDateKey(now)),
   ]);
 
   if (rulesError) throw rulesError;
   if (servicesError) throw servicesError;
-  if (existingError) throw existingError;
-  // If the day-overrides table doesn't exist yet (migration 018 pending),
-  // fall back to an empty list so availability still loads correctly.
-  const safeOverrideRows = overrideError ? [] : (overrideRows ?? []);
+
+  // Paginate to get ALL existing slots — Supabase defaults to 1000 rows
+  // which was silently truncating results and preventing later months
+  // from being generated.
+  let existing: any[] = [];
+  try {
+    existing = await fetchAllRows(
+      supabase
+        .from("booking_availability")
+        .select("id, stylist_id, service_id, starts_at, ends_at")
+        .gte("starts_at", now.toISOString())
+        .lte("starts_at", horizon.toISOString()) as any,
+    );
+  } catch (existingError) {
+    throw existingError;
+  }
+
+  let safeOverrideRows: any[] = [];
+  try {
+    safeOverrideRows = await fetchAllRows(
+      supabase
+        .from("booking_availability_day_overrides")
+        .select("stylist_id, day, is_off, start_time, end_time")
+        .gte("day", localDateKey(now)) as any,
+    );
+  } catch {
+    // If the day-overrides table doesn't exist yet (migration 018 pending),
+    // fall back to an empty list so availability still loads correctly.
+    safeOverrideRows = [];
+  }
 
   const durationByService = new Map(
     (services ?? []).map((service: any) => [
@@ -838,10 +876,12 @@ export async function syncRecurringAvailabilityRules(weeksAhead = 16) {
     );
   }
 
-  if (inserts.length > 0) {
+  // Batch inserts in chunks of 500 to avoid request-size limits and timeouts
+  for (let i = 0; i < inserts.length; i += 500) {
+    const chunk = inserts.slice(i, i + 500);
     const { error: insertError } = await supabase
       .from("booking_availability")
-      .insert(inserts);
+      .insert(chunk);
     if (insertError) throw insertError;
   }
 }
