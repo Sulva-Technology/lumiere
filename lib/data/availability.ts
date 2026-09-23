@@ -26,6 +26,16 @@ function toMinutes(value: string) {
   return hours * 60 + minutes;
 }
 
+/** A finish time of 00:00 means midnight at the end of the day. */
+function endMinutes(value: string) {
+  const minutes = toMinutes(value);
+  return minutes === 0 ? 24 * 60 : minutes;
+}
+
+function endTimeValue(value: string) {
+  return endMinutes(value) === 24 * 60 ? "24:00:00" : `${value}:00`;
+}
+
 function startOfDay(date: Date) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
@@ -288,11 +298,16 @@ export async function deleteAvailabilityRule(id: string) {
   if (error) throw error;
 }
 
+export interface WeeklyTimeRange {
+  startTime: string;
+  endTime: string;
+}
+
 export interface WeeklyAvailabilityDay {
   weekday: number;
   off: boolean;
-  startTime: string;
-  endTime: string;
+  /** One or more working stretches; the gaps between them are her breaks. */
+  ranges: WeeklyTimeRange[];
 }
 
 
@@ -362,30 +377,22 @@ async function loadStylistSchedule(
   if (bookingsResult.error) throw bookingsResult.error;
   if (reservationsResult.error) throw reservationsResult.error;
 
-  // General hours (no service) merge into one window per weekday, matching the admin grid.
-  // A rule tied to one service only adds hours for that service.
-  const general = new Map<number, DayWindow>();
+  // Each rule is its own working stretch, so a gap between two rules on the same
+  // weekday is a break clients cannot book. A rule tied to one service only adds
+  // hours for that service.
   const weekly = new Map<number, DayWindow[]>();
   let hasWeeklyHours = false;
   for (const rule of rulesResult.data ?? []) {
+    if (rule.service_id !== null && rule.service_id !== serviceId) continue;
+    hasWeeklyHours = true;
     const window = {
       start: toMinutes(String(rule.start_time).slice(0, 5)),
-      end: toMinutes(String(rule.end_time).slice(0, 5)),
+      end: endMinutes(String(rule.end_time).slice(0, 5)),
     };
-    if (rule.service_id === null) {
-      hasWeeklyHours = true;
-      const current = general.get(rule.weekday);
-      general.set(rule.weekday, {
-        start: current ? Math.min(current.start, window.start) : window.start,
-        end: current ? Math.max(current.end, window.end) : window.end,
-      });
-    } else if (rule.service_id === serviceId) {
-      hasWeeklyHours = true;
-      weekly.set(rule.weekday, [...(weekly.get(rule.weekday) ?? []), window]);
-    }
+    weekly.set(rule.weekday, [...(weekly.get(rule.weekday) ?? []), window]);
   }
-  for (const [weekday, window] of general) {
-    weekly.set(weekday, [window, ...(weekly.get(weekday) ?? [])]);
+  for (const windows of weekly.values()) {
+    windows.sort((a, b) => a.start - b.start);
   }
 
   const busy: BusyWindow[] = [];
@@ -578,8 +585,7 @@ export async function claimOpenTime(input: {
 export interface ScheduleDay {
   day: string;
   open: boolean;
-  startTime: string | null;
-  endTime: string | null;
+  ranges: WeeklyTimeRange[];
   changed: boolean;
   bookings: number;
 }
@@ -613,8 +619,10 @@ export async function getScheduleDays(stylistId: string): Promise<ScheduleDay[]>
     days.push({
       day: key,
       open: windows.length > 0,
-      startTime: windows.length ? toTime(Math.min(...windows.map((w) => w.start))) : null,
-      endTime: windows.length ? toTime(Math.max(...windows.map((w) => w.end))) : null,
+      ranges: windows.map((window) => ({
+        startTime: toTime(window.start),
+        endTime: toTime(window.end),
+      })),
       changed: schedule.overrides.has(key),
       bookings: bookingsByDay.get(key) ?? 0,
     });
@@ -639,7 +647,7 @@ async function dayOverrideWindows(supabase: SupabaseAdmin, stylistId: string) {
         ? null
         : {
             start: toMinutes(String(row.start_time).slice(0, 5)),
-            end: toMinutes(String(row.end_time).slice(0, 5)),
+            end: endMinutes(String(row.end_time).slice(0, 5)),
           },
     );
   }
@@ -674,8 +682,21 @@ export async function saveWeeklyHours(input: {
       throw new Error("Each day can only be set once.");
     }
     seen.add(day.weekday);
-    if (!day.off && toMinutes(day.endTime) <= toMinutes(day.startTime)) {
-      throw new Error("The finish time must be later than the start time.");
+    if (day.off) continue;
+    if (day.ranges.length === 0) {
+      throw new Error("Add at least one time for each working day.");
+    }
+    const sorted = [...day.ranges].sort(
+      (a, b) => toMinutes(a.startTime) - toMinutes(b.startTime),
+    );
+    for (const [index, range] of sorted.entries()) {
+      if (endMinutes(range.endTime) <= toMinutes(range.startTime)) {
+        throw new Error("Each finish time must be later than its start time.");
+      }
+      const next = sorted[index + 1];
+      if (next && toMinutes(next.startTime) < endMinutes(range.endTime)) {
+        throw new Error("Two of the times on the same day overlap.");
+      }
     }
   }
 
@@ -689,14 +710,16 @@ export async function saveWeeklyHours(input: {
 
   const rows = input.days
     .filter((day) => !day.off)
-    .map((day) => ({
-      stylist_id: input.stylistId,
-      service_id: null,
-      weekday: day.weekday,
-      start_time: `${day.startTime}:00`,
-      end_time: `${day.endTime}:00`,
-      active: true,
-    }));
+    .flatMap((day) =>
+      day.ranges.map((range) => ({
+        stylist_id: input.stylistId,
+        service_id: null,
+        weekday: day.weekday,
+        start_time: `${range.startTime}:00`,
+        end_time: endTimeValue(range.endTime),
+        active: true,
+      })),
+    );
 
   if (rows.length > 0) {
     const { error: insertError } = await supabase
@@ -705,7 +728,7 @@ export async function saveWeeklyHours(input: {
     if (insertError) throw insertError;
   }
 
-  return { daysOn: rows.length };
+  return { daysOn: input.days.filter((day) => !day.off).length };
 }
 
 export async function getDayOverrides(stylistId?: string) {
@@ -734,7 +757,7 @@ export async function applyDayOverride(input: {
     input.mode === "hours" &&
     (!input.startTime ||
       !input.endTime ||
-      toMinutes(input.endTime) <= toMinutes(input.startTime))
+      endMinutes(input.endTime) <= toMinutes(input.startTime))
   ) {
     throw new Error("The finish time must be later than the start time.");
   }
@@ -748,7 +771,7 @@ export async function applyDayOverride(input: {
         day: input.day,
         is_off: input.mode === "off",
         start_time: input.mode === "hours" ? `${input.startTime}:00` : null,
-        end_time: input.mode === "hours" ? `${input.endTime}:00` : null,
+        end_time: input.mode === "hours" && input.endTime ? endTimeValue(input.endTime) : null,
       },
       { onConflict: "stylist_id,day" },
     )

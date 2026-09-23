@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Repeat } from 'lucide-react';
+import { Calendar, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Plus, Repeat, X } from 'lucide-react';
 import { Glass } from '@/components/ui/glass';
 import type { AvailabilityDayOverride, AvailabilityRule, StylistSummary } from '@/lib/types';
+
+interface TimeRange {
+  startTime: string;
+  endTime: string;
+}
 
 interface ScheduleDay {
   day: string;
   open: boolean;
-  startTime: string | null;
-  endTime: string | null;
+  ranges: TimeRange[];
   changed: boolean;
   bookings: number;
 }
@@ -17,8 +21,8 @@ interface ScheduleDay {
 interface DayForm {
   weekday: number;
   off: boolean;
-  startTime: string;
-  endTime: string;
+  /** Working stretches for the day; the gaps between them are breaks. */
+  ranges: TimeRange[];
 }
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -39,17 +43,57 @@ function todayKey() {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+/** Minutes after midnight; a finish time of 00:00 (or 24:00) means midnight at the end of the day. */
+function minutesOf(time: string, isEnd = false) {
+  const [hours, minutes] = time.split(':').map(Number);
+  const total = hours * 60 + minutes;
+  return isEnd && total === 0 ? 24 * 60 : total;
+}
+
+/** Time inputs cannot show 24:00, so midnight is edited as 00:00. */
+function inputTime(time: string) {
+  return time === '24:00' ? '00:00' : time;
+}
+
+function formatTime(time: string) {
+  const [hours, minutes] = time.split(':').map(Number);
+  if (hours === 24 || (hours === 0 && minutes === 0)) return '12am';
+  const suffix = hours >= 12 ? 'pm' : 'am';
+  const hour12 = hours % 12 || 12;
+  return minutes ? `${hour12}:${String(minutes).padStart(2, '0')}${suffix}` : `${hour12}${suffix}`;
+}
+
+function formatRanges(ranges: TimeRange[]) {
+  return ranges.map((range) => `${formatTime(range.startTime)} to ${formatTime(range.endTime)}`).join(', ');
+}
+
+/** The first problem with a day's times, or null when they are fine. */
+function rangeProblem(ranges: TimeRange[]) {
+  const sorted = [...ranges].sort((a, b) => minutesOf(a.startTime) - minutesOf(b.startTime));
+  for (const [index, range] of sorted.entries()) {
+    if (minutesOf(range.endTime, true) <= minutesOf(range.startTime)) {
+      return 'each finish time must be later than its start time.';
+    }
+    const next = sorted[index + 1];
+    if (next && minutesOf(next.startTime) < minutesOf(range.endTime, true)) {
+      return 'two of the times overlap.';
+    }
+  }
+  return null;
+}
+
 function buildWeek(rules: AvailabilityRule[]): DayForm[] {
   return WEEKDAYS.map((_, weekday) => {
-    const windows = rules.filter((rule) => rule.weekday === weekday && rule.active);
+    const windows = rules
+      .filter((rule) => rule.weekday === weekday && rule.active)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
     if (windows.length === 0) {
-      return { weekday, off: true, startTime: DEFAULT_START, endTime: DEFAULT_END };
+      return { weekday, off: true, ranges: [{ startTime: DEFAULT_START, endTime: DEFAULT_END }] };
     }
     return {
       weekday,
       off: false,
-      startTime: windows.reduce((earliest, rule) => (rule.startTime < earliest ? rule.startTime : earliest), windows[0].startTime),
-      endTime: windows.reduce((latest, rule) => (rule.endTime > latest ? rule.endTime : latest), windows[0].endTime),
+      ranges: windows.map((rule) => ({ startTime: rule.startTime, endTime: inputTime(rule.endTime) })),
     };
   });
 }
@@ -150,15 +194,51 @@ export default function AdminAvailabilityPage() {
     setWeek((current) => current.map((day) => (day.weekday === weekday ? { ...day, ...patch } : day)));
   }
 
+  function updateRange(weekday: number, index: number, patch: Partial<TimeRange>) {
+    setWeek((current) =>
+      current.map((day) =>
+        day.weekday === weekday
+          ? { ...day, ranges: day.ranges.map((range, i) => (i === index ? { ...range, ...patch } : range)) }
+          : day,
+      ),
+    );
+  }
+
+  function addRange(weekday: number) {
+    setWeek((current) =>
+      current.map((day) => {
+        if (day.weekday !== weekday) return day;
+        // Start the new stretch an hour after the last one finishes, when there is room.
+        const lastEnd = minutesOf(day.ranges[day.ranges.length - 1]?.endTime ?? DEFAULT_END, true);
+        const start = Math.min(lastEnd + 60, 22 * 60);
+        const end = Math.min(start + 120, 24 * 60);
+        const toTime = (value: number) =>
+          value === 24 * 60 ? '00:00' : `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+        return { ...day, ranges: [...day.ranges, { startTime: toTime(start), endTime: toTime(end) }] };
+      }),
+    );
+  }
+
+  function removeRange(weekday: number, index: number) {
+    setWeek((current) =>
+      current.map((day) =>
+        day.weekday === weekday ? { ...day, ranges: day.ranges.filter((_, i) => i !== index) } : day,
+      ),
+    );
+  }
+
   async function handleSaveWeek(event: React.FormEvent) {
     event.preventDefault();
     if (!primaryStylistId) return;
 
-    const broken = week.find((day) => !day.off && day.endTime <= day.startTime);
-    if (broken) {
-      setError(`${WEEKDAYS[broken.weekday]}: the finish time must be later than the start time.`);
-      setNotice(null);
-      return;
+    for (const day of week) {
+      if (day.off) continue;
+      const problem = day.ranges.length === 0 ? 'add at least one time, or turn the day off.' : rangeProblem(day.ranges);
+      if (problem) {
+        setError(`${WEEKDAYS[day.weekday]}: ${problem}`);
+        setNotice(null);
+        return;
+      }
     }
 
     setSaving(true);
@@ -173,8 +253,7 @@ export default function AdminAvailabilityPage() {
           days: week.map((day) => ({
             weekday: day.weekday,
             off: day.off,
-            startTime: day.startTime,
-            endTime: day.endTime,
+            ranges: day.off ? [] : day.ranges,
           })),
         }),
       });
@@ -194,7 +273,7 @@ export default function AdminAvailabilityPage() {
     event.preventDefault();
     if (!primaryStylistId || !overrideDate) return;
 
-    if (overrideMode === 'hours' && overrideEnd <= overrideStart) {
+    if (overrideMode === 'hours' && minutesOf(overrideEnd, true) <= minutesOf(overrideStart)) {
       setError('The finish time must be later than the start time.');
       setNotice(null);
       return;
@@ -311,7 +390,9 @@ export default function AdminAvailabilityPage() {
           <Repeat size={20} className="text-[#8B4411]" />
           <div>
             <h2 className="font-serif text-2xl text-[#4A2109]">Your normal week</h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Turn a day off, or change its hours. Clients only see what is on.</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              Turn a day off, or change its hours. Busy in the middle of the day? Add a second time, and the gap stays blocked.
+            </p>
           </div>
         </div>
 
@@ -342,29 +423,53 @@ export default function AdminAvailabilityPage() {
               {day.off ? (
                 <p className="text-sm text-[var(--text-secondary)] sm:pr-2">No appointments this day</p>
               ) : (
-                <div className="flex items-center gap-3">
-                  <Clock size={16} className="text-[var(--text-secondary)]" />
-                  <label className="sr-only" htmlFor={`start-${day.weekday}`}>
-                    {WEEKDAYS[day.weekday]} start time
-                  </label>
-                  <input
-                    id={`start-${day.weekday}`}
-                    type="time"
-                    value={day.startTime}
-                    onChange={(event) => updateDay(day.weekday, { startTime: event.target.value })}
-                    className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
-                  />
-                  <span className="text-[var(--text-secondary)]">to</span>
-                  <label className="sr-only" htmlFor={`end-${day.weekday}`}>
-                    {WEEKDAYS[day.weekday]} finish time
-                  </label>
-                  <input
-                    id={`end-${day.weekday}`}
-                    type="time"
-                    value={day.endTime}
-                    onChange={(event) => updateDay(day.weekday, { endTime: event.target.value })}
-                    className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
-                  />
+                <div className="space-y-2">
+                  {day.ranges.map((range, index) => (
+                    <div key={index} className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <Clock size={16} className="text-[var(--text-secondary)]" />
+                      <label className="sr-only" htmlFor={`start-${day.weekday}-${index}`}>
+                        {WEEKDAYS[day.weekday]} start time {index + 1}
+                      </label>
+                      <input
+                        id={`start-${day.weekday}-${index}`}
+                        type="time"
+                        value={range.startTime}
+                        onChange={(event) => updateRange(day.weekday, index, { startTime: event.target.value })}
+                        className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
+                      />
+                      <span className="text-[var(--text-secondary)]">to</span>
+                      <label className="sr-only" htmlFor={`end-${day.weekday}-${index}`}>
+                        {WEEKDAYS[day.weekday]} finish time {index + 1}
+                      </label>
+                      <input
+                        id={`end-${day.weekday}-${index}`}
+                        type="time"
+                        value={range.endTime}
+                        onChange={(event) => updateRange(day.weekday, index, { endTime: event.target.value })}
+                        className="rounded-xl bg-white/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
+                      />
+                      {day.ranges.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeRange(day.weekday, index)}
+                          aria-label={`Remove ${WEEKDAYS[day.weekday]} time ${index + 1}`}
+                          className="rounded-full p-2 text-[var(--text-secondary)] transition-colors hover:bg-white/50 hover:text-[#713813]"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {day.ranges.length < 6 && (
+                    <button
+                      type="button"
+                      onClick={() => addRange(day.weekday)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#8B4411] hover:underline"
+                    >
+                      <Plus size={14} />
+                      Add another time (leave a gap for a break)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -476,7 +581,9 @@ export default function AdminAvailabilityPage() {
                     <p className="text-sm text-[var(--text-secondary)]">
                       {override.isOff
                         ? 'Day off'
-                        : `${override.startTime ?? ''} to ${override.endTime ?? ''}`}
+                        : override.startTime && override.endTime
+                          ? formatRanges([{ startTime: override.startTime, endTime: override.endTime }])
+                          : 'Different hours'}
                     </p>
                   </div>
                   <button
@@ -582,7 +689,7 @@ export default function AdminAvailabilityPage() {
               <div>
                 <p className="font-medium text-[#4A2109]">{formatDayLabel(selected.day)}</p>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  {selected.open ? `Open ${selected.startTime} to ${selected.endTime}` : 'Off'}
+                  {selected.open ? `Open ${formatRanges(selected.ranges)}` : 'Off'}
                   {selected.changed ? ' · changed from your normal week' : ''}
                   {selected.bookings > 0
                     ? ` · ${selected.bookings} client${selected.bookings === 1 ? '' : 's'} booked`

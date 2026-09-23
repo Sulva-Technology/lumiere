@@ -228,8 +228,14 @@ export const adminAvailabilityWeekSchema = z.object({
       z.object({
         weekday: z.coerce.number().int().min(0).max(6),
         off: z.boolean(),
-        startTime: z.string().regex(/^\d{2}:\d{2}$/),
-        endTime: z.string().regex(/^\d{2}:\d{2}$/),
+        ranges: z
+          .array(
+            z.object({
+              startTime: z.string().regex(/^\d{2}:\d{2}$/),
+              endTime: z.string().regex(/^\d{2}:\d{2}$/),
+            }),
+          )
+          .max(6),
       }),
     )
     .min(1)
