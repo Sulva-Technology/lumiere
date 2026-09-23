@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { sendBookingConfirmationEmails } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/data/audit";
 import {
+  BOOKING_BUFFER_MINUTES,
   claimOpenTime,
   listOpenTimes,
   parseOpenTimeId,
@@ -465,14 +466,16 @@ async function getAvailableSlot(
 
   const slotStart = new Date(slot.starts_at).getTime();
   const slotEnd = new Date(slot.ends_at).getTime();
+  // Bookings keep a break between them (see BOOKING_BUFFER_MINUTES).
+  const bufferMs = BOOKING_BUFFER_MINUTES * 60_000;
   // 2. Double check for a real overlap with a confirmed booking.
   const { data: confirmedBookings } = await supabase
     .from("bookings")
     .select("id, starts_at, ends_at")
     .eq("stylist_id", input.stylistId)
     .in("status", ["confirmed", "completed"])
-    .lt("starts_at", new Date(slotEnd).toISOString())
-    .gt("ends_at", new Date(slotStart).toISOString());
+    .lt("starts_at", new Date(slotEnd + bufferMs).toISOString())
+    .gt("ends_at", new Date(slotStart - bufferMs).toISOString());
 
   if (confirmedBookings && confirmedBookings.length > 0) {
     throw new Error(
@@ -496,7 +499,7 @@ async function getAvailableSlot(
         return false;
       const reservedStart = new Date(reservedSlot.starts_at).getTime();
       const reservedEnd = new Date(reservedSlot.ends_at).getTime();
-      return slotStart < reservedEnd && slotEnd > reservedStart;
+      return slotStart < reservedEnd + bufferMs && slotEnd + bufferMs > reservedStart;
     },
   );
 

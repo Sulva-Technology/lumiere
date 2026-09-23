@@ -318,6 +318,12 @@ type SupabaseAdmin = ReturnType<typeof createSupabaseAdminClient>;
 export const BOOKING_WINDOW_DAYS = 183;
 /** Clients can start an appointment on any half hour inside her working hours. */
 const START_STEP_MINUTES = 30;
+/**
+ * Break she keeps free after every appointment (cleanup, reset, travel). Clients
+ * still see and book the service's own length; this only spaces bookings apart.
+ */
+export const BOOKING_BUFFER_MINUTES = 30;
+const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60_000;
 /** Used only until she saves her first working week, so the calendar is never empty. */
 const FALLBACK_WINDOW: DayWindow = { start: 9 * 60, end: 17 * 60 };
 /** Open times are not stored rows; their id carries the start time until a client books it. */
@@ -445,8 +451,9 @@ function openTimesForDay(
     while (cursor.getTime() + durationMinutes * 60_000 <= windowEnd) {
       const start = cursor.getTime();
       const end = start + durationMinutes * 60_000;
+      // Keep a break after both the existing appointment and the new one.
       const taken = schedule.busy.some(
-        (busy) => start < busy.end && end > busy.start,
+        (busy) => start < busy.end + BUFFER_MS && end + BUFFER_MS > busy.start,
       );
       if (cursor > now && !taken && !seen.has(start)) {
         seen.add(start);
