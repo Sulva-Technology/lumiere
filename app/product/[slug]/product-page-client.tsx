@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Glass } from '@/components/ui/glass';
+import { ReloadNotice } from '@/components/reload-notice';
 import { useCart } from '@/components/cart-context';
 import { formatCurrency } from '@/lib/format';
 import type { ProductDetail, ProductVariant } from '@/lib/types';
@@ -48,7 +49,11 @@ export function ProductPageClient({ slug }: { slug: string }) {
       <div className="mx-auto max-w-4xl px-4 py-12">
         <Glass level="heavy" className="p-10 text-center">
           <h1 className="font-serif text-3xl text-[#4A2109]">Product unavailable</h1>
-          <p className="mt-3 text-[var(--text-secondary)]">{error ?? 'This product could not be found.'}</p>
+          {error ? (
+            <ReloadNotice className="mt-3" message="This product didn’t load." />
+          ) : (
+            <p className="mt-3 text-[var(--text-secondary)]">This product could not be found.</p>
+          )}
         </Glass>
       </div>
     );

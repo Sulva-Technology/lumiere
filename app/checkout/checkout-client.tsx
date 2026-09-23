@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Glass } from '@/components/ui/glass';
+import { ReloadNotice } from '@/components/reload-notice';
 import { useCart } from '@/components/cart-context';
 import { formatCurrency } from '@/lib/format';
 
@@ -166,7 +167,7 @@ export function CheckoutClient() {
               <option value="US">United States</option>
             </select>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <ReloadNotice message="Checkout didn’t start." />}
 
             <div className="space-y-3 pt-2">
               <button

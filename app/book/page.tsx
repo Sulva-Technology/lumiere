@@ -19,6 +19,7 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { BUSINESS_TIME_ZONE, businessDateKey } from "@/lib/timezone";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ServicePrice } from "@/components/service-price";
+import { ReloadNotice } from "@/components/reload-notice";
 import { formatSpecialWindow, priceForAppointment } from "@/lib/specials";
 import type {
   AvailableSlot,
@@ -420,11 +421,7 @@ function BookingPageContent() {
           </div>
         ))}
       </div>
-      {error && currentStep !== "details" && (
-        <p role="alert" className="mb-6 text-center text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && currentStep !== "details" && <ReloadNotice className="mb-6" />}
         {currentStep === "service" && (
           <div className="space-y-6">
             <header className="text-center">
@@ -1004,7 +1001,10 @@ function BookingPageContent() {
               </div>
             </div>
             {error && (
-              <p className="mt-4 text-center text-sm text-red-500">{error}</p>
+              <ReloadNotice
+                className="mt-4"
+                message="We couldn’t save that just now."
+              />
             )}
             {showRetainerModal && selectedServiceDetail && (
               <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-4 backdrop-blur-sm sm:items-center sm:justify-center" role="dialog" aria-modal="true" aria-labelledby="retainer-title">

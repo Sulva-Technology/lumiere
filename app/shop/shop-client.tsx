@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Glass } from '@/components/ui/glass';
+import { ReloadNotice } from '@/components/reload-notice';
 import { formatCurrency } from '@/lib/format';
 import type { Category, ProductListItem } from '@/lib/types';
 
@@ -81,7 +82,7 @@ export function ShopClient({ initialCategory }: { initialCategory: string }) {
       ) : error ? (
         <Glass level="heavy" className="p-8 text-center">
           <p className="font-serif text-2xl text-[#4A2109]">Collection unavailable</p>
-          <p className="mt-2 text-[var(--text-secondary)]">{error}</p>
+          <ReloadNotice className="mt-2" message="The collection didn’t load." />
         </Glass>
       ) : products.length === 0 ? (
         <Glass level="heavy" className="p-8 text-center">
