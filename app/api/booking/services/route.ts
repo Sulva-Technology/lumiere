@@ -6,7 +6,7 @@ export async function GET() {
     const services = await getBookingServices();
     return NextResponse.json(
       { services },
-      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" } },
+      { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } },
     );
   } catch (error) {
     return NextResponse.json(
