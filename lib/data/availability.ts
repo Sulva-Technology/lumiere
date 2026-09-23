@@ -4,37 +4,6 @@ import type {
   AvailabilityRule,
 } from "@/lib/types";
 
-/**
- * Supabase defaults to returning at most 1000 rows per query.
- * This helper paginates through the full result set so syncing
- * and querying work correctly when there are thousands of slots.
- */
-async function fetchAllRows<T extends Record<string, unknown>>(
-  queryBuilder: ReturnType<ReturnType<typeof createSupabaseAdminClient>["from"]>["select"],
-): Promise<T[]> {
-  const PAGE = 1000;
-  const all: T[] = [];
-  let offset = 0;
-  while (true) {
-    console.log(`[fetchAllRows] fetching offset ${offset} to ${offset + PAGE - 1}`);
-    const { data, error } = await (queryBuilder as any).range(offset, offset + PAGE - 1);
-    if (error) {
-      console.error(`[fetchAllRows] Error:`, error);
-      throw error;
-    }
-    console.log(`[fetchAllRows] got ${data ? data.length : 0} rows`);
-    if (!data || data.length === 0) break;
-    all.push(...(data as T[]));
-    if (data.length < PAGE) break;
-    offset += PAGE;
-    if (offset > 50000) {
-      console.error(`[fetchAllRows] Safety break triggered at 50,000 rows!`);
-      break;
-    }
-  }
-  return all;
-}
-
 function relationFirst<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
@@ -70,22 +39,11 @@ function withTime(date: Date, time: string) {
   return copy;
 }
 
-function nextWeekday(base: Date, weekday: number) {
-  const copy = startOfDay(base);
-  const delta = (weekday - copy.getDay() + 7) % 7;
-  copy.setDate(copy.getDate() + delta);
-  return copy;
-}
-
 /** Calendar key (yyyy-mm-dd) for a moment, read in the same clock the slots are built in. */
 function localDateKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function minutesOfDay(date: Date) {
-  return date.getHours() * 60 + date.getMinutes();
 }
 
 function parseLocalDay(day: string) {
@@ -103,50 +61,6 @@ function mapOverride(row: any): AvailabilityDayOverride {
     startTime: row.start_time ? String(row.start_time).slice(0, 5) : null,
     endTime: row.end_time ? String(row.end_time).slice(0, 5) : null,
   };
-}
-
-export async function getAvailabilityAdminRows() {
-  await syncRecurringAvailabilityRules();
-  const supabase = createSupabaseAdminClient();
-  const [
-    { data: availability, error: availabilityError },
-    { data: activeReservations, error: reservationError },
-  ] = await Promise.all([
-    supabase
-      .from("booking_availability")
-      .select(
-        "id, starts_at, ends_at, is_available, service_id, stylist_id, stylists(name), booking_services(name), bookings(id)",
-      )
-      .gte("starts_at", new Date().toISOString())
-      .order("starts_at", { ascending: true }),
-    supabase
-      .from("booking_reservations")
-      .select("availability_id")
-      .eq("reservation_status", "pending_payment")
-      .gt("expires_at", new Date().toISOString()),
-  ]);
-
-  if (availabilityError) throw availabilityError;
-  if (reservationError) throw reservationError;
-
-  const reservedIds = new Set(
-    (activeReservations ?? []).map(
-      (reservation) => reservation.availability_id,
-    ),
-  );
-
-  return (availability ?? []).map((slot) => ({
-    id: slot.id,
-    starts_at: slot.starts_at,
-    ends_at: slot.ends_at,
-    is_available: slot.is_available,
-    has_booking: Array.isArray(slot.bookings)
-      ? slot.bookings.length > 0
-      : false,
-    is_reserved: reservedIds.has(slot.id),
-    booking_services: relationFirst(slot.booking_services) ?? null,
-    stylists: relationFirst(slot.stylists) ?? null,
-  }));
 }
 
 export async function createAvailabilitySlot(input: {
@@ -362,8 +276,6 @@ export async function upsertAvailabilityRule(input: {
 
   const { data, error } = await query.select("*").single();
   if (error) throw error;
-
-  await syncRecurringAvailabilityRules();
   return mapRule(data);
 }
 
@@ -383,80 +295,347 @@ export interface WeeklyAvailabilityDay {
   endTime: string;
 }
 
-export interface AvailabilityChangeResult {
-  removed: number;
-  kept: number;
+
+type SupabaseAdmin = ReturnType<typeof createSupabaseAdminClient>;
+
+/** How far ahead clients can book. The calendar is computed, so this costs nothing to extend. */
+export const BOOKING_WINDOW_DAYS = 183;
+/** Clients can start an appointment on any half hour inside her working hours. */
+const START_STEP_MINUTES = 30;
+/** Used only until she saves her first working week, so the calendar is never empty. */
+const FALLBACK_WINDOW: DayWindow = { start: 9 * 60, end: 17 * 60 };
+/** Open times are not stored rows; their id carries the start time until a client books it. */
+const OPEN_TIME_PREFIX = "open:";
+
+type BusyWindow = { start: number; end: number };
+
+interface StylistSchedule {
+  weekly: Map<number, DayWindow[]>;
+  hasWeeklyHours: boolean;
+  overrides: Map<string, DayWindow | null>;
+  busy: BusyWindow[];
 }
 
-/** Booked or held slots must survive a schedule change, so she never loses a client. */
-async function protectedSlotIds(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+function toTime(minutes: number) {
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
+function addDays(date: Date, days: number) {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+}
+
+/**
+ * Everything needed to draw her calendar: the normal week, changed dates, and the
+ * times already taken by a confirmed booking or a client mid-checkout.
+ */
+async function loadStylistSchedule(
+  supabase: SupabaseAdmin,
   stylistId: string,
-) {
+  serviceId?: string,
+): Promise<StylistSchedule> {
   const nowIso = new Date().toISOString();
-  const [{ data: bookings }, { data: reservations }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("availability_id")
-      .eq("stylist_id", stylistId)
-      .gte("starts_at", nowIso),
-    supabase
-      .from("booking_reservations")
-      .select("availability_id")
-      .eq("stylist_id", stylistId)
-      .eq("reservation_status", "pending_payment")
-      .gt("expires_at", nowIso),
-  ]);
+  const [rulesResult, overrides, bookingsResult, reservationsResult] =
+    await Promise.all([
+      supabase
+        .from("booking_availability_rules")
+        .select("service_id, weekday, start_time, end_time")
+        .eq("stylist_id", stylistId)
+        .eq("active", true),
+      dayOverrideWindows(supabase, stylistId),
+      supabase
+        .from("bookings")
+        .select("starts_at, ends_at")
+        .eq("stylist_id", stylistId)
+        .in("status", ["confirmed", "completed"])
+        .gte("ends_at", nowIso),
+      supabase
+        .from("booking_reservations")
+        .select("booking_availability(starts_at, ends_at)")
+        .eq("stylist_id", stylistId)
+        .eq("reservation_status", "pending_payment")
+        .gt("expires_at", nowIso),
+    ]);
 
-  const ids = new Set<string>();
-  for (const row of [...(bookings ?? []), ...(reservations ?? [])]) {
-    if (row.availability_id) ids.add(row.availability_id as string);
+  if (rulesResult.error) throw rulesResult.error;
+  if (bookingsResult.error) throw bookingsResult.error;
+  if (reservationsResult.error) throw reservationsResult.error;
+
+  // General hours (no service) merge into one window per weekday, matching the admin grid.
+  // A rule tied to one service only adds hours for that service.
+  const general = new Map<number, DayWindow>();
+  const weekly = new Map<number, DayWindow[]>();
+  let hasWeeklyHours = false;
+  for (const rule of rulesResult.data ?? []) {
+    const window = {
+      start: toMinutes(String(rule.start_time).slice(0, 5)),
+      end: toMinutes(String(rule.end_time).slice(0, 5)),
+    };
+    if (rule.service_id === null) {
+      hasWeeklyHours = true;
+      const current = general.get(rule.weekday);
+      general.set(rule.weekday, {
+        start: current ? Math.min(current.start, window.start) : window.start,
+        end: current ? Math.max(current.end, window.end) : window.end,
+      });
+    } else if (rule.service_id === serviceId) {
+      hasWeeklyHours = true;
+      weekly.set(rule.weekday, [...(weekly.get(rule.weekday) ?? []), window]);
+    }
   }
-  return ids;
-}
+  for (const [weekday, window] of general) {
+    weekly.set(weekday, [window, ...(weekly.get(weekday) ?? [])]);
+  }
 
-/** The weekly grid as a lookup: weekday -> window. A weekday with no window is a day off. */
-async function weeklyCoverage(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
-  stylistId: string,
-) {
-  const { data, error } = await supabase
-    .from("booking_availability_rules")
-    .select("weekday, start_time, end_time")
-    .eq("stylist_id", stylistId)
-    .eq("active", true)
-    .is("service_id", null);
-  if (error) throw error;
-
-  const coverage = new Map<number, DayWindow>();
-  for (const rule of data ?? []) {
-    const start = toMinutes(String(rule.start_time).slice(0, 5));
-    const end = toMinutes(String(rule.end_time).slice(0, 5));
-    const current = coverage.get(rule.weekday);
-    coverage.set(rule.weekday, {
-      start: current ? Math.min(current.start, start) : start,
-      end: current ? Math.max(current.end, end) : end,
+  const busy: BusyWindow[] = [];
+  for (const booking of bookingsResult.data ?? []) {
+    busy.push({
+      start: new Date(booking.starts_at).getTime(),
+      end: new Date(booking.ends_at).getTime(),
     });
   }
-  return coverage;
+  for (const reservation of reservationsResult.data ?? []) {
+    const held = relationFirst(
+      reservation.booking_availability as
+        | { starts_at: string; ends_at: string }
+        | { starts_at: string; ends_at: string }[]
+        | null,
+    );
+    if (!held) continue;
+    busy.push({
+      start: new Date(held.starts_at).getTime(),
+      end: new Date(held.ends_at).getTime(),
+    });
+  }
+
+  return { weekly, hasWeeklyHours, overrides, busy };
+}
+
+/** Her hours on one date: a changed date wins, otherwise the normal week. Empty = day off. */
+function windowsForDay(schedule: StylistSchedule, day: Date): DayWindow[] {
+  const key = localDateKey(day);
+  if (schedule.overrides.has(key)) {
+    const override = schedule.overrides.get(key);
+    return override ? [override] : [];
+  }
+  if (!schedule.hasWeeklyHours) return [FALLBACK_WINDOW];
+  return schedule.weekly.get(day.getDay()) ?? [];
+}
+
+function openTimesForDay(
+  schedule: StylistSchedule,
+  day: Date,
+  durationMinutes: number,
+  now: Date,
+) {
+  const seen = new Set<number>();
+  const times: Array<{ start: Date; end: Date }> = [];
+
+  for (const window of windowsForDay(schedule, day)) {
+    let cursor = withTime(day, toTime(window.start));
+    const windowEnd = withTime(day, toTime(window.end)).getTime();
+
+    while (cursor.getTime() + durationMinutes * 60_000 <= windowEnd) {
+      const start = cursor.getTime();
+      const end = start + durationMinutes * 60_000;
+      const taken = schedule.busy.some(
+        (busy) => start < busy.end && end > busy.start,
+      );
+      if (cursor > now && !taken && !seen.has(start)) {
+        seen.add(start);
+        times.push({ start: new Date(start), end: new Date(end) });
+      }
+      cursor = new Date(start + START_STEP_MINUTES * 60_000);
+    }
+  }
+
+  return times.sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
+async function serviceDuration(supabase: SupabaseAdmin, serviceId: string) {
+  const { data, error } = await supabase
+    .from("booking_services")
+    .select("duration_minutes")
+    .eq("id", serviceId)
+    .eq("active", true)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Selected service is unavailable.");
+  return data.duration_minutes as number;
+}
+
+/** Every time a client can book with her for this service, from now to the end of the booking window. */
+export async function listOpenTimes(stylistId: string, serviceId: string) {
+  const supabase = createSupabaseAdminClient();
+  const [duration, schedule] = await Promise.all([
+    serviceDuration(supabase, serviceId),
+    loadStylistSchedule(supabase, stylistId, serviceId),
+  ]);
+
+  const now = new Date();
+  const today = startOfDay(now);
+  const times: Array<{
+    id: string;
+    stylistId: string;
+    serviceId: string;
+    startsAt: string;
+    endsAt: string;
+    isAvailable: boolean;
+  }> = [];
+
+  for (let offset = 0; offset <= BOOKING_WINDOW_DAYS; offset += 1) {
+    for (const time of openTimesForDay(schedule, addDays(today, offset), duration, now)) {
+      times.push({
+        id: `${OPEN_TIME_PREFIX}${time.start.toISOString()}`,
+        stylistId,
+        serviceId,
+        startsAt: time.start.toISOString(),
+        endsAt: time.end.toISOString(),
+        isAvailable: true,
+      });
+    }
+  }
+  return times;
+}
+
+export function parseOpenTimeId(id: string) {
+  if (!id.startsWith(OPEN_TIME_PREFIX)) return null;
+  const startsAt = new Date(id.slice(OPEN_TIME_PREFIX.length));
+  return Number.isNaN(startsAt.getTime()) ? null : startsAt;
+}
+
+/**
+ * Turn the time a client picked into a stored slot, right before their hold is created.
+ * Rechecks her schedule first, so a day she just turned off can no longer be booked.
+ */
+export async function claimOpenTime(input: {
+  stylistId: string;
+  serviceId: string;
+  startsAt: Date;
+}) {
+  const supabase = createSupabaseAdminClient();
+  const [duration, schedule] = await Promise.all([
+    serviceDuration(supabase, input.serviceId),
+    loadStylistSchedule(supabase, input.stylistId, input.serviceId),
+  ]);
+
+  const stillOpen = openTimesForDay(
+    schedule,
+    startOfDay(input.startsAt),
+    duration,
+    new Date(),
+  ).some((time) => time.start.getTime() === input.startsAt.getTime());
+  if (!stillOpen) {
+    throw new Error("That appointment time is no longer available.");
+  }
+
+  const startsAtIso = input.startsAt.toISOString();
+  const endsAtIso = new Date(
+    input.startsAt.getTime() + duration * 60_000,
+  ).toISOString();
+
+  // Reuse a stored slot for this exact time when nobody has ever booked it
+  // (each slot can only carry one booking).
+  const { data: existing, error: existingError } = await supabase
+    .from("booking_availability")
+    .select("id, bookings(id)")
+    .eq("stylist_id", input.stylistId)
+    .eq("service_id", input.serviceId)
+    .eq("starts_at", startsAtIso)
+    .eq("ends_at", endsAtIso);
+  if (existingError) throw existingError;
+
+  const reusable = (existing ?? []).find(
+    (slot) => !Array.isArray(slot.bookings) || slot.bookings.length === 0,
+  );
+  if (reusable) {
+    const { data, error } = await supabase
+      .from("booking_availability")
+      .update({ is_available: true })
+      .eq("id", reusable.id)
+      .select("id, starts_at, ends_at, is_available, stylist_id, service_id")
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from("booking_availability")
+    .insert({
+      stylist_id: input.stylistId,
+      service_id: input.serviceId,
+      starts_at: startsAtIso,
+      ends_at: endsAtIso,
+      is_available: true,
+    })
+    .select("id, starts_at, ends_at, is_available, stylist_id, service_id")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface ScheduleDay {
+  day: string;
+  open: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  changed: boolean;
+  bookings: number;
+}
+
+/** Her calendar as she sees it in admin: each date, its hours, and how many clients are booked. */
+export async function getScheduleDays(stylistId: string): Promise<ScheduleDay[]> {
+  const supabase = createSupabaseAdminClient();
+  const today = startOfDay(new Date());
+  const [schedule, bookingsResult] = await Promise.all([
+    loadStylistSchedule(supabase, stylistId),
+    supabase
+      .from("bookings")
+      .select("starts_at")
+      .eq("stylist_id", stylistId)
+      .in("status", ["confirmed", "completed"])
+      .gte("starts_at", today.toISOString()),
+  ]);
+  if (bookingsResult.error) throw bookingsResult.error;
+
+  const bookingsByDay = new Map<string, number>();
+  for (const booking of bookingsResult.data ?? []) {
+    const key = localDateKey(new Date(booking.starts_at));
+    bookingsByDay.set(key, (bookingsByDay.get(key) ?? 0) + 1);
+  }
+
+  const days: ScheduleDay[] = [];
+  for (let offset = 0; offset <= BOOKING_WINDOW_DAYS; offset += 1) {
+    const date = addDays(today, offset);
+    const key = localDateKey(date);
+    const windows = windowsForDay(schedule, date);
+    days.push({
+      day: key,
+      open: windows.length > 0,
+      startTime: windows.length ? toTime(Math.min(...windows.map((w) => w.start))) : null,
+      endTime: windows.length ? toTime(Math.max(...windows.map((w) => w.end))) : null,
+      changed: schedule.overrides.has(key),
+      bookings: bookingsByDay.get(key) ?? 0,
+    });
+  }
+  return days;
 }
 
 /** Per-date changes as a lookup: date -> window, or null when the whole day is off. */
-async function dayOverrideWindows(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
-  stylistId: string,
-) {
+async function dayOverrideWindows(supabase: SupabaseAdmin, stylistId: string) {
   const { data, error } = await supabase
     .from("booking_availability_day_overrides")
     .select("day, is_off, start_time, end_time")
-    .eq("stylist_id", stylistId);
+    .eq("stylist_id", stylistId)
+    .gte("day", localDateKey(new Date()));
   if (error) throw error;
 
   const overrides = new Map<string, DayWindow | null>();
   for (const row of data ?? []) {
     overrides.set(
       row.day as string,
-      row.is_off
+      row.is_off || !row.start_time || !row.end_time
         ? null
         : {
             start: toMinutes(String(row.start_time).slice(0, 5)),
@@ -467,81 +646,23 @@ async function dayOverrideWindows(
   return overrides;
 }
 
-/**
- * Drop open slots the new schedule no longer covers, so the public booking page stops
- * offering times she switched off. Slots with a booking or a pending hold are kept.
- */
-async function pruneOpenSlots(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
-  stylistId: string,
-  range: { from: string; to?: string },
-): Promise<AvailabilityChangeResult> {
-  const [coverage, overrides, protectedIds] = await Promise.all([
-    weeklyCoverage(supabase, stylistId),
-    dayOverrideWindows(supabase, stylistId),
-    protectedSlotIds(supabase, stylistId),
-  ]);
-
-  // Nothing is configured yet, so there is no schedule to prune against.
-  if (coverage.size === 0 && overrides.size === 0) {
-    return { removed: 0, kept: 0 };
-  }
-
-  let slotsQuery = supabase
-    .from("booking_availability")
-    .select("id, starts_at, ends_at")
-    .eq("stylist_id", stylistId)
-    .gte("starts_at", range.from);
-  if (range.to) slotsQuery = slotsQuery.lte("starts_at", range.to);
-
-  const { data: slots, error } = await slotsQuery;
-  if (error) throw error;
-
-  const removeIds: string[] = [];
-  let kept = 0;
-
-  for (const slot of slots ?? []) {
-    const startsAt = new Date(slot.starts_at);
-    const endsAt = new Date(slot.ends_at);
-    const dayKey = localDateKey(startsAt);
-    const window = overrides.has(dayKey)
-      ? overrides.get(dayKey) ?? null
-      : coverage.get(startsAt.getDay()) ?? null;
-    const covered =
-      window !== null &&
-      minutesOfDay(startsAt) >= window.start &&
-      minutesOfDay(endsAt) <= window.end;
-
-    if (covered) continue;
-    if (protectedIds.has(slot.id)) {
-      kept += 1;
-      continue;
-    }
-    removeIds.push(slot.id);
-  }
-
-  for (let index = 0; index < removeIds.length; index += 100) {
-    const chunk = removeIds.slice(index, index + 100);
-    const { error: deleteError } = await supabase
-      .from("booking_availability")
-      .delete()
-      .in("id", chunk);
-    if (deleteError) throw deleteError;
-  }
-
-  return { removed: removeIds.length, kept };
-}
-
-function dayBounds(day: string) {
+async function bookingsOnDay(supabase: SupabaseAdmin, stylistId: string, day: string) {
   const start = parseLocalDay(day);
-  const end = new Date(start);
-  end.setHours(23, 59, 59, 999);
-  return { from: start.toISOString(), to: end.toISOString() };
+  const end = addDays(start, 1);
+  const { count, error } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("stylist_id", stylistId)
+    .in("status", ["confirmed", "completed"])
+    .gte("starts_at", start.toISOString())
+    .lt("starts_at", end.toISOString());
+  if (error) throw error;
+  return count ?? 0;
 }
 
 /**
  * Save the whole working week at once: the grid is the source of truth, so previous
- * general rules are replaced. Everything open that the new grid does not cover goes.
+ * general rules are replaced. The calendar reads it directly, nothing else to rebuild.
  */
 export async function saveWeeklyHours(input: {
   stylistId: string;
@@ -584,12 +705,7 @@ export async function saveWeeklyHours(input: {
     if (insertError) throw insertError;
   }
 
-  const result = await pruneOpenSlots(supabase, input.stylistId, {
-    from: new Date().toISOString(),
-  });
-  await syncRecurringAvailabilityRules();
-
-  return { ...result, daysOn: rows.length };
+  return { daysOn: rows.length };
 }
 
 export async function getDayOverrides(stylistId?: string) {
@@ -640,349 +756,18 @@ export async function applyDayOverride(input: {
     .single();
   if (error) throw error;
 
-  const result = await pruneOpenSlots(
-    supabase,
-    input.stylistId,
-    dayBounds(input.day),
-  );
-  await syncRecurringAvailabilityRules();
-
-  return { override: mapOverride(data), ...result };
+  // Existing bookings are never cancelled by a schedule change; tell her they are still on.
+  const booked = await bookingsOnDay(supabase, input.stylistId, input.day);
+  return { override: mapOverride(data), booked };
 }
 
 /** Undo a per-date change; the date falls back to the weekly grid. */
 export async function deleteDayOverride(id: string) {
   const supabase = createSupabaseAdminClient();
-  const { data: row, error: loadError } = await supabase
-    .from("booking_availability_day_overrides")
-    .select("id, stylist_id, day")
-    .eq("id", id)
-    .maybeSingle();
-  if (loadError) throw loadError;
-  if (!row) throw new Error("That day change is no longer there.");
-
   const { error } = await supabase
     .from("booking_availability_day_overrides")
     .delete()
     .eq("id", id);
   if (error) throw error;
-
-  const result = await pruneOpenSlots(
-    supabase,
-    row.stylist_id,
-    dayBounds(row.day),
-  );
-  await syncRecurringAvailabilityRules();
-  return result;
+  return { undone: true };
 }
-
-type AvailabilitySyncScope = {
-  stylistId?: string;
-  serviceId?: string;
-};
-
-type SlotTemplate = {
-  stylist_id: string;
-  service_id: string | null;
-  weekday: number;
-  start_time: string;
-  end_time: string;
-};
-
-/**
- * Older calendars were created as a limited run of individual slots instead
- * of recurring rules. Continue that real weekly pattern when no rule exists,
- * so the calendar does not simply end after the original batch of dates.
- */
-function deriveWeeklyTemplates(existing: any[]): SlotTemplate[] {
-  const windows = new Map<
-    string,
-    { stylistId: string; serviceId: string | null; weekday: number; start: number; end: number }
-  >();
-
-  for (const slot of existing) {
-    const startsAt = new Date(slot.starts_at);
-    const endsAt = new Date(slot.ends_at);
-    const weekday = startsAt.getDay();
-    const start = minutesOfDay(startsAt);
-    const end = minutesOfDay(endsAt);
-    const key = `${slot.stylist_id}:${slot.service_id ?? "all"}:${weekday}`;
-    const current = windows.get(key);
-
-    windows.set(key, {
-      stylistId: slot.stylist_id,
-      serviceId: slot.service_id ?? null,
-      weekday,
-      start: current ? Math.min(current.start, start) : start,
-      end: current ? Math.max(current.end, end) : end,
-    });
-  }
-
-  return Array.from(windows.values()).map((window) => ({
-    stylist_id: window.stylistId,
-    service_id: window.serviceId,
-    weekday: window.weekday,
-    start_time: `${String(Math.floor(window.start / 60)).padStart(2, "0")}:${String(window.start % 60).padStart(2, "0")}:00`,
-    end_time: `${String(Math.floor(window.end / 60)).padStart(2, "0")}:${String(window.end % 60).padStart(2, "0")}:00`,
-  }));
-}
-
-/**
- * Materialize recurring working hours into bookable slots.
- *
- * The optional scope keeps client booking requests fast: a customer only needs
- * slots for the stylist and service they selected, while admin changes can
- * still refresh the complete schedule.
- */
-export async function syncRecurringAvailabilityRules(
-  weeksAhead = 13,
-  scope: AvailabilitySyncScope = {},
-) {
-  const supabase = createSupabaseAdminClient();
-  const now = new Date();
-  const horizon = new Date(now);
-  horizon.setDate(horizon.getDate() + weeksAhead * 7);
-
-  const rulesQuery = supabase
-    .from("booking_availability_rules")
-    .select("*")
-    .eq("active", true);
-  const servicesQuery = supabase
-    .from("booking_services")
-    .select("id, duration_minutes")
-    .eq("active", true);
-
-  if (scope.stylistId) rulesQuery.eq("stylist_id", scope.stylistId);
-  if (scope.serviceId) {
-    rulesQuery.or(
-      `service_id.is.null,service_id.eq.${scope.serviceId}`,
-    );
-    servicesQuery.eq("id", scope.serviceId);
-  }
-
-  const [
-    { data: rules, error: rulesError },
-    { data: services, error: servicesError },
-  ] = await Promise.all([
-    rulesQuery,
-    servicesQuery,
-  ]);
-
-  if (rulesError) throw rulesError;
-  if (servicesError) throw servicesError;
-
-  // Paginate to get ALL existing slots — Supabase defaults to 1000 rows
-  // which was silently truncating results and preventing later months
-  // from being generated.
-  let existing: any[] = [];
-  try {
-    const existingQuery = supabase
-      .from("booking_availability")
-      .select("id, stylist_id, service_id, starts_at, ends_at")
-      .gte("starts_at", now.toISOString())
-      .lte("starts_at", horizon.toISOString());
-    if (scope.stylistId) existingQuery.eq("stylist_id", scope.stylistId);
-    if (scope.serviceId) existingQuery.eq("service_id", scope.serviceId);
-    existing = await fetchAllRows(existingQuery as any);
-  } catch (existingError) {
-    throw existingError;
-  }
-
-  let safeOverrideRows: any[] = [];
-  try {
-    const overridesQuery = supabase
-      .from("booking_availability_day_overrides")
-      .select("stylist_id, day, is_off, start_time, end_time")
-      .gte("day", localDateKey(now));
-    if (scope.stylistId) overridesQuery.eq("stylist_id", scope.stylistId);
-    safeOverrideRows = await fetchAllRows(overridesQuery as any);
-  } catch {
-    // If the day-overrides table doesn't exist yet (migration 018 pending),
-    // fall back to an empty list so availability still loads correctly.
-    safeOverrideRows = [];
-  }
-
-  const durationByService = new Map(
-    (services ?? []).map((service: any) => [
-      service.id,
-      service.duration_minutes,
-    ]),
-  );
-  const allServiceIds = Array.from(durationByService.keys());
-  const overrideIndex = new Map<
-    string,
-    { isOff: boolean; startTime: string | null; endTime: string | null }
-  >();
-  for (const row of safeOverrideRows) {
-    overrideIndex.set(`${row.stylist_id}:${row.day}`, {
-      isOff: row.is_off,
-      startTime: row.start_time ? String(row.start_time).slice(0, 5) : null,
-      endTime: row.end_time ? String(row.end_time).slice(0, 5) : null,
-    });
-  }
-
-  const existingWindows = (existing ?? []).map((slot: any) => ({
-    stylistId: slot.stylist_id,
-    serviceId: slot.service_id,
-    start: new Date(slot.starts_at).getTime(),
-    end: new Date(slot.ends_at).getTime(),
-  }));
-  const existingKeys = new Set(
-    (existing ?? []).map(
-      (slot: any) =>
-        `${slot.stylist_id}:${slot.service_id}:${new Date(slot.starts_at).toISOString()}`,
-    ),
-  );
-  const inserts: Array<{
-    stylist_id: string;
-    service_id: string;
-    starts_at: string;
-    ends_at: string;
-    is_available: true;
-  }> = [];
-  const daysHandledByOverride = new Set<string>();
-  // Keep explicit weekly rules, then fill any gaps with the established pattern
-  // from existing slots. Some legacy calendars have a partial rule set alongside
-  // manually-created slots; treating either source as exclusive made the calendar
-  // stop after the manually-created dates ran out.
-  const effectiveRules = [...(rules ?? []), ...deriveWeeklyTemplates(existing)];
-
-  function fillWindow(
-    stylistId: string,
-    day: Date,
-    serviceIds: string[],
-    startTime: string,
-    endTime: string,
-  ) {
-    const windowStart = withTime(day, startTime);
-    const windowEnd = withTime(day, endTime);
-
-    for (const serviceId of serviceIds) {
-      const duration = durationByService.get(serviceId);
-      if (!duration) continue;
-
-      let cursor = new Date(windowStart);
-
-      while (cursor.getTime() + duration * 60_000 <= windowEnd.getTime()) {
-        if (cursor > now) {
-          const slotEnd = new Date(cursor.getTime() + duration * 60_000);
-          const slotKey = `${stylistId}:${serviceId}:${cursor.toISOString()}`;
-          const overlaps = existingWindows.some(
-            (window) =>
-              window.stylistId === stylistId &&
-              window.serviceId === serviceId &&
-              window.start < slotEnd.getTime() &&
-              window.end > cursor.getTime(),
-          );
-
-          if (!existingKeys.has(slotKey) && !overlaps) {
-            inserts.push({
-              stylist_id: stylistId,
-              service_id: serviceId,
-              starts_at: cursor.toISOString(),
-              ends_at: slotEnd.toISOString(),
-              is_available: true,
-            });
-            existingKeys.add(slotKey);
-            existingWindows.push({
-              stylistId,
-              serviceId,
-              start: cursor.getTime(),
-              end: slotEnd.getTime(),
-            });
-          }
-        }
-
-        cursor = new Date(cursor.getTime() + 30 * 60_000); // 30-minute steps for more flexible start times
-      }
-    }
-  }
-
-  for (const rule of effectiveRules) {
-    let day = nextWeekday(now, rule.weekday);
-
-    while (day <= horizon) {
-      const overrideKey = `${rule.stylist_id}:${localDateKey(day)}`;
-      const override = overrideIndex.get(overrideKey);
-
-      if (override?.isOff) {
-        day = new Date(day);
-        day.setDate(day.getDate() + 7);
-        continue;
-      }
-
-      if (override) {
-        // Different hours for this one date: build them once, from every active service.
-        if (daysHandledByOverride.has(overrideKey)) {
-          day = new Date(day);
-          day.setDate(day.getDate() + 7);
-          continue;
-        }
-        daysHandledByOverride.add(overrideKey);
-        if (override.startTime && override.endTime) {
-          fillWindow(
-            rule.stylist_id,
-            day,
-            allServiceIds,
-            override.startTime,
-            override.endTime,
-          );
-        }
-      } else {
-        // A rule with no service applies to every active service.
-        fillWindow(
-          rule.stylist_id,
-          day,
-          rule.service_id ? [rule.service_id] : allServiceIds,
-          rule.start_time.slice(0, 5),
-          rule.end_time.slice(0, 5),
-        );
-      }
-
-      day = new Date(day);
-      day.setDate(day.getDate() + 7);
-    }
-  }
-
-  // A changed date can also land on a weekday she is normally off, so those are built
-  // separately — a rule loop never reaches them.
-  for (const [overrideKey, override] of overrideIndex) {
-    if (override.isOff || daysHandledByOverride.has(overrideKey)) continue;
-    if (!override.startTime || !override.endTime) continue;
-
-    const separator = overrideKey.lastIndexOf(":");
-    const stylistId = overrideKey.slice(0, separator);
-    const day = parseLocalDay(overrideKey.slice(separator + 1));
-    if (day < startOfDay(now) || day > horizon) continue;
-
-    daysHandledByOverride.add(overrideKey);
-    fillWindow(
-      stylistId,
-      day,
-      allServiceIds,
-      override.startTime,
-      override.endTime,
-    );
-  }
-
-  // Batch inserts in chunks of 500 to avoid request-size limits and timeouts
-  const chunks = [];
-  for (let i = 0; i < inserts.length; i += 500) {
-    chunks.push(inserts.slice(i, i + 500));
-  }
-
-  // Process chunks with concurrency limit to avoid exhausting connection pool
-  const CONCURRENCY = 5;
-  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
-    const batch = chunks.slice(i, i + CONCURRENCY);
-    await Promise.all(
-      batch.map(async (chunk) => {
-        const { error: insertError } = await supabase
-          .from("booking_availability")
-          .insert(chunk);
-        if (insertError) throw insertError;
-      })
-    );
-  }
-}
-

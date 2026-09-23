@@ -2,7 +2,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createHostedCheckoutSession } from "@/lib/payments";
 import { sendBookingConfirmationEmails } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/data/audit";
-import { syncRecurringAvailabilityRules } from "@/lib/data/availability";
+import {
+  claimOpenTime,
+  listOpenTimes,
+  parseOpenTimeId,
+} from "@/lib/data/availability";
 import { logEvent } from "@/lib/observability";
 import type {
   AvailableSlot,
@@ -342,115 +346,10 @@ export async function getAvailability(
   stylistId?: string,
   serviceId?: string,
 ): Promise<AvailableSlot[]> {
-  // Keep the rolling booking window populated for clients. This is scoped to
-  // their selection so opening the booking calendar cannot trigger a costly
-  // full-schedule regeneration.
-  await syncRecurringAvailabilityRules(13, { stylistId, serviceId });
-  const supabase = createSupabaseAdminClient();
-  let requestedDurationMinutes = 0;
-
-  if (serviceId) {
-    const { data: service, error: serviceError } = await supabase
-      .from("booking_services")
-      .select("duration_minutes")
-      .eq("id", serviceId)
-      .eq("active", true)
-      .maybeSingle();
-
-    if (serviceError) throw serviceError;
-    if (!service) throw new Error("Selected service is unavailable.");
-    requestedDurationMinutes = service.duration_minutes;
-  }
-
-  // 1. Fetch candidate slots
-  let query = supabase
-    .from("booking_availability")
-    .select("id, stylist_id, service_id, starts_at, ends_at, is_available")
-    .eq("is_available", true)
-    .gte("starts_at", nowIso())
-    .order("starts_at")
-    .limit(5000);
-
-  if (stylistId) query = query.eq("stylist_id", stylistId);
-  if (serviceId) query = query.eq("service_id", serviceId);
-
-  // 2. Fetch all confirmed bookings and pending reservations to check for buffers
-  const [
-    { data: slots, error: slotsError },
-    { data: confirmedBookings, error: bookingsError },
-    { data: reservations, error: reservationError },
-  ] = await Promise.all([
-    query,
-    supabase
-      .from("bookings")
-      .select("starts_at, ends_at, status, stylist_id")
-      .in("status", ["confirmed", "completed"])
-      .gte("ends_at", nowIso()),
-    supabase
-      .from("booking_reservations")
-      .select(
-        "availability_id, expires_at, reservation_status, booking_availability(starts_at, ends_at, stylist_id)",
-      )
-      .eq("reservation_status", "pending_payment")
-      .gt("expires_at", nowIso()),
-  ]);
-
-  if (slotsError) throw slotsError;
-  if (bookingsError) throw bookingsError;
-  if (reservationError) throw reservationError;
-
-  const seenSlotWindows = new Set<string>();
-
-  return (slots ?? [])
-    .filter((slot) => {
-      const slotStart = new Date(slot.starts_at).getTime();
-      const slotEnd = new Date(slot.ends_at).getTime();
-      if (slotEnd - slotStart < requestedDurationMinutes * 60_000) return false;
-
-      const isBlockedByReservation = (reservations ?? []).some(
-        (reservation) => {
-          const reservationSlot = relationFirst(
-            reservation.booking_availability,
-          );
-          if (
-            !reservationSlot ||
-            reservationSlot.stylist_id !== slot.stylist_id
-          )
-            return false;
-          const reservationStart = new Date(
-            reservationSlot.starts_at,
-          ).getTime();
-          const reservationEnd = new Date(reservationSlot.ends_at).getTime();
-
-          return slotStart < reservationEnd && slotEnd > reservationStart;
-        },
-      );
-      if (isBlockedByReservation) return false;
-
-      // A booking blocks only the time it occupies; the rest of the day stays bookable.
-      const isBlockedByBooking = (confirmedBookings ?? []).some((booking) => {
-        if (booking.stylist_id !== slot.stylist_id) return false;
-        const bStart = new Date(booking.starts_at).getTime();
-        const bEnd = new Date(booking.ends_at).getTime();
-
-        return slotStart < bEnd && slotEnd > bStart;
-      });
-
-      if (isBlockedByBooking) return false;
-
-      const windowKey = `${slot.stylist_id}:${slot.starts_at}`;
-      if (seenSlotWindows.has(windowKey)) return false;
-      seenSlotWindows.add(windowKey);
-      return true;
-    })
-    .map((slot) => ({
-      id: slot.id,
-      stylistId: slot.stylist_id,
-      serviceId: slot.service_id,
-      startsAt: slot.starts_at,
-      endsAt: slot.ends_at,
-      isAvailable: slot.is_available,
-    }));
+  // Open times are worked out from her weekly hours and changed dates, minus
+  // anything already booked or held, so every month shows without stored slots.
+  if (!stylistId || !serviceId) return [];
+  return listOpenTimes(stylistId, serviceId);
 }
 
 export async function validateCartLines(
@@ -522,15 +421,26 @@ async function getAvailableSlot(
   if (serviceError) throw serviceError;
   if (!service) throw new Error("Selected service is unavailable.");
 
-  // 1. Fetch the requested slot
-  const { data: slot, error: slotError } = await supabase
-    .from("booking_availability")
-    .select("id, starts_at, ends_at, is_available, stylist_id, service_id")
-    .eq("id", input.availabilityId)
-    .eq("is_available", true)
-    .maybeSingle();
+  // 1. Resolve the requested time to a stored slot
+  const openTimeStart = parseOpenTimeId(input.availabilityId);
+  let slot;
+  if (openTimeStart) {
+    slot = await claimOpenTime({
+      stylistId: input.stylistId,
+      serviceId: input.serviceId,
+      startsAt: openTimeStart,
+    });
+  } else {
+    const { data, error: slotError } = await supabase
+      .from("booking_availability")
+      .select("id, starts_at, ends_at, is_available, stylist_id, service_id")
+      .eq("id", input.availabilityId)
+      .eq("is_available", true)
+      .maybeSingle();
 
-  if (slotError) throw slotError;
+    if (slotError) throw slotError;
+    slot = data;
+  }
   if (
     !slot ||
     slot.stylist_id !== input.stylistId ||
@@ -608,7 +518,7 @@ export async function createBookingCheckout(
     isMakeupService && input.makeupIntake ? input.makeupIntake : null;
 
   const reservationPayload = {
-    availability_id: input.availabilityId,
+    availability_id: slot.id,
     stylist_id: input.stylistId,
     service_id: input.serviceId,
     full_name: input.fullName,
@@ -653,7 +563,7 @@ export async function createBookingCheckout(
 
   logEvent("info", "booking.reservation_created", {
     reservationId: reservation.id,
-    availabilityId: input.availabilityId,
+    availabilityId: slot.id,
     stylistId: input.stylistId,
     serviceId: input.serviceId,
     email: input.email,
@@ -709,7 +619,7 @@ export async function createBookingCheckout(
         kind: "booking",
         reservationId: reservation.id,
         paymentId: payment.id,
-        availabilityId: input.availabilityId,
+        availabilityId: slot.id,
       },
       lines: [{
         name: "Appointment deposit",
@@ -739,7 +649,7 @@ export async function createBookingCheckout(
       action: "booking.reservation_created",
       entityType: "booking_reservation",
       entityId: reservation.id,
-      payload: { paymentId: payment.id, availabilityId: input.availabilityId },
+      payload: { paymentId: payment.id, availabilityId: slot.id },
     });
 
     return {

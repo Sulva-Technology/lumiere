@@ -1,19 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Check, Clock, Repeat, Trash2 } from 'lucide-react';
+import { Calendar, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Repeat } from 'lucide-react';
 import { Glass } from '@/components/ui/glass';
 import type { AvailabilityDayOverride, AvailabilityRule, StylistSummary } from '@/lib/types';
 
-interface AvailabilitySlot {
-  id: string;
-  starts_at: string;
-  ends_at: string;
-  is_available: boolean;
-  has_booking: boolean;
-  is_reserved: boolean;
-  booking_services: { name: string } | null;
-  stylists: { name: string } | null;
+interface ScheduleDay {
+  day: string;
+  open: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  changed: boolean;
+  bookings: number;
 }
 
 interface DayForm {
@@ -56,9 +54,14 @@ function buildWeek(rules: AvailabilityRule[]): DayForm[] {
   });
 }
 
-/** Slot dates are read exactly as they are stored, so nothing shifts when she is travelling. */
-function slotDateKey(startsAt: string) {
-  return startsAt.slice(0, 10);
+function monthStart(value: Date) {
+  return new Date(value.getFullYear(), value.getMonth(), 1);
+}
+
+function dateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function formatDayLabel(dayKey: string) {
@@ -70,7 +73,9 @@ function formatDayLabel(dayKey: string) {
 }
 
 export default function AdminAvailabilityPage() {
-  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [days, setDays] = useState<ScheduleDay[]>([]);
+  const [visibleMonth, setVisibleMonth] = useState(() => monthStart(new Date()));
+  const [selectedDay, setSelectedDay] = useState(todayKey);
   const [rules, setRules] = useState<AvailabilityRule[]>([]);
   const [overrides, setOverrides] = useState<AvailabilityDayOverride[]>([]);
   const [stylists, setStylists] = useState<StylistSummary[]>([]);
@@ -90,31 +95,38 @@ export default function AdminAvailabilityPage() {
 
   async function loadData() {
     try {
-      const [availabilityRes, rulesRes, overridesRes, stylistsRes] = await Promise.all([
-        fetch('/api/admin/availability'),
+      const stylistsRes = await fetch('/api/booking/stylists');
+      const stylistsJson = await stylistsRes.json();
+      if (!stylistsRes.ok) throw new Error(stylistsJson.error ?? 'Could not load your profile.');
+      const loadedStylists: StylistSummary[] = stylistsJson.stylists;
+      const stylistId = loadedStylists[0]?.id ?? '';
+
+      const [daysRes, rulesRes, overridesRes] = await Promise.all([
+        fetch(`/api/admin/availability?stylistId=${stylistId}`),
         fetch('/api/admin/availability/rules'),
-        fetch('/api/admin/availability/overrides'),
-        fetch('/api/booking/stylists'),
+        fetch(`/api/admin/availability/overrides?stylistId=${stylistId}`),
       ]);
 
-      const [availabilityJson, rulesJson, overridesJson, stylistsJson] = await Promise.all([
-        availabilityRes.json(),
+      const [daysJson, rulesJson, overridesJson] = await Promise.all([
+        daysRes.json(),
         rulesRes.json(),
         overridesRes.json(),
-        stylistsRes.json(),
       ]);
 
-      if (!availabilityRes.ok) throw new Error(availabilityJson.error ?? 'Could not load your open times.');
+      if (!daysRes.ok) throw new Error(daysJson.error ?? 'Could not load your calendar.');
       if (!rulesRes.ok) throw new Error(rulesJson.error ?? 'Could not load your working week.');
       if (!overridesRes.ok) throw new Error(overridesJson.error ?? 'Could not load your changed days.');
-      if (!stylistsRes.ok) throw new Error(stylistsJson.error ?? 'Could not load your profile.');
 
       const loadedRules: AvailabilityRule[] = rulesJson.data.rules;
-      setAvailability(availabilityJson.data.availability);
+      setDays(daysJson.data.days);
       setRules(loadedRules);
       setOverrides(overridesJson.data.overrides);
-      setStylists(stylistsJson.stylists);
-      setWeek(buildWeek(loadedRules.filter((rule) => rule.active && rule.serviceId === null)));
+      setStylists(loadedStylists);
+      setWeek(
+        buildWeek(
+          loadedRules.filter((rule) => rule.active && rule.serviceId === null && rule.stylistId === stylistId),
+        ),
+      );
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Could not load your availability.');
     } finally {
@@ -126,14 +138,12 @@ export default function AdminAvailabilityPage() {
     void loadData();
   }, []);
 
-  function changeSummary(result: { removed?: number; kept?: number }) {
-    const removed = result.removed ?? 0;
-    const kept = result.kept ?? 0;
-    const parts = [`Saved. ${removed} open time${removed === 1 ? '' : 's'} turned off.`];
-    if (kept > 0) {
-      parts.push(`${kept} time${kept === 1 ? '' : 's'} already taken by clients were kept.`);
+  function changeSummary(result: { booked?: number }) {
+    const booked = result.booked ?? 0;
+    if (booked > 0) {
+      return `Saved. You already have ${booked} client${booked === 1 ? '' : 's'} booked that day, and they are still booked.`;
     }
-    return parts.join(' ');
+    return 'Saved. Your booking page is updated.';
   }
 
   function updateDay(weekday: number, patch: Partial<DayForm>) {
@@ -172,7 +182,7 @@ export default function AdminAvailabilityPage() {
       if (!response.ok) throw new Error(json.error ?? 'Could not save your week.');
 
       await loadData();
-      setNotice(changeSummary(json.data));
+      setNotice('Saved. Your booking page now follows this week.');
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Could not save your week.');
     } finally {
@@ -260,22 +270,21 @@ export default function AdminAvailabilityPage() {
     }
   }
 
-  const daySummaries = useMemo(() => {
-    const map = new Map<string, { open: number; booked: number }>();
-    for (const slot of availability) {
-      const key = slotDateKey(slot.starts_at);
-      const entry = map.get(key) ?? { open: 0, booked: 0 };
-      if (slot.has_booking || slot.is_reserved) {
-        entry.booked += 1;
-      } else {
-        entry.open += 1;
-      }
-      map.set(key, entry);
-    }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([dayKey, counts]) => ({ dayKey, ...counts }));
-  }, [availability]);
+  const daysByKey = useMemo(() => new Map(days.map((day) => [day.day, day])), [days]);
+  const overrideByDay = useMemo(
+    () => new Map(overrides.map((override) => [override.day, override])),
+    [overrides],
+  );
+  const firstMonth = monthStart(new Date());
+  const lastMonth = days.length ? monthStart(new Date(`${days[days.length - 1].day}T12:00:00`)) : firstMonth;
+  const selected = daysByKey.get(selectedDay) ?? null;
+  const selectedOverride = overrideByDay.get(selectedDay) ?? null;
+
+  function openDifferentHours(dayKey: string) {
+    setOverrideDate(dayKey);
+    setOverrideMode('hours');
+    document.getElementById('override-date')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   if (loading) return <div className="p-8 text-center text-[var(--text-secondary)]">Loading your availability...</div>;
 
@@ -489,43 +498,124 @@ export default function AdminAvailabilityPage() {
         </Glass>
 
         <Glass level="medium" className="p-6">
-          <div className="mb-6">
-            <h2 className="font-serif text-2xl text-[#4A2109]">What clients can book</h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Next 13 weeks. Turn a whole date off here if you cannot work it.
-            </p>
+          <div className="mb-6 flex items-center gap-3">
+            <CalendarDays size={20} className="text-[#8B4411]" />
+            <div>
+              <h2 className="font-serif text-2xl text-[#4A2109]">Your calendar</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                This is what clients see. Tap any date to turn it off or change it.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {daySummaries.length > 0 ? (
-              daySummaries.map((day) => (
-                <div key={day.dayKey} className="flex items-center justify-between gap-3 rounded-2xl bg-white/10 p-4">
-                  <div>
-                    <p className="font-medium text-[#4A2109]">{formatDayLabel(day.dayKey)}</p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {day.open > 0 ? `${day.open} open time${day.open === 1 ? '' : 's'}` : 'Nothing open'}
-                      {day.booked > 0 ? ` · ${day.booked} already taken by clients` : ''}
-                    </p>
-                  </div>
-                  {day.open > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => void handleDayOff(day.dayKey)}
-                      disabled={busyDay === day.dayKey}
-                      className={`${BUTTON_QUIET} inline-flex items-center gap-2`}
-                    >
-                      <Trash2 size={15} />
-                      Turn off
-                    </button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="rounded-2xl bg-white/10 p-4 text-sm text-[var(--text-secondary)]">
-                Nothing open yet. Turn on your days above and save.
-              </p>
+          <div className="mb-4 flex items-center justify-between">
+            <button
+              type="button"
+              aria-label="Previous month"
+              disabled={visibleMonth <= firstMonth}
+              onClick={() => setVisibleMonth((month) => new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+              className="rounded-full p-2 text-[#713813] transition-colors hover:bg-white/50 disabled:opacity-30"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <h3 className="font-serif text-xl text-[#4A2109]">
+              {visibleMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+            </h3>
+            <button
+              type="button"
+              aria-label="Next month"
+              disabled={visibleMonth >= lastMonth}
+              onClick={() => setVisibleMonth((month) => new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+              className="rounded-full p-2 text-[#713813] transition-colors hover:bg-white/50 disabled:opacity-30"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => (
+              <span key={label} className="py-2">
+                {label}
+              </span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: visibleMonth.getDay() }, (_, index) => (
+              <span key={`blank-${index}`} />
+            ))}
+            {Array.from(
+              { length: new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate() },
+              (_, index) => {
+                const key = dateKey(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), index + 1));
+                const info = daysByKey.get(key);
+                const isSelected = key === selectedDay;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={!info}
+                    onClick={() => setSelectedDay(key)}
+                    aria-label={`${formatDayLabel(key)}${info ? (info.open ? ', open' : ', off') : ''}`}
+                    className={`relative aspect-square rounded-xl text-sm transition-colors ${
+                      isSelected
+                        ? 'bg-[#8B4411] text-white'
+                        : !info
+                          ? 'cursor-not-allowed text-[var(--text-secondary)] opacity-30'
+                          : info.open
+                            ? 'bg-[#8B4411]/10 font-bold text-[#8B4411] hover:bg-[#8B4411]/20'
+                            : 'bg-white/10 text-[var(--text-secondary)] line-through hover:bg-white/30'
+                    }`}
+                  >
+                    {index + 1}
+                    {info && info.bookings > 0 && (
+                      <span className="absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-current" />
+                    )}
+                  </button>
+                );
+              },
             )}
           </div>
+          <p className="mt-3 text-xs text-[var(--text-secondary)]">Crossed out = off. A dot = clients booked.</p>
+
+          {selected && (
+            <div className="mt-6 space-y-3 rounded-2xl bg-white/10 p-4">
+              <div>
+                <p className="font-medium text-[#4A2109]">{formatDayLabel(selected.day)}</p>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {selected.open ? `Open ${selected.startTime} to ${selected.endTime}` : 'Off'}
+                  {selected.changed ? ' · changed from your normal week' : ''}
+                  {selected.bookings > 0
+                    ? ` · ${selected.bookings} client${selected.bookings === 1 ? '' : 's'} booked`
+                    : ''}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selected.open && (
+                  <button
+                    type="button"
+                    onClick={() => void handleDayOff(selected.day)}
+                    disabled={busyDay === selected.day}
+                    className={BUTTON_QUIET}
+                  >
+                    {busyDay === selected.day ? 'Saving...' : 'Turn this day off'}
+                  </button>
+                )}
+                <button type="button" onClick={() => openDifferentHours(selected.day)} className={BUTTON_QUIET}>
+                  {selected.open ? 'Different hours' : 'Open this day'}
+                </button>
+                {selectedOverride && (
+                  <button
+                    type="button"
+                    onClick={() => void handleUndoOverride(selectedOverride.id)}
+                    disabled={busyDay === selectedOverride.id}
+                    className={BUTTON_QUIET}
+                  >
+                    Back to normal week
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </Glass>
       </div>
     </div>

@@ -50,7 +50,8 @@ export const checkoutSessionSchema = z.object({
 export const createBookingSchema = z.object({
   stylistId: z.string().uuid(),
   serviceId: z.string().uuid(),
-  availabilityId: z.string().uuid(),
+  // A stored slot uuid, or an "open:<iso start>" time from the live calendar.
+  availabilityId: z.string().trim().min(1).max(64),
   fullName: z.string().trim().min(2).max(120),
   email: z.string().email(),
   phone: z.string().trim().min(7).max(30),

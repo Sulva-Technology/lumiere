@@ -7,16 +7,17 @@ import {
 import {
   createAvailabilitySlot,
   deleteAvailabilitySlot,
-  getAvailabilityAdminRows,
+  getScheduleDays,
 } from "@/lib/data/availability";
 import { getErrorMessage } from "@/lib/validation";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAdminApiUser();
-    const availability = await getAvailabilityAdminRows();
+    const stylistId = new URL(request.url).searchParams.get("stylistId");
+    const days = stylistId ? await getScheduleDays(stylistId) : [];
     return NextResponse.json({
-      data: { availability },
+      data: { days },
       error: null,
       meta: null,
     });
