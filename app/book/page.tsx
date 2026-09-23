@@ -239,6 +239,22 @@ function BookingPageContent() {
             ? "Your appointment is confirmed. Payment is due in person at your appointment."
             : "Your payment completed successfully. We are finalizing your appointment confirmation now.",
         );
+        if (!payingInPerson) {
+          // Confirm straight from Stripe so the booking and emails never wait on the webhook.
+          try {
+            const response = await fetch("/api/bookings/confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reservationId }),
+            });
+            const json = await response.json();
+            if (response.ok && json.data?.confirmed) {
+              setStatusMessage(
+                "Your appointment is confirmed. A confirmation email is on its way.",
+              );
+            }
+          } catch {}
+        }
         return;
       }
       try {

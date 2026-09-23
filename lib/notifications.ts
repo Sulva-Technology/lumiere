@@ -94,13 +94,17 @@ async function sendMail(payload: MailPayload) {
     return;
   }
 
-  await resend.emails.send({
+  // Resend reports failures (unverified domain, bad recipient) in `error` instead of throwing.
+  const { error } = await resend.emails.send({
     from: resendFromEmail,
     to: payload.to,
     subject: payload.subject,
     html: payload.html,
     replyTo: payload.replyTo,
   });
+  if (error) {
+    throw new Error(`Email to ${Array.isArray(payload.to) ? payload.to.join(', ') : payload.to} failed: ${error.message}`);
+  }
 }
 
 export async function sendAdminCustomEmail(payload: AdminCustomEmailPayload) {
@@ -251,21 +255,25 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
     </div>
   `;
 
-  await sendMail({
-    to: payload.email,
-    subject: `${payload.storeName} booking confirmation ${payload.bookingReference}`,
-    html: customerHtml,
-    replyTo: payload.bookingContactEmail || payload.supportEmail,
-  });
-
-  if (internalRecipients.length > 0) {
-    await sendMail({
-      to: internalRecipients,
-      subject: `New booking confirmed: ${payload.bookingReference}`,
-      html: internalHtml,
-      replyTo: payload.email,
-    });
-  }
+  // Send both independently so one failed address never blocks the other email.
+  const results = await Promise.allSettled([
+    sendMail({
+      to: payload.email,
+      subject: `${payload.storeName} booking confirmation ${payload.bookingReference}`,
+      html: customerHtml,
+      replyTo: payload.bookingContactEmail || payload.supportEmail,
+    }),
+    internalRecipients.length > 0
+      ? sendMail({
+          to: internalRecipients,
+          subject: `New booking confirmed: ${payload.bookingReference}`,
+          html: internalHtml,
+          replyTo: payload.email,
+        })
+      : Promise.resolve(),
+  ]);
+  const failures = results.flatMap((result) => (result.status === 'rejected' ? [String(result.reason instanceof Error ? result.reason.message : result.reason)] : []));
+  if (failures.length > 0) throw new Error(failures.join(' | '));
 }
 
 export async function sendOrderStatusUpdateEmail(payload: OrderStatusEmailPayload) {

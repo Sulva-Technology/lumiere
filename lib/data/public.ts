@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createHostedCheckoutSession } from "@/lib/payments";
+import { createHostedCheckoutSession, extractPaymentIntentId } from "@/lib/payments";
+import { getStripe } from "@/lib/stripe";
 import { sendBookingConfirmationEmails } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/data/audit";
 import {
@@ -1035,6 +1036,40 @@ export async function getReservationById(
     .maybeSingle();
   if (error) throw error;
   return data ? mapReservation(data) : null;
+}
+
+/**
+ * Confirm a booking when the client lands back on the site after paying, by asking
+ * Stripe directly. The webhook normally does this, but if it is delayed or missing
+ * the booking (and its emails) must still go through. Safe to run alongside the
+ * webhook: finalizePaidBooking returns the existing booking when one already exists.
+ */
+export async function confirmBookingFromCheckout(reservationId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: payment, error } = await supabase
+    .from("payments")
+    .select("id, booking_id, session_reference")
+    .eq("reservation_id", reservationId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!payment) return { confirmed: false };
+  if (payment.booking_id) return { confirmed: true };
+  if (!payment.session_reference?.startsWith("cs_")) return { confirmed: false };
+
+  const session = await getStripe().checkout.sessions.retrieve(payment.session_reference);
+  if (session.payment_status !== "paid" || session.metadata?.reservationId !== reservationId) {
+    return { confirmed: false };
+  }
+
+  logEvent("info", "booking.confirmed_from_return", { reservationId, paymentId: payment.id, sessionId: session.id });
+  const booking = await finalizePaidBooking({
+    paymentId: payment.id,
+    sessionReference: session.id,
+    providerReference: extractPaymentIntentId(session),
+    reservationId,
+  });
+  return { confirmed: Boolean(booking) };
 }
 
 export async function markReservationCancelled(reservationId: string) {
