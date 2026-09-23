@@ -399,8 +399,6 @@ export async function getAvailability(
   if (bookingsError) throw bookingsError;
   if (reservationError) throw reservationError;
 
-  const PRE_BUFFER_MS = 30 * 60_000; // 30 minutes before
-  const POST_BUFFER_MS = 3 * 60 * 60_000; // 3 hours after
   const seenSlotWindows = new Set<string>();
 
   return (slots ?? [])
@@ -424,26 +422,18 @@ export async function getAvailability(
           ).getTime();
           const reservationEnd = new Date(reservationSlot.ends_at).getTime();
 
-          const expandedStart = reservationStart - PRE_BUFFER_MS;
-          const expandedEnd = reservationEnd + POST_BUFFER_MS;
-
-          return slotStart < expandedEnd && slotEnd > expandedStart;
+          return slotStart < reservationEnd && slotEnd > reservationStart;
         },
       );
       if (isBlockedByReservation) return false;
 
-      // Check for overlap with any confirmed booking + asymmetric buffer
+      // A booking blocks only the time it occupies; the rest of the day stays bookable.
       const isBlockedByBooking = (confirmedBookings ?? []).some((booking) => {
         if (booking.stylist_id !== slot.stylist_id) return false;
         const bStart = new Date(booking.starts_at).getTime();
         const bEnd = new Date(booking.ends_at).getTime();
 
-        // Expanded booking window: [start - pre_buffer, end + post_buffer]
-        const expandedStart = bStart - PRE_BUFFER_MS;
-        const expandedEnd = bEnd + POST_BUFFER_MS;
-
-        // Overlap check: slot starts before booking ends AND slot ends after booking starts
-        return slotStart < expandedEnd && slotEnd > expandedStart;
+        return slotStart < bEnd && slotEnd > bStart;
       });
 
       if (isBlockedByBooking) return false;
@@ -552,16 +542,14 @@ async function getAvailableSlot(
 
   const slotStart = new Date(slot.starts_at).getTime();
   const slotEnd = new Date(slot.ends_at).getTime();
-  const BUFFER_MS = 60 * 60_000;
-
-  // 2. Double check for ANY overlapping confirmed bookings for this stylist (including buffers)
+  // 2. Double check for a real overlap with a confirmed booking.
   const { data: confirmedBookings } = await supabase
     .from("bookings")
     .select("id, starts_at, ends_at")
     .eq("stylist_id", input.stylistId)
     .in("status", ["confirmed", "completed"])
-    .lt("starts_at", new Date(slotEnd + BUFFER_MS).toISOString())
-    .gt("ends_at", new Date(slotStart - BUFFER_MS).toISOString());
+    .lt("starts_at", new Date(slotEnd).toISOString())
+    .gt("ends_at", new Date(slotStart).toISOString());
 
   if (confirmedBookings && confirmedBookings.length > 0) {
     throw new Error(

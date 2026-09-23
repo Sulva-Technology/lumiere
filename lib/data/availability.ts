@@ -681,6 +681,52 @@ type AvailabilitySyncScope = {
   serviceId?: string;
 };
 
+type SlotTemplate = {
+  stylist_id: string;
+  service_id: string | null;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+};
+
+/**
+ * Older calendars were created as a limited run of individual slots instead
+ * of recurring rules. Continue that real weekly pattern when no rule exists,
+ * so the calendar does not simply end after the original batch of dates.
+ */
+function deriveWeeklyTemplates(existing: any[]): SlotTemplate[] {
+  const windows = new Map<
+    string,
+    { stylistId: string; serviceId: string | null; weekday: number; start: number; end: number }
+  >();
+
+  for (const slot of existing) {
+    const startsAt = new Date(slot.starts_at);
+    const endsAt = new Date(slot.ends_at);
+    const weekday = startsAt.getDay();
+    const start = minutesOfDay(startsAt);
+    const end = minutesOfDay(endsAt);
+    const key = `${slot.stylist_id}:${slot.service_id ?? "all"}:${weekday}`;
+    const current = windows.get(key);
+
+    windows.set(key, {
+      stylistId: slot.stylist_id,
+      serviceId: slot.service_id ?? null,
+      weekday,
+      start: current ? Math.min(current.start, start) : start,
+      end: current ? Math.max(current.end, end) : end,
+    });
+  }
+
+  return Array.from(windows.values()).map((window) => ({
+    stylist_id: window.stylistId,
+    service_id: window.serviceId,
+    weekday: window.weekday,
+    start_time: `${String(Math.floor(window.start / 60)).padStart(2, "0")}:${String(window.start % 60).padStart(2, "0")}:00`,
+    end_time: `${String(Math.floor(window.end / 60)).padStart(2, "0")}:${String(window.end % 60).padStart(2, "0")}:00`,
+  }));
+}
+
 /**
  * Materialize recurring working hours into bookable slots.
  *
@@ -795,6 +841,8 @@ export async function syncRecurringAvailabilityRules(
     is_available: true;
   }> = [];
   const daysHandledByOverride = new Set<string>();
+  const effectiveRules =
+    (rules ?? []).length > 0 ? rules ?? [] : deriveWeeklyTemplates(existing);
 
   function fillWindow(
     stylistId: string,
@@ -847,7 +895,7 @@ export async function syncRecurringAvailabilityRules(
     }
   }
 
-  for (const rule of rules ?? []) {
+  for (const rule of effectiveRules) {
     let day = nextWeekday(now, rule.weekday);
 
     while (day <= horizon) {
