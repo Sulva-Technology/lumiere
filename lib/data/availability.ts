@@ -841,8 +841,11 @@ export async function syncRecurringAvailabilityRules(
     is_available: true;
   }> = [];
   const daysHandledByOverride = new Set<string>();
-  const effectiveRules =
-    (rules ?? []).length > 0 ? rules ?? [] : deriveWeeklyTemplates(existing);
+  // Keep explicit weekly rules, then fill any gaps with the established pattern
+  // from existing slots. Some legacy calendars have a partial rule set alongside
+  // manually-created slots; treating either source as exclusive made the calendar
+  // stop after the manually-created dates ran out.
+  const effectiveRules = [...(rules ?? []), ...deriveWeeklyTemplates(existing)];
 
   function fillWindow(
     stylistId: string,
