@@ -1,4 +1,10 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  addDaysToKey,
+  businessDateKey,
+  businessDateTime,
+  weekdayOfKey,
+} from "@/lib/timezone";
 import type {
   AvailabilityDayOverride,
   AvailabilityRule,
@@ -36,28 +42,22 @@ function endTimeValue(value: string) {
   return endMinutes(value) === 24 * 60 ? "24:00:00" : `${value}:00`;
 }
 
+// All day and hour math runs on the studio's clock (see lib/timezone), not the server's.
 function startOfDay(date: Date) {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
+  return businessDateTime(businessDateKey(date));
 }
 
 function withTime(date: Date, time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  const copy = new Date(date);
-  copy.setHours(hours, minutes, 0, 0);
-  return copy;
+  return businessDateTime(businessDateKey(date), time);
 }
 
 /** Calendar key (yyyy-mm-dd) for a moment, read in the same clock the slots are built in. */
 function localDateKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+  return businessDateKey(date);
 }
 
 function parseLocalDay(day: string) {
-  return new Date(`${day}T00:00:00`);
+  return businessDateTime(day);
 }
 
 type DayWindow = { start: number; end: number };
@@ -144,8 +144,8 @@ export async function createAvailabilitySchedule(input: {
       .from("booking_availability")
       .select("stylist_id, service_id, starts_at")
       .eq("stylist_id", input.stylistId)
-      .gte("starts_at", `${input.startDate}T00:00:00.000Z`)
-      .lte("starts_at", `${input.endDate}T23:59:59.999Z`),
+      .gte("starts_at", parseLocalDay(input.startDate).toISOString())
+      .lt("starts_at", parseLocalDay(addDaysToKey(input.endDate, 1)).toISOString()),
   ]);
 
   if (servicesError) throw servicesError;
@@ -164,11 +164,12 @@ export async function createAvailabilitySchedule(input: {
     ends_at: string;
     is_available: true;
   }> = [];
-  const current = new Date(`${input.startDate}T00:00:00`);
-  const lastDay = new Date(`${input.endDate}T00:00:00`);
+  let currentKey = input.startDate;
 
-  while (current <= lastDay) {
-    const isWeekend = current.getDay() === 0 || current.getDay() === 6;
+  while (currentKey <= input.endDate) {
+    const current = parseLocalDay(currentKey);
+    const weekday = weekdayOfKey(currentKey);
+    const isWeekend = weekday === 0 || weekday === 6;
     const startTime = isWeekend
       ? input.weekendStartTime
       : input.weekdayStartTime;
@@ -200,7 +201,7 @@ export async function createAvailabilitySchedule(input: {
       }
     }
 
-    current.setDate(current.getDate() + 1);
+    currentKey = addDaysToKey(currentKey, 1);
   }
 
   if (inserts.length > 0) {
@@ -336,9 +337,7 @@ function toTime(minutes: number) {
 }
 
 function addDays(date: Date, days: number) {
-  const copy = new Date(date);
-  copy.setDate(copy.getDate() + days);
-  return copy;
+  return parseLocalDay(addDaysToKey(localDateKey(date), days));
 }
 
 /**
@@ -427,7 +426,7 @@ function windowsForDay(schedule: StylistSchedule, day: Date): DayWindow[] {
     return override ? [override] : [];
   }
   if (!schedule.hasWeeklyHours) return [FALLBACK_WINDOW];
-  return schedule.weekly.get(day.getDay()) ?? [];
+  return schedule.weekly.get(weekdayOfKey(key)) ?? [];
 }
 
 function openTimesForDay(

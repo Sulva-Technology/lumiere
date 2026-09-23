@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { getOptionalEnv } from '@/lib/env';
 import type { MakeupBookingIntake } from '@/lib/types';
+import { BUSINESS_TIME_ZONE } from '@/lib/timezone';
 
 type MailPayload = {
   to: string | string[];
@@ -82,7 +83,8 @@ function formatCurrency(amount: number) {
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'full',
-    timeStyle: 'short',
+    timeStyle: 'long',
+    timeZone: BUSINESS_TIME_ZONE,
   }).format(new Date(value));
 }
 

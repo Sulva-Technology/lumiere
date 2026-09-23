@@ -8,6 +8,7 @@ import {
   parseOpenTimeId,
 } from "@/lib/data/availability";
 import { logEvent } from "@/lib/observability";
+import { BUSINESS_TIME_ZONE } from "@/lib/timezone";
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -623,7 +624,7 @@ export async function createBookingCheckout(
       },
       lines: [{
         name: "Appointment deposit",
-        description: `${service.name} - ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(slot.starts_at))}. Remaining balance due at appointment: $${remainingBalance.toFixed(2)}.`,
+        description: `${service.name} - ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: BUSINESS_TIME_ZONE }).format(new Date(slot.starts_at))}. Remaining balance due at appointment: $${remainingBalance.toFixed(2)}.`,
         amount: retainerAmount,
         quantity: 1,
       }],

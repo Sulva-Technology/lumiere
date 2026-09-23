@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Glass } from "@/components/ui/glass";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { BUSINESS_TIME_ZONE, businessDateKey } from "@/lib/timezone";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type {
   AvailableSlot,
@@ -43,8 +44,8 @@ const SKIN_OPTIONS: MakeupSkinType[] = [
   "Normal",
   "Not sure",
 ];
-function dateKey(value: string | Date) {
-  const date = new Date(value);
+/** Calendar-grid key from a local y/m/d date (not a moment in time). */
+function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
@@ -184,15 +185,15 @@ function BookingPageContent() {
 
   useEffect(() => {
     if (!availability.length) return;
-    const firstDate = dateKey(availability[0].startsAt);
+    const firstDate = businessDateKey(availability[0].startsAt);
     setSelectedAvailabilityDate((current) => current || firstDate);
-    setVisibleMonth(monthStart(new Date(availability[0].startsAt)));
+    setVisibleMonth(monthStart(new Date(`${firstDate}T12:00:00`)));
   }, [availability]);
 
   const availabilityByDate = useMemo(() => {
     const grouped = new Map<string, AvailableSlot[]>();
     for (const slot of availability) {
-      const key = dateKey(slot.startsAt);
+      const key = businessDateKey(slot.startsAt);
       grouped.set(key, [...(grouped.get(key) ?? []), slot]);
     }
     return grouped;
@@ -599,6 +600,9 @@ function BookingPageContent() {
                           })
                         : "Choose a date"}
                     </h2>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                      All times are Arizona time (MST).
+                    </p>
                     <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {selectedDateSlots.map((slot) => (
                         <button
@@ -614,6 +618,7 @@ function BookingPageContent() {
                           {new Date(slot.startsAt).toLocaleTimeString("en-US", {
                             hour: "numeric",
                             minute: "2-digit",
+                            timeZone: BUSINESS_TIME_ZONE,
                           })}
                         </button>
                       ))}

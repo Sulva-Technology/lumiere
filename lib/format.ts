@@ -1,3 +1,5 @@
+import { BUSINESS_TIME_ZONE } from './timezone';
+
 export function formatCurrency(amount: number, currency: 'USD' | 'usd' = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -12,6 +14,8 @@ export function formatDateTime(value: string) {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: BUSINESS_TIME_ZONE,
+    timeZoneName: 'short',
   }).format(new Date(value));
 }
 
