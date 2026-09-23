@@ -209,6 +209,20 @@ export const adminBookingServiceSchema = z.object({
   price: z.coerce.number().min(0),
   serviceType: z.enum(bookingServiceTypes),
   active: z.boolean().optional().default(true),
+  special: z
+    .object({
+      price: z.coerce.number().min(0),
+      label: z.string().trim().max(80).nullable().optional(),
+      startsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a start date for the special."),
+      endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose an end date for the special."),
+    })
+    .refine((special) => special.endsOn >= special.startsOn, {
+      message: "Special end date must be on or after the start date.",
+    })
+    .nullable()
+    .optional(),
+}).refine((service) => !service.special || service.special.price < service.price, {
+  message: "Special price must be lower than the regular price.",
 });
 
 export const adminAvailabilityRuleSchema = z.object({

@@ -193,6 +193,14 @@ export interface GalleryItem {
   mediaAssetId: string | null;
 }
 
+/** Limited-time price for appointments dated startsOn..endsOn (yyyy-mm-dd, Arizona). */
+export interface ServiceSpecial {
+  price: number;
+  label: string | null;
+  startsOn: string;
+  endsOn: string;
+}
+
 export interface BookingService {
   id: string;
   name: string;
@@ -202,6 +210,7 @@ export interface BookingService {
   price: number;
   serviceType: BookingServiceType;
   active?: boolean;
+  special?: ServiceSpecial | null;
   bestFor?: string;
   included?: string[];
   prepNotes?: string[];

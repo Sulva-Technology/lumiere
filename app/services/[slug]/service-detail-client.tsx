@@ -5,7 +5,7 @@ import { Glass } from '@/components/ui/glass';
 import Link from 'next/link';
 import { Check, Clock, DollarSign, Sparkles } from 'lucide-react';
 import type { BookingService } from '@/lib/types';
-import { formatCurrency } from '@/lib/format';
+import { ServicePrice } from '@/components/service-price';
 
 export default function ServiceDetailClient({ service }: { service: BookingService }) {
   const Icon = Sparkles;
@@ -85,7 +85,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
                     <DollarSign size={16} />
                     <span>Investment</span>
                   </div>
-                  <span className="font-bold text-[var(--text-primary)]">{formatCurrency(service.price)}</span>
+                  <ServicePrice service={service} className="items-end text-right" priceClassName="font-bold text-[var(--text-primary)]" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">

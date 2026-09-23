@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/availability";
 import { logEvent } from "@/lib/observability";
 import { BUSINESS_TIME_ZONE } from "@/lib/timezone";
+import { SPECIAL_COLUMNS, isSpecialCurrent, priceForAppointment, specialFromRow } from "@/lib/specials";
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -256,20 +257,29 @@ export async function getProductBySlug(
 
 export async function getBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("booking_services")
-    .select("id, slug, name, description, duration_minutes, price, service_type")
-    .eq("active", true)
-    .eq("service_type", "makeup")
-    .order("price");
+  const baseColumns = "id, slug, name, description, duration_minutes, price, service_type";
+  const query = (columns: string) =>
+    supabase
+      .from("booking_services")
+      .select(columns)
+      .eq("active", true)
+      .eq("service_type", "makeup")
+      .order("price");
+
+  let { data, error } = await query(`${baseColumns}, ${SPECIAL_COLUMNS}`);
+  // Keep booking working until migration 019 (service specials) is applied.
+  if (error && isMissingColumnError(error, "special_price")) {
+    ({ data, error } = await query(baseColumns));
+  }
 
   if (error) throw error;
   // We import SERVICES dynamically to avoid circular dependencies if any,
   // though here it's fine. We'll use the slug to match.
   const { SERVICES } = require("./services");
 
-  return (data ?? []).map((service) => {
+  return ((data ?? []) as any[]).map((service) => {
     const seoData = SERVICES.find((s: any) => s.slug === service.slug);
+    const special = specialFromRow(service);
 
     return {
       id: service.id,
@@ -279,6 +289,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
       durationMinutes: service.duration_minutes,
       price: normalizeMoney(service.price),
       serviceType: service.service_type,
+      special: isSpecialCurrent(special) ? special : null,
       // Pass through SEO specific fields if they exist
       included: seoData?.included ?? [],
       prepNotes: seoData?.prepNotes ?? [],
@@ -509,7 +520,9 @@ export async function createBookingCheckout(
   // Travel is quoted directly by the artist and is never added automatically.
   const travelFee = 0;
   const sameDayFee = input.sameDayAppointment ? 50 : 0;
-  const appointmentTotal = service.price + travelFee + sameDayFee;
+  const servicePrice = priceForAppointment(service, slot.starts_at);
+  const specialApplied = servicePrice !== service.price;
+  const appointmentTotal = servicePrice + travelFee + sameDayFee;
   const retainerAmount = 35 + sameDayFee;
   const remainingBalance = Math.max(appointmentTotal - retainerAmount, 0);
   const isInPersonPayment = input.paymentMethod === "in_person";
@@ -583,6 +596,9 @@ export async function createBookingCheckout(
       metadata: {
         kind: "booking",
         serviceName: service.name,
+        servicePrice,
+        specialApplied,
+        specialLabel: specialApplied ? service.special?.label ?? null : null,
         appointmentTotal,
         retainerAmount,
         remainingBalance,

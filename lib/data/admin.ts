@@ -3,7 +3,8 @@ import { sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmat
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
 import { finalizePaidOrder } from '@/lib/data/checkout';
-import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeSectionVisibility, HomeShopSectionItem, PaymentRecord, ProductDetail, StoreSettings } from '@/lib/types';
+import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeSectionVisibility, HomeShopSectionItem, PaymentRecord, ProductDetail, ServiceSpecial, StoreSettings } from '@/lib/types';
+import { SPECIAL_COLUMNS, specialFromRow } from '@/lib/specials';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 import { finalizePaidBooking } from '@/lib/data/public';
 import { logEvent } from '@/lib/observability';
@@ -302,96 +303,107 @@ export async function getAdminCategories(): Promise<Category[]> {
   return data ?? [];
 }
 
-export async function getAdminBookingServices(): Promise<BookingService[]> {
-  const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase.from('booking_services').select('id, name, slug, description, duration_minutes, price, service_type, active').order('price');
-  if (error) throw error;
-  return (data ?? []).map((service) => ({
-    id: service.id,
-    name: service.name,
-    slug: service.slug,
-    description: service.description,
-    durationMinutes: money(service.duration_minutes),
-    price: money(service.price),
-    serviceType: service.service_type,
-    active: service.active,
-  }));
-}
+const BASE_SERVICE_COLUMNS = 'id, name, slug, description, duration_minutes, price, service_type, active';
+const SERVICE_COLUMNS = `${BASE_SERVICE_COLUMNS}, ${SPECIAL_COLUMNS}`;
 
-export async function createAdminBookingService(input: {
-  name: string;
-  slug: string;
-  description?: string | null;
-  durationMinutes: number;
-  price: number;
-  serviceType: BookingServiceType;
-  active?: boolean;
-}) {
-  const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from('booking_services')
-    .insert({
-      name: input.name,
-      slug: input.slug,
-      description: input.description?.trim() || null,
-      duration_minutes: input.durationMinutes,
-      price: input.price,
-      service_type: input.serviceType,
-      active: input.active ?? true,
-    })
-    .select('id, name, slug, description, duration_minutes, price, service_type, active')
-    .single();
-
-  if (error) throw error;
-  return {
-    id: data.id,
-    name: data.name,
-    slug: data.slug,
-    description: data.description,
-    durationMinutes: money(data.duration_minutes),
-    price: money(data.price),
-    serviceType: data.service_type,
-    active: data.active,
-  } satisfies BookingService;
-}
-
-export async function updateAdminBookingService(input: {
+type ServiceRow = {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  duration_minutes: number;
+  price: number | string;
+  service_type: BookingServiceType;
+  active: boolean;
+  special_price?: number | string | null;
+  special_label?: string | null;
+  special_starts_on?: string | null;
+  special_ends_on?: string | null;
+};
+
+function toAdminBookingService(row: ServiceRow): BookingService {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    durationMinutes: money(row.duration_minutes),
+    price: money(row.price),
+    serviceType: row.service_type,
+    active: row.active,
+    special: specialFromRow(row),
+  };
+}
+
+type SpecialInput = Omit<ServiceSpecial, 'label'> & { label?: string | null };
+
+function specialColumns(special: SpecialInput | null | undefined) {
+  return {
+    special_price: special?.price ?? null,
+    special_label: special?.label?.trim() || null,
+    special_starts_on: special?.startsOn ?? null,
+    special_ends_on: special?.endsOn ?? null,
+  };
+}
+
+export async function getAdminBookingServices(): Promise<BookingService[]> {
+  const supabase = createSupabaseAdminClient();
+  const list = (columns: string) => supabase.from('booking_services').select(columns).order('price');
+  let { data, error } = await list(SERVICE_COLUMNS);
+  // Migration 019 adds the special columns; list services without them until it runs.
+  if (error?.message.includes('special_')) {
+    ({ data, error } = await list(BASE_SERVICE_COLUMNS));
+  }
+  if (error) throw error;
+  return ((data ?? []) as unknown as ServiceRow[]).map(toAdminBookingService);
+}
+
+type BookingServiceInput = {
+  name: string;
+  slug: string;
   description?: string | null;
   durationMinutes: number;
   price: number;
   serviceType: BookingServiceType;
   active?: boolean;
-}) {
-  const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from('booking_services')
-    .update({
-      name: input.name,
-      slug: input.slug,
-      description: input.description?.trim() || null,
-      duration_minutes: input.durationMinutes,
-      price: input.price,
-      service_type: input.serviceType,
-      active: input.active ?? true,
-    })
-    .eq('id', input.id)
-    .select('id, name, slug, description, duration_minutes, price, service_type, active')
-    .single();
+  special?: SpecialInput | null;
+};
 
+async function saveBookingService(
+  input: BookingServiceInput,
+  write: (values: Record<string, unknown>, columns: string) => PromiseLike<{ data: unknown; error: { message: string } | null }>
+) {
+  const values = {
+    name: input.name,
+    slug: input.slug,
+    description: input.description?.trim() || null,
+    duration_minutes: input.durationMinutes,
+    price: input.price,
+    service_type: input.serviceType,
+    active: input.active ?? true,
+  };
+  let { data, error } = await write({ ...values, ...specialColumns(input.special) }, SERVICE_COLUMNS);
+  if (error?.message.includes('special_')) {
+    if (input.special) throw new Error('Specials need the 019_service_specials database migration. Apply it in Supabase, then save again.');
+    // Before migration 019, save the service without special columns.
+    ({ data, error } = await write(values, BASE_SERVICE_COLUMNS));
+  }
   if (error) throw error;
-  return {
-    id: data.id,
-    name: data.name,
-    slug: data.slug,
-    description: data.description,
-    durationMinutes: money(data.duration_minutes),
-    price: money(data.price),
-    serviceType: data.service_type,
-    active: data.active,
-  } satisfies BookingService;
+  return toAdminBookingService(data as ServiceRow);
+}
+
+export async function createAdminBookingService(input: BookingServiceInput) {
+  const supabase = createSupabaseAdminClient();
+  return saveBookingService(input, (values, columns) =>
+    supabase.from('booking_services').insert(values).select(columns).single()
+  );
+}
+
+export async function updateAdminBookingService(input: BookingServiceInput & { id: string }) {
+  const supabase = createSupabaseAdminClient();
+  return saveBookingService(input, (values, columns) =>
+    supabase.from('booking_services').update(values).eq('id', input.id).select(columns).single()
+  );
 }
 
 export async function deleteAdminBookingService(id: string) {

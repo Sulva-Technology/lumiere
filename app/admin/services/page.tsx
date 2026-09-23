@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Glass } from '@/components/ui/glass';
 import { formatCurrency } from '@/lib/format';
+import { formatSpecialWindow, isSpecialCurrent } from '@/lib/specials';
 import type { BookingService, BookingServiceType } from '@/lib/types';
 
 type ServiceFormState = {
@@ -14,6 +15,11 @@ type ServiceFormState = {
   price: string;
   serviceType: BookingServiceType;
   active: boolean;
+  specialEnabled: boolean;
+  specialPrice: string;
+  specialLabel: string;
+  specialStartsOn: string;
+  specialEndsOn: string;
 };
 
 const INITIAL_FORM: ServiceFormState = {
@@ -25,7 +31,30 @@ const INITIAL_FORM: ServiceFormState = {
   price: '',
   serviceType: 'makeup',
   active: true,
+  specialEnabled: false,
+  specialPrice: '',
+  specialLabel: '',
+  specialStartsOn: '',
+  specialEndsOn: '',
 };
+
+function formFromService(service: BookingService): ServiceFormState {
+  return {
+    id: service.id,
+    name: service.name,
+    slug: service.slug,
+    description: service.description ?? '',
+    durationMinutes: String(service.durationMinutes),
+    price: String(service.price),
+    serviceType: service.serviceType,
+    active: service.active ?? true,
+    specialEnabled: Boolean(service.special),
+    specialPrice: service.special ? String(service.special.price) : '',
+    specialLabel: service.special?.label ?? '',
+    specialStartsOn: service.special?.startsOn ?? '',
+    specialEndsOn: service.special?.endsOn ?? '',
+  };
+}
 
 function toSlug(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -73,6 +102,9 @@ export default function AdminServicesPage() {
           price: form.price,
           serviceType: form.serviceType,
           active: form.active,
+          special: form.specialEnabled
+            ? { price: form.specialPrice, label: form.specialLabel || null, startsOn: form.specialStartsOn, endsOn: form.specialEndsOn }
+            : null,
         }),
       });
       const json = await response.json();
@@ -128,6 +160,29 @@ export default function AdminServicesPage() {
               <input value={form.durationMinutes} onChange={(event) => setForm((current) => ({ ...current, durationMinutes: event.target.value }))} type="number" min="15" step="15" placeholder="Duration" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
               <input value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} type="number" min="0" step="0.01" placeholder="Price" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
             </div>
+            <fieldset className="space-y-3 rounded-3xl border border-white/10 p-4">
+              <label className="inline-flex items-center gap-2 text-sm text-white/80">
+                <input type="checkbox" checked={form.specialEnabled} onChange={(event) => setForm((current) => ({ ...current, specialEnabled: event.target.checked }))} />
+                Limited-time special
+              </label>
+              {form.specialEnabled && (
+                <>
+                  <p className="text-xs leading-5 text-white/50">Clients see the regular price crossed out. The special price only applies to appointments dated inside these dates; other dates book at the regular price. The special disappears from the site after the end date.</p>
+                  <input value={form.specialLabel} onChange={(event) => setForm((current) => ({ ...current, specialLabel: event.target.value }))} maxLength={80} placeholder="Label, e.g. October Special" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" />
+                  <input value={form.specialPrice} onChange={(event) => setForm((current) => ({ ...current, specialPrice: event.target.value }))} type="number" min="0" step="0.01" placeholder="Special price" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs text-white/50">
+                      First appointment date
+                      <input value={form.specialStartsOn} onChange={(event) => setForm((current) => ({ ...current, specialStartsOn: event.target.value }))} type="date" className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30 [color-scheme:dark]" required />
+                    </label>
+                    <label className="text-xs text-white/50">
+                      Last appointment date
+                      <input value={form.specialEndsOn} onChange={(event) => setForm((current) => ({ ...current, specialEndsOn: event.target.value }))} type="date" min={form.specialStartsOn || undefined} className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30 [color-scheme:dark]" required />
+                    </label>
+                  </div>
+                </>
+              )}
+            </fieldset>
             <label className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm text-white/70">
               <input type="checkbox" checked={form.active} onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))} />
               Active
@@ -152,10 +207,15 @@ export default function AdminServicesPage() {
                   <div className="mt-4 flex flex-wrap gap-3 text-sm text-white/55">
                     <span className="rounded-full border border-white/10 px-3 py-1">{service.durationMinutes} mins</span>
                     <span className="rounded-full border border-white/10 px-3 py-1">{formatCurrency(service.price)}</span>
+                    {service.special && (
+                      <span className={`rounded-full border px-3 py-1 ${isSpecialCurrent(service.special) ? 'border-[#8B4411]/60 text-[#F7E7C1]' : 'border-white/10 text-white/40'}`}>
+                        {service.special.label || 'Special'}: {formatCurrency(service.special.price)} · {formatSpecialWindow(service.special)}{isSpecialCurrent(service.special) ? '' : ' (ended)'}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setForm({ id: service.id, name: service.name, slug: service.slug, description: service.description ?? '', durationMinutes: String(service.durationMinutes), price: String(service.price), serviceType: service.serviceType, active: service.active ?? true })} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10">Edit</button>
+                  <button type="button" onClick={() => setForm(formFromService(service))} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10">Edit</button>
                   <button type="button" onClick={() => void handleDelete(service.id)} className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/20">Archive / Delete</button>
                 </div>
               </div>

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowRight, Clock, DollarSign } from 'lucide-react';
 import Image from 'next/image';
 import type { BookingService } from '@/lib/types';
-import { formatCurrency } from '@/lib/format';
+import { ServicePrice } from '@/components/service-price';
 
 interface ServicesClientProps {
   initialServices: BookingService[];
@@ -47,8 +47,8 @@ export default function ServicesClient({ initialServices }: ServicesClientProps)
                 
                 <div className="mt-auto space-y-3">
                   <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <DollarSign size={16} className="text-[var(--text-accent)]" />
-                    <span>{formatCurrency(service.price)}</span>
+                    <DollarSign size={16} className="shrink-0 self-start mt-0.5 text-[var(--text-accent)]" />
+                    <ServicePrice service={service} />
                   </div>
                   <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                     <Clock size={16} className="text-[var(--text-accent)]" />

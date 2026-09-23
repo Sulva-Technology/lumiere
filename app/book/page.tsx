@@ -18,6 +18,8 @@ import { Glass } from "@/components/ui/glass";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { BUSINESS_TIME_ZONE, businessDateKey } from "@/lib/timezone";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ServicePrice } from "@/components/service-price";
+import { formatSpecialWindow, priceForAppointment } from "@/lib/specials";
 import type {
   AvailableSlot,
   BookingReservation,
@@ -200,8 +202,15 @@ function BookingPageContent() {
   }, [availability]);
   const selectedDateSlots =
     availabilityByDate.get(selectedAvailabilityDate) ?? [];
+  // Specials only apply to appointments dated inside the special window.
+  const servicePrice = selectedServiceDetail
+    ? selectedSlot
+      ? priceForAppointment(selectedServiceDetail, selectedSlot.startsAt)
+      : selectedServiceDetail.price
+    : 0;
+  const specialApplied = !!selectedServiceDetail && servicePrice !== selectedServiceDetail.price;
   const bookingTotal =
-    (selectedServiceDetail?.price ?? 0) +
+    servicePrice +
     (sameDayAppointment ? SAME_DAY_FEE : 0);
   const bookingFee = RETAINER_AMOUNT + (sameDayAppointment ? SAME_DAY_FEE : 0);
 
@@ -447,9 +456,11 @@ function BookingPageContent() {
                       <Icon className="shrink-0 text-[#8B4411] opacity-40" />
                     </div>
                     <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4">
-                      <p className="font-serif text-2xl text-[#8B4411]">
-                        {formatCurrency(service.price)}
-                      </p>
+                      <ServicePrice
+                        service={service}
+                        className="items-end text-right"
+                        priceClassName="font-serif text-2xl text-[#8B4411]"
+                      />
                     </div>
                   </button>
                 );
@@ -475,6 +486,14 @@ function BookingPageContent() {
               <p className="mt-4 text-[var(--text-secondary)]">
                 Select a live opening for {selectedServiceDetail?.name}.
               </p>
+              {selectedServiceDetail?.special && (
+                <p className="mx-auto mt-4 w-fit rounded-full bg-[#8B4411]/10 px-4 py-2 text-sm text-[var(--text-primary)]">
+                  {selectedServiceDetail.special.label || "Special pricing"}:{" "}
+                  <strong>{formatCurrency(selectedServiceDetail.special.price)}</strong> for appointments{" "}
+                  {formatSpecialWindow(selectedServiceDetail.special)}. Other dates are{" "}
+                  {formatCurrency(selectedServiceDetail.price)}.
+                </p>
+              )}
             </header>
             <div className="mx-auto max-w-2xl">
               {loadingAvailability ? (
@@ -906,9 +925,20 @@ function BookingPageContent() {
                         Service
                       </span>
                       <span className="font-medium">
-                        {selectedServiceDetail
-                          ? formatCurrency(selectedServiceDetail.price)
-                          : "-"}
+                        {selectedServiceDetail ? (
+                          specialApplied ? (
+                            <>
+                              <s className="mr-2 font-normal text-[var(--text-secondary)]">
+                                {formatCurrency(selectedServiceDetail.price)}
+                              </s>
+                              {formatCurrency(servicePrice)}
+                            </>
+                          ) : (
+                            formatCurrency(servicePrice)
+                          )
+                        ) : (
+                          "-"
+                        )}
                       </span>
                     </div>
                     {sameDayAppointment && (
