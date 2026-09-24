@@ -47,6 +47,40 @@ const SKIN_OPTIONS: MakeupSkinType[] = [
   "Normal",
   "Not sure",
 ];
+const DETAILS_STORAGE_KEY = "itzlola:booking-details";
+
+/** What a client typed on the details step, kept so a retry or reload never loses it. */
+type SavedDetails = {
+  fullName: string;
+  phone: string;
+  email: string;
+  notes: string;
+  sameDayAppointment: boolean;
+  occasion: string;
+  referenceDescription: string;
+  referenceImageUrl: string | null;
+  referenceImageAssetId: string | null;
+  lookType: MakeupLookType;
+  skinType: MakeupSkinType;
+  skinConditionsOrAllergies: string;
+};
+
+function readSavedDetails(): Partial<SavedDetails> | null {
+  try {
+    const raw = window.localStorage.getItem(DETAILS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<SavedDetails>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedDetails(details: SavedDetails | null) {
+  try {
+    if (details) window.localStorage.setItem(DETAILS_STORAGE_KEY, JSON.stringify(details));
+    else window.localStorage.removeItem(DETAILS_STORAGE_KEY);
+  } catch {}
+}
+
 /** Calendar-grid key from a local y/m/d date (not a moment in time). */
 function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -106,6 +140,82 @@ function BookingPageContent() {
   );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [availabilityAttempt, setAvailabilityAttempt] = useState(0);
+  const [detailsRestored, setDetailsRestored] = useState(false);
+  // What "Try again" should redo for the last failure.
+  const retryRef = useRef<(() => void) | null>(null);
+  const lastUploadRef = useRef<File | null>(null);
+
+  useEffect(() => {
+    if (success) {
+      writeSavedDetails(null);
+    } else {
+      const saved = readSavedDetails();
+      if (saved) {
+        if (typeof saved.fullName === "string") setFullName(saved.fullName);
+        if (typeof saved.phone === "string") setPhone(saved.phone);
+        if (typeof saved.email === "string") setEmail(saved.email);
+        if (typeof saved.notes === "string") setNotes(saved.notes);
+        if (typeof saved.sameDayAppointment === "boolean") setSameDayAppointment(saved.sameDayAppointment);
+        if (typeof saved.occasion === "string") setOccasion(saved.occasion);
+        if (typeof saved.referenceDescription === "string") setReferenceDescription(saved.referenceDescription);
+        if (saved.referenceImageUrl !== undefined) setReferenceImageUrl(saved.referenceImageUrl);
+        if (saved.referenceImageAssetId !== undefined) setReferenceImageAssetId(saved.referenceImageAssetId);
+        if (saved.lookType && LOOK_OPTIONS.includes(saved.lookType)) setLookType(saved.lookType);
+        if (saved.skinType && SKIN_OPTIONS.includes(saved.skinType)) setSkinType(saved.skinType);
+        if (typeof saved.skinConditionsOrAllergies === "string") setSkinConditionsOrAllergies(saved.skinConditionsOrAllergies);
+      }
+    }
+    setDetailsRestored(true);
+  }, [success]);
+
+  useEffect(() => {
+    // Wait for the restore so empty defaults never overwrite saved answers.
+    if (!detailsRestored || success) return;
+    writeSavedDetails({
+      fullName,
+      phone,
+      email,
+      notes,
+      sameDayAppointment,
+      occasion,
+      referenceDescription,
+      referenceImageUrl,
+      referenceImageAssetId,
+      lookType,
+      skinType,
+      skinConditionsOrAllergies,
+    });
+  }, [
+    detailsRestored,
+    success,
+    fullName,
+    phone,
+    email,
+    notes,
+    sameDayAppointment,
+    occasion,
+    referenceDescription,
+    referenceImageUrl,
+    referenceImageAssetId,
+    lookType,
+    skinType,
+    skinConditionsOrAllergies,
+  ]);
+
+  function failWith(message: string, retry: () => void) {
+    retryRef.current = retry;
+    setError(message);
+  }
+
+  function tryAgain() {
+    const retry = retryRef.current;
+    retryRef.current = null;
+    setError(null);
+    retry?.();
+  }
 
   useEffect(() => {
     async function load() {
@@ -126,17 +236,18 @@ function BookingPageContent() {
         if (stylistsJson.stylists[0])
           setSelectedStylist(stylistsJson.stylists[0].id);
       } catch (loadError) {
-        setError(
+        failWith(
           loadError instanceof Error
             ? loadError.message
             : "Unable to load booking data.",
+          () => setLoadAttempt((attempt) => attempt + 1),
         );
       } finally {
         setLoadingBookingData(false);
       }
     }
     void load();
-  }, []);
+  }, [loadAttempt]);
 
   const filteredServices = services;
   const selectedServiceDetail = useMemo(
@@ -174,17 +285,30 @@ function BookingPageContent() {
           throw new Error(json.error ?? "Unable to load availability.");
         setAvailability(json.availability);
       } catch (loadError) {
-        setError(
+        failWith(
           loadError instanceof Error
             ? loadError.message
             : "Unable to load availability.",
+          () => setAvailabilityAttempt((attempt) => attempt + 1),
         );
       } finally {
         setLoadingAvailability(false);
       }
     }
     void loadAvailability();
-  }, [selectedService, selectedStylist]);
+  }, [selectedService, selectedStylist, availabilityAttempt]);
+
+  useEffect(() => {
+    // After a refresh, a time someone else just took sends the client back to pick
+    // another one; everything they typed stays in place.
+    if (loadingAvailability || !selectedAvailability || currentStep !== "details") return;
+    if (availability.some((slot) => slot.id === selectedAvailability)) return;
+    setSelectedAvailability("");
+    setError(null);
+    retryRef.current = null;
+    setCurrentStep("availability");
+    setNotice("That time was just booked. Please pick another; your details are saved.");
+  }, [availability, loadingAvailability, selectedAvailability, currentStep]);
 
   useEffect(() => {
     if (!availability.length) return;
@@ -281,6 +405,7 @@ function BookingPageContent() {
   }, [canceled, payingInPerson, reservationId, success]);
 
   async function handleReferenceUpload(file: File) {
+    lastUploadRef.current = file;
     setUploadingReference(true);
     setError(null);
     try {
@@ -296,10 +421,13 @@ function BookingPageContent() {
       setReferenceImageUrl(json.data.url);
       setReferenceImageAssetId(json.data.mediaAsset.id);
     } catch (uploadError) {
-      setError(
+      failWith(
         uploadError instanceof Error
           ? uploadError.message
           : "Unable to upload inspiration photo.",
+        () => {
+          if (lastUploadRef.current) void handleReferenceUpload(lastUploadRef.current);
+        },
       );
     } finally {
       setUploadingReference(false);
@@ -355,11 +483,14 @@ function BookingPageContent() {
         json.data.checkoutUrl ??
         `/book?success=1&reservation=${json.data.reservationId}&payment=in_person`;
     } catch (submitError) {
-      setError(
+      failWith(
         submitError instanceof Error
           ? submitError.message
           : "Unable to continue.",
+        () => void confirmRetainerPayment(),
       );
+      // Refresh times in case the chosen one was taken meanwhile.
+      setAvailabilityAttempt((attempt) => attempt + 1);
     } finally {
       setSaving(false);
     }
@@ -421,7 +552,14 @@ function BookingPageContent() {
           </div>
         ))}
       </div>
-      {error && currentStep !== "details" && <ReloadNotice className="mb-6" />}
+      {error && currentStep !== "details" && (
+        <ReloadNotice className="mb-6" onRetry={tryAgain} />
+      )}
+      {notice && currentStep === "availability" && (
+        <p role="status" className="mb-6 text-center text-sm text-[var(--text-primary)]">
+          {notice}
+        </p>
+      )}
         {currentStep === "service" && (
           <div className="space-y-6">
             <header className="text-center">
@@ -1003,6 +1141,7 @@ function BookingPageContent() {
             {error && (
               <ReloadNotice
                 className="mt-4"
+                onRetry={tryAgain}
                 message="We couldn’t save that just now."
               />
             )}
@@ -1045,7 +1184,7 @@ function BookingPageContent() {
               </label>
               <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => { setShowTermsModal(false); setPendingAvailability(null); }} className="rounded-full px-5 py-3 text-sm font-medium text-[var(--text-secondary)]">Choose another time</button>
-                <button type="button" disabled={!termsAccepted} onClick={() => { setSelectedAvailability(pendingAvailability); setShowTermsModal(false); setPendingAvailability(null); setCurrentStep("details"); }} className="rounded-full bg-[#8B4411] px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40">Continue to booking details</button>
+                <button type="button" disabled={!termsAccepted} onClick={() => { setSelectedAvailability(pendingAvailability); setNotice(null); setShowTermsModal(false); setPendingAvailability(null); setCurrentStep("details"); }} className="rounded-full bg-[#8B4411] px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40">Continue to booking details</button>
               </div>
             </Glass>
           </div>
