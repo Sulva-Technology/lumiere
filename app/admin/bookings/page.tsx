@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Loader2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock, ExternalLink, Loader2, Maximize2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/format';
 import { BUSINESS_TIME_ZONE } from '@/lib/timezone';
@@ -81,6 +81,14 @@ export default function AdminBookingsPage() {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter | null>(null);
+  const [photo, setPhoto] = useState<{ url: string; clientName: string } | null>(null);
+
+  useEffect(() => {
+    if (!photo) return;
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setPhoto(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [photo]);
 
   async function load() {
     setLoading(true);
@@ -333,22 +341,35 @@ export default function AdminBookingsPage() {
                       </dl>
                     )}
                     {booking.sameDay && <Pill status="pending" label="Same-day add-on" />}
+                    {booking.intake?.referenceImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setPhoto({ url: booking.intake!.referenceImageUrl, clientName: booking.clientName })}
+                        className="group relative block overflow-hidden rounded-2xl border border-[rgba(201,147,97,0.16)]"
+                        aria-label={`Enlarge ${booking.clientName}'s reference photo`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- client uploads live in storage, not a configured image domain */}
+                        <img
+                          src={booking.intake.referenceImageUrl}
+                          alt={`Makeup reference photo from ${booking.clientName}`}
+                          loading="lazy"
+                          className="h-40 w-32 object-cover transition duration-300 group-hover:scale-105 sm:h-44 sm:w-36"
+                        />
+                        <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-6 text-[11px] uppercase tracking-[0.16em] text-[#F7E7C1]">
+                          <Maximize2 size={12} /> Reference
+                        </span>
+                      </button>
+                    )}
                     {booking.intake && Object.keys(booking.intake).length > 0 && (
                       <details className="group rounded-2xl border border-[rgba(201,147,97,0.12)] px-3 py-2 text-sm">
                         <summary className="cursor-pointer select-none text-[#e8d3bd] marker:text-[#C99361]">Client&apos;s makeup details</summary>
                         <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
                           {Object.entries(booking.intake)
-                            .filter(([key]) => key !== 'referenceImageAssetId')
+                            .filter(([key]) => key !== 'referenceImageAssetId' && key !== 'referenceImageUrl')
                             .map(([key, value]) => (
                               <div key={key} className="min-w-0">
-                                <dt className="text-[10px] uppercase tracking-[0.18em] text-[#C99361]/80">{INTAKE_LABELS[key] ?? (key === 'referenceImageUrl' ? 'Reference photo' : key)}</dt>
-                                <dd className="mt-0.5 break-words text-[#e8d3bd]">
-                                  {key === 'referenceImageUrl' ? (
-                                    <a href={value} target="_blank" rel="noreferrer" className="underline decoration-[#C99361]/50 hover:text-[#F7E7C1]">View photo</a>
-                                  ) : (
-                                    value.replace(/_/g, ' ')
-                                  )}
-                                </dd>
+                                <dt className="text-[10px] uppercase tracking-[0.18em] text-[#C99361]/80">{INTAKE_LABELS[key] ?? key}</dt>
+                                <dd className="mt-0.5 break-words text-[#e8d3bd]">{value.replace(/_/g, ' ')}</dd>
                               </div>
                             ))}
                         </dl>
@@ -422,6 +443,44 @@ export default function AdminBookingsPage() {
             );
           })}
         </ul>
+      )}
+
+      {photo && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${photo.clientName}'s reference photo`}
+          onClick={() => setPhoto(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+        >
+          <div className="absolute right-4 top-4 flex gap-2">
+            <a
+              href={photo.url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-xs text-[#F7E7C1] hover:bg-black/70"
+            >
+              <ExternalLink size={13} /> Open original
+            </a>
+            <button
+              type="button"
+              onClick={() => setPhoto(null)}
+              aria-label="Close"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-[#F7E7C1] hover:bg-black/70"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- see thumbnail above */}
+          <img
+            src={photo.url}
+            alt={`Makeup reference photo from ${photo.clientName}`}
+            onClick={(event) => event.stopPropagation()}
+            className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+          />
+          <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-[#e8d3bd]/70">{photo.clientName} · tap outside or press Esc to close</p>
+        </div>
       )}
     </div>
   );
