@@ -143,16 +143,32 @@ export async function getAdminPayments(): Promise<PaymentRecord[]> {
   return (data ?? []).map(mapPayment);
 }
 
+/** Deposit, total and intake answers, as saved on the booking's payment at checkout. */
+function bookingMoney(payment: { amount?: unknown; metadata?: unknown } | null) {
+  const meta = (payment?.metadata && typeof payment.metadata === 'object' ? payment.metadata : {}) as Record<string, unknown>;
+  const num = (value: unknown) => (value === null || value === undefined || value === '' || Number.isNaN(Number(value)) ? null : Number(value));
+  const intake = meta.makeupIntake && typeof meta.makeupIntake === 'object' ? (meta.makeupIntake as Record<string, unknown>) : null;
+  return {
+    depositAmount: num(meta.retainerAmount) ?? num(payment?.amount),
+    appointmentTotal: num(meta.appointmentTotal),
+    balanceDue: num(meta.remainingBalance),
+    sameDay: num(meta.sameDayFee) ? true : false,
+    intake: intake
+      ? Object.fromEntries(Object.entries(intake).filter(([, value]) => typeof value === 'string' && value.trim()).map(([key, value]) => [key, String(value)]))
+      : null,
+  };
+}
+
 export async function getAdminBookings(): Promise<AdminBookingRow[]> {
   const supabase = createSupabaseAdminClient();
   const [{ data: bookings, error: bookingsError }, { data: reservations, error: reservationsError }] = await Promise.all([
     supabase
       .from('bookings')
-      .select('id, booking_reference, full_name, starts_at, status, notes, payment_status, stylists(name), booking_services(name), payments(provider, provider_reference)')
+      .select('id, booking_reference, full_name, email, phone, starts_at, status, notes, payment_status, stylists(name), booking_services(name), payments(id, provider, provider_reference, amount, metadata)')
       .order('starts_at', { ascending: false }),
     supabase
       .from('booking_reservations')
-      .select('id, full_name, created_at, notes, reservation_status, expires_at, booking_availability(starts_at), stylists(name), booking_services(name), payments(provider, provider_reference, status)')
+      .select('id, full_name, email, phone, created_at, notes, reservation_status, expires_at, booking_availability(starts_at), stylists(name), booking_services(name), payments(id, provider, provider_reference, status, amount, metadata)')
       .in('reservation_status', ['pending_payment', 'expired', 'cancelled'])
       .order('created_at', { ascending: false }),
   ]);
@@ -172,6 +188,10 @@ export async function getAdminBookings(): Promise<AdminBookingRow[]> {
     paymentStatus: booking.payment_status,
     paymentProvider: relationFirst(booking.payments)?.provider ?? null,
     paymentReference: relationFirst(booking.payments)?.provider_reference ?? null,
+    paymentId: relationFirst(booking.payments)?.id ?? null,
+    ...bookingMoney(relationFirst(booking.payments)),
+    clientEmail: booking.email ?? null,
+    clientPhone: booking.phone ?? null,
     notes: booking.notes,
     entryType: 'booking',
   }));
@@ -188,6 +208,10 @@ export async function getAdminBookings(): Promise<AdminBookingRow[]> {
     paymentStatus: relationFirst(reservation.payments)?.status ?? 'pending',
     paymentProvider: relationFirst(reservation.payments)?.provider ?? null,
     paymentReference: relationFirst(reservation.payments)?.provider_reference ?? null,
+    paymentId: relationFirst(reservation.payments)?.id ?? null,
+    ...bookingMoney(relationFirst(reservation.payments)),
+    clientEmail: reservation.email ?? null,
+    clientPhone: reservation.phone ?? null,
     notes: reservation.notes,
     entryType: 'reservation',
   }));
@@ -1176,7 +1200,7 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
   const settings = await getStoreSettings();
   const stylist = relationFirst(booking.stylists) as { name?: string | null; email?: string | null } | null;
 
-  await sendBookingConfirmationEmails({
+  return sendBookingConfirmationEmails({
     storeName: settings?.store_name?.trim() || 'itzlolabeauty',
     supportEmail: settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
     bookingContactEmail: settings?.booking_contact_email?.trim() || settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
@@ -1191,8 +1215,75 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
     notes: booking.notes,
     makeupIntake: booking.intake_payload ?? null,
   });
+}
 
-  return { ok: true };
+/**
+ * Turn a payment hold into a real booking once Stripe confirms the deposit was paid
+ * (for when the webhook and the client's return to the site both missed it), then
+ * email the client and the team. Never confirms without Stripe's word.
+ */
+export async function confirmPaidReservation(reservationId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: payment, error } = await supabase
+    .from('payments')
+    .select('id, booking_id, provider, session_reference, provider_reference')
+    .eq('reservation_id', reservationId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!payment) throw new Error('No payment is linked to this hold.');
+
+  let bookingId = payment.booking_id as string | null;
+
+  if (!bookingId) {
+    const sessionId = [payment.session_reference, payment.provider_reference].find((ref) => ref?.startsWith('cs_'));
+    if (!sessionId) throw new Error('This hold has no Stripe checkout to check.');
+
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== 'paid') {
+      throw new Error('Stripe does not show this deposit as paid.');
+    }
+
+    // The time may have been given to someone else after the hold lapsed.
+    const { data: reservation, error: reservationError } = await supabase
+      .from('booking_reservations')
+      .select('availability_id')
+      .eq('id', reservationId)
+      .maybeSingle();
+    if (reservationError) throw reservationError;
+    if (!reservation) throw new Error('Payment hold not found.');
+    const { data: taken, error: takenError } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('availability_id', reservation.availability_id)
+      .maybeSingle();
+    if (takenError) throw takenError;
+    if (taken) {
+      throw new Error('Another client has since booked this time. Contact this client to rebook or refund them in Stripe.');
+    }
+
+    const booking = await finalizePaidBooking({
+      paymentId: payment.id,
+      sessionReference: session.id,
+      providerReference: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null,
+      reservationId,
+      skipEmails: true,
+    });
+    if (!booking) throw new Error('Unable to create the booking from this hold.');
+    bookingId = booking.id;
+
+    logEvent('info', 'admin.reservation_confirmed', { reservationId, paymentId: payment.id, bookingId });
+  }
+
+  // The booking stands even if an email bounces; report it so she can resend.
+  try {
+    const sent = await resendBookingConfirmationEmail(bookingId);
+    return { bookingId, sent, emailError: null };
+  } catch (emailError) {
+    logEvent('error', 'admin.reservation_confirm_email_failed', { reservationId, bookingId, reason: emailError instanceof Error ? emailError.message : 'email_failed' });
+    return { bookingId, sent: null, emailError: emailError instanceof Error ? emailError.message : 'Unable to send confirmation emails.' };
+  }
 }
 
 export async function sendAdminEmail(input: {

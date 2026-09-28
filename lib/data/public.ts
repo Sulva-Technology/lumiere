@@ -711,6 +711,8 @@ export async function finalizePaidBooking(input: {
   sessionReference?: string | null;
   reservationId?: string | null;
   inPerson?: boolean;
+  /** The caller sends (and reports on) the confirmation emails itself. */
+  skipEmails?: boolean;
 }): Promise<BookingConfirmation | null> {
   const supabase = createSupabaseAdminClient();
   const payment = await findBookingPaymentRecord(supabase, input);
@@ -954,6 +956,8 @@ export async function finalizePaidBooking(input: {
     sessionReference: resolvedSessionReference,
     providerReference: resolvedProviderReference,
   });
+
+  if (input.skipEmails) return getBookingConfirmation(booking.id);
 
   try {
     const store = await getPublicStoreSettings();

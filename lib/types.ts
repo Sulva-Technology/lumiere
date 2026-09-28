@@ -328,6 +328,15 @@ export interface AdminBookingRow {
   paymentStatus: string;
   paymentProvider: string | null;
   paymentReference: string | null;
+  paymentId: string | null;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  depositAmount: number | null;
+  appointmentTotal: number | null;
+  balanceDue: number | null;
+  sameDay: boolean;
+  /** Makeup intake answers keyed by field name, when the client filled them in. */
+  intake: Record<string, string> | null;
   notes: string | null;
   entryType: "booking" | "reservation";
 }

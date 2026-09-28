@@ -274,6 +274,7 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
   ]);
   const failures = results.flatMap((result) => (result.status === 'rejected' ? [String(result.reason instanceof Error ? result.reason.message : result.reason)] : []));
   if (failures.length > 0) throw new Error(failures.join(' | '));
+  return { client: payload.email, team: internalRecipients };
 }
 
 export async function sendOrderStatusUpdateEmail(payload: OrderStatusEmailPayload) {
