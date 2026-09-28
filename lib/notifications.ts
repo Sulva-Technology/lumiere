@@ -60,7 +60,11 @@ type OrderStatusEmailPayload = {
 };
 
 const resendApiKey = getOptionalEnv('RESEND_API_KEY');
-const resendFromEmail = getOptionalEnv('RESEND_FROM_EMAIL', 'hello@itzlolabeauty.com');
+const resendFromAddress = getOptionalEnv('RESEND_FROM_EMAIL', 'hello@itzlolabeauty.com');
+// A bare address shows its mailbox ("orders") as the sender in inboxes, so give it the brand name.
+const resendFromEmail = resendFromAddress.includes('<')
+  ? resendFromAddress
+  : `${getOptionalEnv('RESEND_FROM_NAME').trim() || 'Itz Lola Beauty'} <${resendFromAddress}>`;
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
