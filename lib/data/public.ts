@@ -63,9 +63,12 @@ function isMissingColumnError(error: unknown, columnName: string) {
       ? (error as { message: string }).message
       : "";
 
+  // Postgres names joined columns by alias too, e.g. `column stylists_1.email does not exist`.
+  const missing = message.match(/column "?([\w.]+)"? does not exist/)?.[1];
   return (
     message.includes(`Could not find the '${columnName}' column`) ||
-    message.includes(`column "${columnName}" does not exist`)
+    missing === columnName ||
+    Boolean(missing?.endsWith(`.${columnName}`))
   );
 }
 
