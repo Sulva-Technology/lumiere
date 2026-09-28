@@ -9,6 +9,7 @@ import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 import { finalizePaidBooking } from '@/lib/data/public';
 import { logEvent } from '@/lib/observability';
 import { getStripe } from '@/lib/stripe';
+import { getErrorMessage } from '@/lib/validation';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -1177,34 +1178,37 @@ export async function resendOrderConfirmationEmail(orderId: string) {
 
 export async function resendBookingConfirmationEmail(bookingId: string) {
   const supabase = createSupabaseAdminClient();
-  let bookingResult = await supabase
+  // Only columns every install has; the artist email and intake answers are optional extras below.
+  const { data: booking, error } = await supabase
     .from('bookings')
-    .select('id, booking_reference, full_name, email, phone, notes, starts_at, payment_status, intake_payload, stylists(name, email), booking_services(name)')
+    .select('id, booking_reference, full_name, email, phone, notes, starts_at, payment_status, stylist_id, stylists(name), booking_services(name)')
     .eq('id', bookingId)
     .maybeSingle();
-
-  if (bookingResult.error && bookingResult.error.message.includes('email')) {
-    bookingResult = await supabase
-      .from('bookings')
-      .select('id, booking_reference, full_name, email, phone, notes, starts_at, payment_status, intake_payload, stylists(name), booking_services(name)')
-      .eq('id', bookingId)
-      .maybeSingle();
-  }
-
-  const { data: booking, error } = bookingResult;
 
   if (error) throw error;
   if (!booking) throw new Error('Booking not found.');
   if (booking.payment_status !== 'paid') throw new Error('Only paid bookings can resend confirmation emails.');
 
+  const [stylistEmailResult, intakeResult, paymentResult] = await Promise.all([
+    supabase.from('stylists').select('email').eq('id', booking.stylist_id).maybeSingle(),
+    supabase.from('bookings').select('intake_payload').eq('id', bookingId).maybeSingle(),
+    supabase.from('payments').select('metadata').eq('booking_id', bookingId).limit(1).maybeSingle(),
+  ]);
+  const stylistEmail = stylistEmailResult.error ? null : ((stylistEmailResult.data as { email?: string | null } | null)?.email ?? null);
+  const storedIntake = intakeResult.error ? null : (intakeResult.data as { intake_payload?: unknown } | null)?.intake_payload;
+  const paymentIntake = (paymentResult.data?.metadata as { makeupIntake?: unknown } | null)?.makeupIntake;
+  const makeupIntake = [storedIntake, paymentIntake].find(
+    (value) => value && typeof value === 'object' && Object.keys(value as object).length > 0,
+  ) as Parameters<typeof sendBookingConfirmationEmails>[0]['makeupIntake'] | undefined;
+
   const settings = await getStoreSettings();
-  const stylist = relationFirst(booking.stylists) as { name?: string | null; email?: string | null } | null;
+  const stylist = relationFirst(booking.stylists) as { name?: string | null } | null;
 
   return sendBookingConfirmationEmails({
     storeName: settings?.store_name?.trim() || 'itzlolabeauty',
     supportEmail: settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
     bookingContactEmail: settings?.booking_contact_email?.trim() || settings?.support_email?.trim() || 'hello@itzlolabeauty.com',
-    stylistEmail: stylist?.email ?? null,
+    stylistEmail,
     fullName: booking.full_name,
     email: booking.email,
     bookingReference: booking.booking_reference,
@@ -1213,7 +1217,7 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
     startsAt: booking.starts_at,
     phone: booking.phone,
     notes: booking.notes,
-    makeupIntake: booking.intake_payload ?? null,
+    makeupIntake: makeupIntake ?? null,
   });
 }
 
@@ -1281,8 +1285,8 @@ export async function confirmPaidReservation(reservationId: string) {
     const sent = await resendBookingConfirmationEmail(bookingId);
     return { bookingId, sent, emailError: null };
   } catch (emailError) {
-    logEvent('error', 'admin.reservation_confirm_email_failed', { reservationId, bookingId, reason: emailError instanceof Error ? emailError.message : 'email_failed' });
-    return { bookingId, sent: null, emailError: emailError instanceof Error ? emailError.message : 'Unable to send confirmation emails.' };
+    logEvent('error', 'admin.reservation_confirm_email_failed', { reservationId, bookingId, reason: getErrorMessage(emailError, 'email_failed') });
+    return { bookingId, sent: null, emailError: getErrorMessage(emailError, 'Unable to send confirmation emails.') };
   }
 }
 
