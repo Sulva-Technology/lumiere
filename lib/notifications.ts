@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { getOptionalEnv } from '@/lib/env';
 import type { MakeupBookingIntake } from '@/lib/types';
 import { BUSINESS_TIME_ZONE } from '@/lib/timezone';
+import { downloadUrl } from '@/lib/download-url';
 
 type MailPayload = {
   to: string | string[];
@@ -244,7 +245,6 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
           ['Appointment Date & Time Needed', intake.appointmentDateTimeNeeded],
           ['What is the occasion?', intake.occasion],
           ['Reference / inspiration details', intake.referenceDescription],
-          ['Reference image', intake.referenceImageUrl],
           ['What type of look are you going for?', intake.lookType],
           ['What is your skin type?', intake.skinType],
           ['Skin conditions or allergies', intake.skinConditionsOrAllergies],
@@ -256,20 +256,35 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       : []
   ).filter((row): row is [string, string] => typeof row[1] === 'string' && row[1].trim().length > 0);
 
+  const referenceImageUrl = intake?.referenceImageUrl?.trim() || null;
+  const referenceImageMarkup = referenceImageUrl
+    ? (() => {
+        const download = escapeHtml(downloadUrl(referenceImageUrl, `${payload.bookingReference}-reference`));
+        return `
+          <p style="margin:0 0 8px;"><strong>Reference image:</strong></p>
+          <a href="${download}" style="display:inline-block;margin:0 0 8px;">
+            <img src="${escapeHtml(referenceImageUrl)}" alt="Reference look from ${escapeHtml(payload.fullName)}" width="180" style="display:block;max-width:180px;height:auto;border-radius:12px;border:0;" />
+          </a>
+          <p style="margin:0 0 10px;"><a href="${download}" style="color:inherit;font-weight:bold;text-decoration:underline;">Download image</a></p>
+        `;
+      })()
+    : '';
+
   const makeupMarkup =
-    makeupRows.length > 0
-      ? `
+    makeupRows.length > 0 || referenceImageMarkup
+      ? (heading: string) => `
         <div style="margin-top:18px;padding-top:18px;border-top:1px solid rgba(201,147,97,0.18);">
-          <h3 style="margin:0 0 12px;font-size:16px;">Makeup intake</h3>
+          <h3 style="margin:0 0 12px;font-size:16px;">${heading}</h3>
           ${makeupRows
             .map(
               ([label, value]) =>
-                `<p style="margin:0 0 10px;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`
+                `<p style="margin:0 0 10px;"><strong>${escapeHtml(label)}${label.endsWith('?') ? '' : ':'}</strong> ${escapeHtml(value)}</p>`
             )
             .join('')}
+          ${referenceImageMarkup}
         </div>
       `
-      : '';
+      : () => '';
 
   const payment = payload.payment;
   const money = (amount: number | null | undefined) => (typeof amount === 'number' ? formatCurrency(amount) : null);
@@ -278,7 +293,7 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
         ['Payment method', payment.inPerson ? 'Paying in person at the appointment' : 'Deposit paid online'],
         ['Appointment total', money(payment.appointmentTotal)],
         [payment.inPerson ? 'Deposit (not yet paid)' : 'Deposit paid', money(payment.depositAmount)],
-        ['Balance to collect at appointment', money(payment.inPerson ? payment.appointmentTotal : payment.balanceDue)],
+        ['Balance due at appointment', money(payment.inPerson ? payment.appointmentTotal : payment.balanceDue)],
         ['Same-day fee', payment.sameDayFee ? money(payment.sameDayFee) : null],
         ['Special applied', payment.specialLabel],
       ].filter((row): row is [string, string] => Boolean(row[1]))
@@ -294,6 +309,7 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
         </div>
       `
       : '';
+  const notesMarkup = `<p style="margin:0 0 8px;"><strong>Notes:</strong> ${payload.notes ? escapeHtml(payload.notes) : 'None'}</p>`;
   const customerPaymentLine = payment?.inPerson
     ? 'Your appointment is confirmed. Payment is due in person at your appointment.'
     : 'Your appointment is confirmed. Your deposit has been received; the remaining balance is due at your appointment.';
@@ -308,7 +324,12 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Service: ${escapeHtml(payload.serviceName)}</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Artist: ${escapeHtml(payload.stylistName)}</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Date: ${formatDateTime(payload.startsAt)}</p>
-        <p style="margin:0;font-family:Arial,sans-serif;">Phone: ${escapeHtml(payload.phone)}</p>
+        <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Phone: ${escapeHtml(payload.phone)}</p>
+        <div style="font-family:Arial,sans-serif;">
+          ${notesMarkup}
+          ${paymentMarkup}
+          ${makeupMarkup('Your appointment details')}
+        </div>
       </div>
       <p style="margin:20px 0 0;font-family:Arial,sans-serif;color:#c99361;">Need to update your appointment? Reply to this email or contact ${escapeHtml(payload.bookingContactEmail)}.</p>
     </div>
@@ -323,9 +344,9 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       <p><strong>Service:</strong> ${escapeHtml(payload.serviceName)}</p>
       <p><strong>Artist:</strong> ${escapeHtml(payload.stylistName)}</p>
       <p><strong>Starts:</strong> ${formatDateTime(payload.startsAt)}</p>
-      <p><strong>Notes:</strong> ${payload.notes ? escapeHtml(payload.notes) : 'None'}</p>
+      ${notesMarkup}
       ${paymentMarkup}
-      ${makeupMarkup}
+      ${makeupMarkup('Makeup intake')}
     </div>
   `;
 

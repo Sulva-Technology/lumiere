@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock, ExternalLink, Loader2, Maximize2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Download, ExternalLink, Loader2, Maximize2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/format';
 import { BUSINESS_TIME_ZONE } from '@/lib/timezone';
+import { downloadUrl } from '@/lib/download-url';
 import { cn } from '@/lib/utils';
 import type { AdminBookingRow } from '@/lib/types';
 
@@ -462,6 +463,14 @@ export default function AdminBookingsPage() {
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-xs text-[#F7E7C1] hover:bg-black/70"
             >
               <ExternalLink size={13} /> Open original
+            </a>
+            <a
+              href={downloadUrl(photo.url, `${photo.clientName}-reference`)}
+              download
+              onClick={(event) => event.stopPropagation()}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-xs text-[#F7E7C1] hover:bg-black/70"
+            >
+              <Download size={13} /> Download
             </a>
             <button
               type="button"
