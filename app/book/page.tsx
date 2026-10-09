@@ -465,8 +465,6 @@ function BookingPageContent() {
                 lookType,
                 skinType,
                 skinConditionsOrAllergies,
-                lashesPreference: "Yes",
-                hadProfessionalMakeupBefore: "No",
               },
             }
           : {}),

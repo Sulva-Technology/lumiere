@@ -48,7 +48,45 @@ type BookingEmailPayload = {
   phone: string;
   notes?: string | null;
   makeupIntake?: MakeupBookingIntake | null;
+  payment?: BookingPaymentSummary | null;
 };
+
+/** Money for the appointment, as saved on the booking's payment at checkout. */
+export type BookingPaymentSummary = {
+  inPerson: boolean;
+  depositAmount: number | null;
+  appointmentTotal: number | null;
+  balanceDue: number | null;
+  sameDayFee: number | null;
+  specialLabel: string | null;
+};
+
+/** Read the booking money saved on a payment's checkout metadata. */
+export function bookingPaymentSummary(
+  payment: { amount?: unknown; metadata?: unknown } | null | undefined,
+  inPerson: boolean,
+): BookingPaymentSummary {
+  const meta = (payment?.metadata && typeof payment.metadata === 'object' ? payment.metadata : {}) as Record<string, unknown>;
+  const num = (value: unknown) =>
+    value === null || value === undefined || value === '' || Number.isNaN(Number(value)) ? null : Number(value);
+  return {
+    inPerson,
+    depositAmount: num(meta.retainerAmount) ?? num(payment?.amount),
+    appointmentTotal: num(meta.appointmentTotal),
+    balanceDue: num(meta.remainingBalance),
+    sameDayFee: num(meta.sameDayFee),
+    specialLabel: typeof meta.specialLabel === 'string' && meta.specialLabel.trim() ? meta.specialLabel : null,
+  };
+}
+
+/** The intake answers saved on a payment's checkout metadata, for databases without an intake column. */
+export function bookingPaymentIntake(payment: { metadata?: unknown } | null | undefined): MakeupBookingIntake | null {
+  const meta = payment?.metadata && typeof payment.metadata === 'object' ? (payment.metadata as Record<string, unknown>) : null;
+  const intake = meta?.makeupIntake;
+  return intake && typeof intake === 'object' && !Array.isArray(intake) && Object.keys(intake).length > 0
+    ? (intake as MakeupBookingIntake)
+    : null;
+}
 
 type OrderStatusEmailPayload = {
   storeName: string;
@@ -198,21 +236,25 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
   const internalRecipients = Array.from(
     new Set([payload.stylistEmail, payload.bookingContactEmail, payload.supportEmail].filter(Boolean))
   ).filter((recipient): recipient is string => Boolean(recipient) && recipient !== payload.email);
-  const makeupRows = payload.makeupIntake
-    ? [
-        ['Appointment Date & Time Needed', payload.makeupIntake.appointmentDateTimeNeeded],
-        ['What is the occasion?', payload.makeupIntake.occasion],
-        ['Reference / inspiration details', payload.makeupIntake.referenceDescription],
-        ['Reference image', payload.makeupIntake.referenceImageUrl ?? 'No upload attached'],
-        ['What type of look are you going for?', payload.makeupIntake.lookType],
-        ['What is your skin type?', payload.makeupIntake.skinType],
-        ['Skin conditions or allergies', payload.makeupIntake.skinConditionsOrAllergies],
-        ['Will you need lashes included?', payload.makeupIntake.lashesPreference],
-        ['Have you had your makeup done professionally before?', payload.makeupIntake.hadProfessionalMakeupBefore],
-        ["If yes, anything you liked or didn't like?", payload.makeupIntake.priorExperienceNotes ?? 'Not provided'],
-        ['Any product preferences or restrictions?', payload.makeupIntake.productPreferencesOrRestrictions ?? 'Not provided'],
-      ]
-    : [];
+  const intake = payload.makeupIntake;
+  // Only questions the client actually answered, so the artist never reads a made-up answer.
+  const makeupRows = (
+    intake
+      ? [
+          ['Appointment Date & Time Needed', intake.appointmentDateTimeNeeded],
+          ['What is the occasion?', intake.occasion],
+          ['Reference / inspiration details', intake.referenceDescription],
+          ['Reference image', intake.referenceImageUrl],
+          ['What type of look are you going for?', intake.lookType],
+          ['What is your skin type?', intake.skinType],
+          ['Skin conditions or allergies', intake.skinConditionsOrAllergies],
+          ['Will you need lashes included?', intake.lashesPreference],
+          ['Have you had your makeup done professionally before?', intake.hadProfessionalMakeupBefore],
+          ["If yes, anything you liked or didn't like?", intake.priorExperienceNotes],
+          ['Any product preferences or restrictions?', intake.productPreferencesOrRestrictions],
+        ]
+      : []
+  ).filter((row): row is [string, string] => typeof row[1] === 'string' && row[1].trim().length > 0);
 
   const makeupMarkup =
     makeupRows.length > 0
@@ -222,17 +264,44 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
           ${makeupRows
             .map(
               ([label, value]) =>
-                `<p style="margin:0 0 10px;"><strong>${escapeHtml(label ?? 'Detail')}:</strong> ${escapeHtml(value ?? 'Not provided')}</p>`
+                `<p style="margin:0 0 10px;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`
             )
             .join('')}
         </div>
       `
       : '';
 
+  const payment = payload.payment;
+  const money = (amount: number | null | undefined) => (typeof amount === 'number' ? formatCurrency(amount) : null);
+  const paymentRows = payment
+    ? [
+        ['Payment method', payment.inPerson ? 'Paying in person at the appointment' : 'Deposit paid online'],
+        ['Appointment total', money(payment.appointmentTotal)],
+        [payment.inPerson ? 'Deposit (not yet paid)' : 'Deposit paid', money(payment.depositAmount)],
+        ['Balance to collect at appointment', money(payment.inPerson ? payment.appointmentTotal : payment.balanceDue)],
+        ['Same-day fee', payment.sameDayFee ? money(payment.sameDayFee) : null],
+        ['Special applied', payment.specialLabel],
+      ].filter((row): row is [string, string] => Boolean(row[1]))
+    : [];
+  const paymentMarkup =
+    paymentRows.length > 0
+      ? `
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid rgba(201,147,97,0.18);">
+          <h3 style="margin:0 0 12px;font-size:16px;">Payment</h3>
+          ${paymentRows
+            .map(([label, value]) => `<p style="margin:0 0 10px;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`)
+            .join('')}
+        </div>
+      `
+      : '';
+  const customerPaymentLine = payment?.inPerson
+    ? 'Your appointment is confirmed. Payment is due in person at your appointment.'
+    : 'Your appointment is confirmed. Your deposit has been received; the remaining balance is due at your appointment.';
+
   const customerHtml = `
     <div style="background:#140d05;padding:32px;font-family:Georgia,serif;color:#F7E7C1;">
       <h1 style="margin:0 0 12px;font-size:32px;color:#F7E7C1;">${escapeHtml(payload.storeName)}</h1>
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#e0d2c0;">Your appointment is confirmed. Your deposit has been received; the remaining balance is due at your appointment.</p>
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#e0d2c0;">${customerPaymentLine}</p>
       <div style="padding:20px;border:1px solid rgba(201,147,97,0.2);border-radius:20px;background:#1f1208;">
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.fullName)},</p>
         <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#e0d2c0;">Your booking <strong>${escapeHtml(payload.bookingReference)}</strong> is confirmed.</p>
@@ -254,7 +323,8 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       <p><strong>Service:</strong> ${escapeHtml(payload.serviceName)}</p>
       <p><strong>Artist:</strong> ${escapeHtml(payload.stylistName)}</p>
       <p><strong>Starts:</strong> ${formatDateTime(payload.startsAt)}</p>
-      ${payload.notes ? `<p><strong>Notes:</strong> ${escapeHtml(payload.notes)}</p>` : ''}
+      <p><strong>Notes:</strong> ${payload.notes ? escapeHtml(payload.notes) : 'None'}</p>
+      ${paymentMarkup}
       ${makeupMarkup}
     </div>
   `;

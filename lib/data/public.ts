@@ -1,7 +1,11 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createHostedCheckoutSession, extractPaymentIntentId } from "@/lib/payments";
 import { getStripe } from "@/lib/stripe";
-import { sendBookingConfirmationEmails } from "@/lib/notifications";
+import {
+  bookingPaymentIntake,
+  bookingPaymentSummary,
+  sendBookingConfirmationEmails,
+} from "@/lib/notifications";
 import { createAuditLog } from "@/lib/data/audit";
 import {
   BOOKING_BUFFER_MINUTES,
@@ -840,7 +844,10 @@ export async function finalizePaidBooking(input: {
 
   const bookingReference = `BKG-${Math.floor(Date.now() / 1000)}`;
 
-  const reservationIntake = normalizeIntakePayload(reservation.intake_payload);
+  // Databases without the intake column keep the answers only on the payment.
+  const reservationIntake =
+    normalizeIntakePayload(reservation.intake_payload) ??
+    bookingPaymentIntake(payment);
 
   const bookingPayload = {
     booking_reference: bookingReference,
@@ -983,6 +990,10 @@ export async function finalizePaidBooking(input: {
       phone: reservation.phone,
       notes: reservation.notes ?? null,
       makeupIntake: reservationIntake,
+      payment: bookingPaymentSummary(
+        payment,
+        Boolean(input.inPerson) || payment.provider === "in_person",
+      ),
     });
   } catch (notificationError) {
     logEvent("error", "booking.confirmation_email_failed", {
@@ -1222,7 +1233,7 @@ async function findBookingPaymentRecord(
     const { data, error } = await supabase
       .from("payments")
       .select(
-        "id, booking_id, reservation_id, status, paid_at, session_reference, provider_reference",
+        "id, booking_id, reservation_id, status, paid_at, session_reference, provider_reference, provider, amount, metadata",
       )
       .eq(attempt.column, attempt.value)
       .maybeSingle();

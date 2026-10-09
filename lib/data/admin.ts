@@ -1,5 +1,5 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmationEmails, sendOrderStatusUpdateEmail } from '@/lib/notifications';
+import { bookingPaymentIntake, bookingPaymentSummary, sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmationEmails, sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
 import { finalizePaidOrder } from '@/lib/data/checkout';
@@ -1192,14 +1192,14 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
   const [stylistEmailResult, intakeResult, paymentResult] = await Promise.all([
     supabase.from('stylists').select('email').eq('id', booking.stylist_id).maybeSingle(),
     supabase.from('bookings').select('intake_payload').eq('id', bookingId).maybeSingle(),
-    supabase.from('payments').select('metadata').eq('booking_id', bookingId).limit(1).maybeSingle(),
+    supabase.from('payments').select('provider, amount, metadata').eq('booking_id', bookingId).limit(1).maybeSingle(),
   ]);
   const stylistEmail = stylistEmailResult.error ? null : ((stylistEmailResult.data as { email?: string | null } | null)?.email ?? null);
   const storedIntake = intakeResult.error ? null : (intakeResult.data as { intake_payload?: unknown } | null)?.intake_payload;
-  const paymentIntake = (paymentResult.data?.metadata as { makeupIntake?: unknown } | null)?.makeupIntake;
-  const makeupIntake = [storedIntake, paymentIntake].find(
-    (value) => value && typeof value === 'object' && Object.keys(value as object).length > 0,
-  ) as Parameters<typeof sendBookingConfirmationEmails>[0]['makeupIntake'] | undefined;
+  const makeupIntake =
+    storedIntake && typeof storedIntake === 'object' && Object.keys(storedIntake).length > 0
+      ? (storedIntake as Parameters<typeof sendBookingConfirmationEmails>[0]['makeupIntake'])
+      : bookingPaymentIntake(paymentResult.data);
 
   const settings = await getStoreSettings();
   const stylist = relationFirst(booking.stylists) as { name?: string | null } | null;
@@ -1218,6 +1218,7 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
     phone: booking.phone,
     notes: booking.notes,
     makeupIntake: makeupIntake ?? null,
+    payment: paymentResult.data ? bookingPaymentSummary(paymentResult.data, paymentResult.data.provider === 'in_person') : null,
   });
 }
 
