@@ -19,6 +19,7 @@ export default function PrivacyPolicyPage() {
           body: [
             'Product, booking, customer, and order records are stored securely to operate the storefront and support services.',
             'Administrative access is restricted to authorized staff accounts.',
+            'We count visits to this site with our own privacy-friendly analytics: the pages viewed, the site that referred you, your device type, and an approximate city. We do not store IP addresses or share this data with advertisers.',
           ],
         },
         {

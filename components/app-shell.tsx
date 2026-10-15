@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { NavBar } from '@/components/navbar';
 import { CartDrawer } from '@/components/cart-drawer';
 import { Footer } from '@/components/footer';
+import { AnalyticsTracker } from '@/components/analytics-tracker';
 
 type AppShellProps = {
   children: ReactNode;
@@ -25,6 +26,7 @@ export function AppShell({ children, brandName }: AppShellProps) {
 
   return (
     <>
+      <AnalyticsTracker />
       <NavBar brandName={brandName} />
       <CartDrawer />
       <main className="flex-1 pt-24 pb-16">{children}</main>

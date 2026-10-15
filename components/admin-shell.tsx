@@ -21,6 +21,7 @@ import {
   WandSparkles,
   Mail,
   Images,
+  Activity,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 const ADMIN_LINKS = [
   { name: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { name: 'Analytics', href: '/admin/analytics', icon: Activity },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
