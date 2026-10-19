@@ -134,7 +134,7 @@ export default function AdminSettingsPage() {
           </div>
           {[
             ['hero', 'Hero image'],
-            ['gallery', 'Portfolio gallery'],
+            ['gallery', 'Portfolio gallery (homepage section, gallery page and menu link)'],
             ['policies', 'Booking policies'],
           ].map(([key, label]) => (
             <label key={key} className="flex items-center justify-between gap-4 rounded-2xl bg-white/30 px-4 py-3 text-sm">

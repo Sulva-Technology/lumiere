@@ -21,6 +21,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/book': 'Booking',
   '/services': 'Services',
   '/about': 'About',
+  '/gallery': 'Gallery',
   '/contact': 'Contact',
   '/shop': 'Shop',
   '/product': 'Products',

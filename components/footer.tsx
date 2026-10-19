@@ -7,9 +7,10 @@ import { usePathname } from 'next/navigation';
 
 type FooterProps = {
   brandName: string;
+  galleryEnabled: boolean;
 };
 
-export function Footer({ brandName }: FooterProps) {
+export function Footer({ brandName, galleryEnabled }: FooterProps) {
   const pathname = usePathname();
 
   if (pathname?.startsWith('/admin')) return null;
@@ -41,6 +42,11 @@ export function Footer({ brandName }: FooterProps) {
             <Link href="/#about" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               About Lola
             </Link>
+            {galleryEnabled ? (
+              <Link href="/gallery" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
+                Gallery
+              </Link>
+            ) : null}
             <Link href="/book" className="cursor-pointer text-sm text-[#6A3A1C] transition-colors hover:text-[#8B4411]">
               Book Now
             </Link>

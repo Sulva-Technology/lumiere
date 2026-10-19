@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { SERVICES } from '@/lib/data/services';
+import { getPublicGallery, getPublicStoreSettings } from '@/lib/data/public';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://itzlolabeauty.com';
@@ -64,5 +65,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...serviceUrls, ...productUrls];
+  const [store, gallery] = await Promise.all([getPublicStoreSettings(), getPublicGallery()]);
+  const galleryUrls: MetadataRoute.Sitemap =
+    store.homeSectionVisibility.gallery && gallery.length > 0
+      ? [{ url: `${baseUrl}/gallery`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 }]
+      : [];
+
+  return [...staticUrls, ...galleryUrls, ...serviceUrls, ...productUrls];
 }

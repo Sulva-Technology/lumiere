@@ -19,7 +19,8 @@ export async function PUT(request: NextRequest) {
     await requireAdminApiUser();
     const body = storeSettingsSchema.parse(await request.json());
     const settings = await updateStoreSettings(body);
-    revalidatePath('/');
+    // The gallery switch also controls the menu link shown on every page.
+    revalidatePath('/', 'layout');
     return NextResponse.json({ settings });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to save settings.' }, { status: 400 });

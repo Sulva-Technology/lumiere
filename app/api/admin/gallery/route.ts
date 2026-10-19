@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       sortOrder: body.sortOrder,
       active: body.active,
     });
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error, 'Unable to add gallery image.') }, { status: 400 });
@@ -48,7 +48,7 @@ export async function PATCH(request: NextRequest) {
       sortOrder: body.sortOrder,
       active: body.active,
     });
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
     return NextResponse.json({ item });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error, 'Unable to update gallery image.') }, { status: 400 });
@@ -61,7 +61,7 @@ export async function DELETE(request: NextRequest) {
     const id = request.nextUrl.searchParams.get('id');
     if (!id) throw new Error('Gallery image is required.');
     await deleteGalleryItem(id);
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error, 'Unable to remove gallery image.') }, { status: 400 });

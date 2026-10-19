@@ -3,7 +3,7 @@ import { Inter, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/components/cart-context';
 import { AppShell } from '@/components/app-shell';
-import { getPublicStoreSettings } from '@/lib/data/public';
+import { getPublicGallery, getPublicStoreSettings } from '@/lib/data/public';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 const inter = Inter({
@@ -70,7 +70,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const store = await getPublicStoreSettings();
+  const [store, gallery] = await Promise.all([getPublicStoreSettings(), getPublicGallery()]);
+  const galleryEnabled = store.homeSectionVisibility.gallery && gallery.length > 0;
   const siteUrl = 'https://itzlolabeauty.com';
 
   const schema = {
@@ -123,7 +124,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="relative min-h-screen flex flex-col overflow-x-hidden selection:bg-[#8B4411]/20">
         <CartProvider>
-          <AppShell brandName={store.storeName}>
+          <AppShell brandName={store.storeName} galleryEnabled={galleryEnabled}>
             {children}
           </AppShell>
         </CartProvider>

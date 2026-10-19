@@ -10,9 +10,10 @@ import { AnalyticsTracker } from '@/components/analytics-tracker';
 type AppShellProps = {
   children: ReactNode;
   brandName: string;
+  galleryEnabled: boolean;
 };
 
-export function AppShell({ children, brandName }: AppShellProps) {
+export function AppShell({ children, brandName, galleryEnabled }: AppShellProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith('/admin');
 
@@ -27,10 +28,10 @@ export function AppShell({ children, brandName }: AppShellProps) {
   return (
     <>
       <AnalyticsTracker />
-      <NavBar brandName={brandName} />
+      <NavBar brandName={brandName} galleryEnabled={galleryEnabled} />
       <CartDrawer />
       <main className="flex-1 pt-24 pb-16">{children}</main>
-      <Footer brandName={brandName} />
+      <Footer brandName={brandName} galleryEnabled={galleryEnabled} />
     </>
   );
 }

@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Glass } from '@/components/ui/glass';
+import { GalleryLightbox } from '@/components/gallery-lightbox';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Expand } from 'lucide-react';
 import type { GalleryItem, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
@@ -12,6 +14,8 @@ type HomeClientProps = {
   gallery: GalleryItem[];
 };
 
+const HOME_GALLERY_COUNT = 5;
+
 const founderIntro = "Hi, I’m Lola, the makeup artist and creative behind itzlolabeauty.";
 const founderMission = "For me, makeup has never been just about the finished look. It’s about how you feel while getting ready and the confidence you leave with. My style is all about enhancing you: beautiful skin, soft details, and polished glam that still feels like you.";
 const founderClose = "I want the experience to feel just as good as the makeup. Comfortable, intentional, and confident. I can’t wait to have you in my chair! ♡";
@@ -19,6 +23,7 @@ const founderClose = "I want the experience to feel just as good as the makeup. 
 export default function Home({ settings, gallery }: HomeClientProps) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
   const visibility = resolvedSettings.home_section_visibility;
+  const [openPhoto, setOpenPhoto] = useState<number | null>(null);
 
   return (
     <div className="flex flex-col gap-24 pb-24">
@@ -103,21 +108,24 @@ export default function Home({ settings, gallery }: HomeClientProps) {
       {/* Portfolio Gallery Section */}
       {visibility.gallery && gallery.length > 0 && (
         <section id="portfolio" className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-10 flex items-end justify-between gap-6">
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--text-accent)]">The portfolio</p>
               <h2 className="font-serif text-4xl md:text-5xl text-[var(--text-primary)]">Glam, tailored to you.</h2>
             </div>
-            <Link href="/book" className="hidden items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
-              Book your look <ArrowRight size={16} />
+            <Link href="/gallery" className="hidden shrink-0 items-center gap-2 text-sm font-medium text-[var(--text-accent)] transition-opacity hover:opacity-80 sm:flex">
+              View full gallery <ArrowRight size={16} />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-12">
-            {gallery.slice(0, 5).map((item, index) => (
-              <figure
+            {gallery.slice(0, HOME_GALLERY_COUNT).map((item, index) => (
+              <button
                 key={item.id}
-                className={`group relative overflow-hidden rounded-[24px] bg-white ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
+                type="button"
+                onClick={() => setOpenPhoto(index)}
+                aria-label={`View larger: ${item.title ?? item.alt}`}
+                className={`group relative overflow-hidden rounded-[24px] bg-white text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8B4411] ${index === 0 ? 'col-span-2 row-span-2 aspect-[4/5] lg:col-span-7' : 'aspect-[4/5] lg:col-span-5'} ${index > 2 ? 'lg:col-span-4' : ''}`}
               >
                 <Image
                   src={item.imageUrl}
@@ -127,19 +135,27 @@ export default function Home({ settings, gallery }: HomeClientProps) {
                   sizes={index === 0 ? '(min-width: 1024px) 56vw, 100vw' : '(min-width: 1024px) 33vw, 50vw'}
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-                <figcaption className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-6">
-                  {item.category && <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/70">{item.category}</p>}
-                  {item.title && <p className="mt-1 font-serif text-2xl sm:text-3xl">{item.title}</p>}
-                </figcaption>
-              </figure>
+                <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" aria-hidden />
+                <span className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-[#4A2109] opacity-0 shadow transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden>
+                  <Expand size={16} />
+                </span>
+                <span className="absolute inset-x-0 bottom-0 block p-4 text-white sm:p-6">
+                  {item.category && <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-white/70">{item.category}</span>}
+                  {item.title && <span className="mt-1 block font-serif text-2xl sm:text-3xl">{item.title}</span>}
+                </span>
+              </button>
             ))}
           </div>
-          <div className="mt-8 sm:hidden">
-            <Link href="/book" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-accent)]">
-              Book your look <ArrowRight size={16} />
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+            <Link href="/gallery" className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--text-primary)] px-8 py-3.5 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80">
+              View full gallery{gallery.length > HOME_GALLERY_COUNT ? ` (${gallery.length} looks)` : ''} <ArrowRight size={16} />
+            </Link>
+            <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B4411] px-8 py-3.5 font-medium text-white transition-opacity hover:opacity-90">
+              Book your look
             </Link>
           </div>
+
+          <GalleryLightbox items={gallery} index={openPhoto} onChange={setOpenPhoto} />
         </section>
       )}
 

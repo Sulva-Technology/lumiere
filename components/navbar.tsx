@@ -10,11 +10,13 @@ import { cn } from '@/lib/utils';
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/#about' },
+  { label: 'Gallery', href: '/gallery' },
   { label: 'Book', href: '/book' },
   { label: 'Contact', href: '/contact' },
 ];
 
-export function NavBar({ brandName }: { brandName: string }) {
+export function NavBar({ brandName, galleryEnabled }: { brandName: string; galleryEnabled: boolean }) {
+  const navLinks = galleryEnabled ? NAV_LINKS : NAV_LINKS.filter((item) => item.href !== '/gallery');
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -38,7 +40,7 @@ export function NavBar({ brandName }: { brandName: string }) {
         )}
       >
         <nav className="hidden md:flex items-center gap-6">
-          {NAV_LINKS.filter((item) => item.href !== '/').map((item) => (
+          {navLinks.filter((item) => item.href !== '/').map((item) => (
             <Link
               key={item.label}
               href={item.href}
@@ -89,7 +91,7 @@ export function NavBar({ brandName }: { brandName: string }) {
       {isMobileMenuOpen && (
         <div className="mx-auto mt-3 max-w-7xl px-1 md:hidden">
           <div className="rounded-2xl border border-[rgba(139,68,17,0.22)] bg-white p-2 shadow-xl backdrop-blur-2xl">
-            {NAV_LINKS.map((item) => (
+            {navLinks.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
