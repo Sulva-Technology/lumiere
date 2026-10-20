@@ -354,6 +354,7 @@ async function loadStylistSchedule(
   supabase: SupabaseAdmin,
   stylistId: string,
   serviceId?: string,
+  excludeBookingId?: string,
 ): Promise<StylistSchedule> {
   const nowIso = new Date().toISOString();
   const [rulesResult, overrides, bookingsResult, reservationsResult] =
@@ -366,7 +367,7 @@ async function loadStylistSchedule(
       dayOverrideWindows(supabase, stylistId),
       supabase
         .from("bookings")
-        .select("starts_at, ends_at")
+        .select("id, starts_at, ends_at")
         .eq("stylist_id", stylistId)
         .in("status", ["confirmed", "completed"])
         .gte("ends_at", nowIso),
@@ -402,6 +403,8 @@ async function loadStylistSchedule(
 
   const busy: BusyWindow[] = [];
   for (const booking of bookingsResult.data ?? []) {
+    // A booking being moved should not block its own new time.
+    if (booking.id === excludeBookingId) continue;
     busy.push({
       start: new Date(booking.starts_at).getTime(),
       end: new Date(booking.ends_at).getTime(),
@@ -586,6 +589,32 @@ export async function claimOpenTime(input: {
     .single();
   if (error) throw error;
   return data;
+}
+
+/**
+ * Times on one date that fit her normal schedule for an existing booking being moved,
+ * ignoring that booking's own current time. Admin can still pick any other time.
+ */
+export async function openTimesForReschedule(input: {
+  bookingId: string;
+  stylistId: string;
+  serviceId: string;
+  day: string;
+  durationMinutes: number;
+}) {
+  const supabase = createSupabaseAdminClient();
+  const schedule = await loadStylistSchedule(
+    supabase,
+    input.stylistId,
+    input.serviceId,
+    input.bookingId,
+  );
+  return openTimesForDay(
+    schedule,
+    parseLocalDay(input.day),
+    input.durationMinutes,
+    new Date(),
+  ).map((time) => time.start);
 }
 
 export interface ScheduleDay {

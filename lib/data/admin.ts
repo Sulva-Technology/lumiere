@@ -10,6 +10,9 @@ import { finalizePaidBooking } from '@/lib/data/public';
 import { logEvent } from '@/lib/observability';
 import { getStripe } from '@/lib/stripe';
 import { getErrorMessage } from '@/lib/validation';
+import { openTimesForReschedule } from '@/lib/data/availability';
+import { formatDateTime } from '@/lib/format';
+import { BUSINESS_TIME_ZONE, businessDateTime } from '@/lib/timezone';
 
 function money(value: number | string | null | undefined) {
   if (typeof value === 'number') return value;
@@ -1177,6 +1180,10 @@ export async function resendOrderConfirmationEmail(orderId: string) {
 }
 
 export async function resendBookingConfirmationEmail(bookingId: string) {
+  return sendBookingEmails(bookingId, { requirePaid: true });
+}
+
+async function sendBookingEmails(bookingId: string, options: { requirePaid?: boolean; rescheduledFrom?: string | null } = {}) {
   const supabase = createSupabaseAdminClient();
   // Only columns every install has; the artist email and intake answers are optional extras below.
   const { data: booking, error } = await supabase
@@ -1187,7 +1194,7 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
 
   if (error) throw error;
   if (!booking) throw new Error('Booking not found.');
-  if (booking.payment_status !== 'paid') throw new Error('Only paid bookings can resend confirmation emails.');
+  if (options.requirePaid && booking.payment_status !== 'paid') throw new Error('Only paid bookings can resend confirmation emails.');
 
   const [stylistEmailResult, intakeResult, paymentResult] = await Promise.all([
     supabase.from('stylists').select('email').eq('id', booking.stylist_id).maybeSingle(),
@@ -1219,7 +1226,194 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
     notes: booking.notes,
     makeupIntake: makeupIntake ?? null,
     payment: paymentResult.data ? bookingPaymentSummary(paymentResult.data, paymentResult.data.provider === 'in_person') : null,
+    rescheduledFrom: options.rescheduledFrom ?? null,
   });
+}
+
+type ReschedulableBooking = {
+  id: string;
+  booking_reference: string;
+  status: string;
+  stylist_id: string;
+  service_id: string;
+  availability_id: string | null;
+  starts_at: string;
+  ends_at: string | null;
+};
+
+async function loadReschedulableBooking(bookingId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id, booking_reference, status, stylist_id, service_id, availability_id, starts_at, ends_at')
+    .eq('id', bookingId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Booking not found.');
+  const booking = data as ReschedulableBooking;
+  if (booking.status !== 'confirmed') throw new Error('Only confirmed bookings can be moved to a new time.');
+
+  // Keep the appointment's own length; fall back to the service length for older rows.
+  let durationMinutes = booking.ends_at ? Math.round((new Date(booking.ends_at).getTime() - new Date(booking.starts_at).getTime()) / 60_000) : 0;
+  if (!(durationMinutes > 0)) {
+    const { data: service } = await supabase.from('booking_services').select('duration_minutes').eq('id', booking.service_id).maybeSingle();
+    durationMinutes = Number(service?.duration_minutes) > 0 ? Number(service?.duration_minutes) : 60;
+  }
+
+  return { booking, durationMinutes };
+}
+
+/** Times on a date that fit her usual hours, for moving a booking. */
+export async function getRescheduleOptions(bookingId: string, day: string) {
+  const { booking, durationMinutes } = await loadReschedulableBooking(bookingId);
+  const starts = await openTimesForReschedule({
+    bookingId,
+    stylistId: booking.stylist_id,
+    serviceId: booking.service_id,
+    day,
+    durationMinutes,
+  });
+  return {
+    durationMinutes,
+    times: starts.map((start) => ({
+      time: new Intl.DateTimeFormat('en-GB', { timeZone: BUSINESS_TIME_ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(start),
+      label: new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TIME_ZONE, hour: 'numeric', minute: '2-digit' }).format(start),
+    })),
+  };
+}
+
+/** Rewrite the "date & time" the booking form copied into the client's answers, wherever it is stored. */
+async function updateIntakeAppointmentTime(bookingId: string, startsAt: string) {
+  const supabase = createSupabaseAdminClient();
+  const label = formatDateTime(startsAt);
+
+  const intakeResult = await supabase.from('bookings').select('intake_payload').eq('id', bookingId).maybeSingle();
+  const stored = intakeResult.error ? null : (intakeResult.data as { intake_payload?: unknown } | null)?.intake_payload;
+  if (stored && typeof stored === 'object' && 'appointmentDateTimeNeeded' in stored) {
+    await supabase
+      .from('bookings')
+      .update({ intake_payload: { ...(stored as Record<string, unknown>), appointmentDateTimeNeeded: label } })
+      .eq('id', bookingId);
+  }
+
+  const { data: payments } = await supabase.from('payments').select('id, metadata').eq('booking_id', bookingId);
+  for (const payment of payments ?? []) {
+    const metadata = payment.metadata && typeof payment.metadata === 'object' ? (payment.metadata as Record<string, unknown>) : null;
+    const intake = metadata?.makeupIntake && typeof metadata.makeupIntake === 'object' ? (metadata.makeupIntake as Record<string, unknown>) : null;
+    if (!metadata || !intake || !('appointmentDateTimeNeeded' in intake)) continue;
+    await supabase
+      .from('payments')
+      .update({ metadata: { ...metadata, makeupIntake: { ...intake, appointmentDateTimeNeeded: label } } })
+      .eq('id', payment.id);
+  }
+}
+
+/**
+ * Move a confirmed booking to a new date and time (studio clock), keeping its length,
+ * deposit and details. Refuses a time that overlaps another client. Optionally emails
+ * the client and team an updated confirmation.
+ */
+export async function rescheduleBooking(input: { bookingId: string; day: string; time: string; notifyClient: boolean }) {
+  const supabase = createSupabaseAdminClient();
+  const { booking, durationMinutes } = await loadReschedulableBooking(input.bookingId);
+
+  const newStart = businessDateTime(input.day, input.time);
+  if (Number.isNaN(newStart.getTime())) throw new Error('Choose a valid date and time.');
+  if (newStart.getTime() <= Date.now()) throw new Error('Choose a date and time in the future.');
+  if (newStart.getTime() === new Date(booking.starts_at).getTime()) throw new Error('The booking is already at that time.');
+
+  const startsAt = newStart.toISOString();
+  const endsAt = new Date(newStart.getTime() + durationMinutes * 60_000).toISOString();
+  const nowIso = new Date().toISOString();
+
+  const [clashResult, holdsResult] = await Promise.all([
+    supabase
+      .from('bookings')
+      .select('full_name, starts_at')
+      .eq('stylist_id', booking.stylist_id)
+      .in('status', ['confirmed', 'completed'])
+      .neq('id', booking.id)
+      .lt('starts_at', endsAt)
+      .gt('ends_at', startsAt)
+      .limit(1),
+    supabase
+      .from('booking_reservations')
+      .select('booking_availability!inner(starts_at, ends_at)')
+      .eq('stylist_id', booking.stylist_id)
+      .eq('reservation_status', 'pending_payment')
+      .gt('expires_at', nowIso)
+      .lt('booking_availability.starts_at', endsAt)
+      .gt('booking_availability.ends_at', startsAt)
+      .limit(1),
+  ]);
+  if (clashResult.error) throw clashResult.error;
+  if (holdsResult.error) throw holdsResult.error;
+
+  const clash = clashResult.data?.[0];
+  if (clash) {
+    throw new Error(`That time overlaps ${clash.full_name}'s appointment at ${formatDateTime(clash.starts_at)}. Pick another time.`);
+  }
+  if ((holdsResult.data ?? []).length > 0) {
+    throw new Error('Another client is paying for that time right now. Pick another time.');
+  }
+
+  // Each slot carries one booking, so reuse an unused slot for this exact time or add one.
+  const { data: existingSlots, error: slotsError } = await supabase
+    .from('booking_availability')
+    .select('id, bookings(id)')
+    .eq('stylist_id', booking.stylist_id)
+    .eq('service_id', booking.service_id)
+    .eq('starts_at', startsAt)
+    .eq('ends_at', endsAt);
+  if (slotsError) throw slotsError;
+
+  let slotId = (existingSlots ?? []).find((slot) => !Array.isArray(slot.bookings) || slot.bookings.length === 0)?.id as string | undefined;
+  let createdSlot = false;
+  if (slotId) {
+    await supabase.from('booking_availability').update({ is_available: false }).eq('id', slotId);
+  } else {
+    const { data: slot, error: slotError } = await supabase
+      .from('booking_availability')
+      .insert({ stylist_id: booking.stylist_id, service_id: booking.service_id, starts_at: startsAt, ends_at: endsAt, is_available: false })
+      .select('id')
+      .single();
+    if (slotError) throw slotError;
+    slotId = slot.id as string;
+    createdSlot = true;
+  }
+
+  const { error: updateError } = await supabase
+    .from('bookings')
+    .update({ availability_id: slotId, starts_at: startsAt, ends_at: endsAt })
+    .eq('id', booking.id);
+  if (updateError) {
+    if (createdSlot) await supabase.from('booking_availability').delete().eq('id', slotId);
+    throw updateError;
+  }
+
+  if (booking.availability_id) {
+    await supabase.from('booking_availability').update({ is_available: true }).eq('id', booking.availability_id);
+  }
+  await updateIntakeAppointmentTime(booking.id, startsAt);
+
+  await createAuditLog({
+    action: 'booking.rescheduled',
+    entityType: 'booking',
+    entityId: booking.id,
+    payload: { from: booking.starts_at, to: startsAt, notifiedClient: input.notifyClient },
+  });
+  logEvent('info', 'admin.booking_rescheduled', { bookingId: booking.id, from: booking.starts_at, to: startsAt });
+
+  if (!input.notifyClient) return { startsAt, sent: null, emailError: null };
+
+  try {
+    const sent = await sendBookingEmails(booking.id, { rescheduledFrom: booking.starts_at });
+    return { startsAt, sent, emailError: null };
+  } catch (emailError) {
+    const message = getErrorMessage(emailError, 'Unable to send the updated confirmation.');
+    logEvent('error', 'admin.booking_reschedule_email_failed', { bookingId: booking.id, reason: message });
+    return { startsAt, sent: null, emailError: message };
+  }
 }
 
 /**

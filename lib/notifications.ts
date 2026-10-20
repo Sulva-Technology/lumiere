@@ -50,6 +50,8 @@ type BookingEmailPayload = {
   notes?: string | null;
   makeupIntake?: MakeupBookingIntake | null;
   payment?: BookingPaymentSummary | null;
+  /** The previous start time, when the studio moved this appointment. */
+  rescheduledFrom?: string | null;
 };
 
 /** Money for the appointment, as saved on the booking's payment at checkout. */
@@ -310,9 +312,18 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       `
       : '';
   const notesMarkup = `<p style="margin:0 0 8px;"><strong>Notes:</strong> ${payload.notes ? escapeHtml(payload.notes) : 'None'}</p>`;
-  const customerPaymentLine = payment?.inPerson
-    ? 'Your appointment is confirmed. Payment is due in person at your appointment.'
-    : 'Your appointment is confirmed. Your deposit has been received; the remaining balance is due at your appointment.';
+  const moved = payload.rescheduledFrom ?? null;
+  const customerPaymentLine = moved
+    ? payment?.inPerson
+      ? 'Your appointment has a new date and time. Everything else stays the same, and payment is still due in person at your appointment.'
+      : 'Your appointment has a new date and time. Everything else stays the same, and your deposit carries over to the new time.'
+    : payment?.inPerson
+      ? 'Your appointment is confirmed. Payment is due in person at your appointment.'
+      : 'Your appointment is confirmed. Your deposit has been received; the remaining balance is due at your appointment.';
+  const customerDateMarkup = moved
+    ? `<p style="margin:0 0 8px;font-family:Arial,sans-serif;"><strong>New date: ${formatDateTime(payload.startsAt)}</strong></p>
+        <p style="margin:0 0 8px;font-family:Arial,sans-serif;color:#a8927a;">Previously: <s>${formatDateTime(moved)}</s></p>`
+    : `<p style="margin:0 0 8px;font-family:Arial,sans-serif;">Date: ${formatDateTime(payload.startsAt)}</p>`;
 
   const customerHtml = `
     <div style="background:#140d05;padding:32px;font-family:Georgia,serif;color:#F7E7C1;">
@@ -320,10 +331,10 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       <p style="margin:0 0 24px;font-family:Arial,sans-serif;color:#e0d2c0;">${customerPaymentLine}</p>
       <div style="padding:20px;border:1px solid rgba(201,147,97,0.2);border-radius:20px;background:#1f1208;">
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Hi ${escapeHtml(payload.fullName)},</p>
-        <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#e0d2c0;">Your booking <strong>${escapeHtml(payload.bookingReference)}</strong> is confirmed.</p>
+        <p style="margin:0 0 18px;font-family:Arial,sans-serif;color:#e0d2c0;">Your booking <strong>${escapeHtml(payload.bookingReference)}</strong> is confirmed${moved ? ' for its new time' : ''}.</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Service: ${escapeHtml(payload.serviceName)}</p>
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Artist: ${escapeHtml(payload.stylistName)}</p>
-        <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Date: ${formatDateTime(payload.startsAt)}</p>
+        ${customerDateMarkup}
         <p style="margin:0 0 8px;font-family:Arial,sans-serif;">Phone: ${escapeHtml(payload.phone)}</p>
         <div style="font-family:Arial,sans-serif;">
           ${notesMarkup}
@@ -337,13 +348,14 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
 
   const internalHtml = `
     <div style="font-family:Arial,sans-serif;padding:24px;background:#F7E7C1;color:#3a1c08;">
-      <h2 style="margin-top:0;">New booking confirmed</h2>
+      <h2 style="margin-top:0;">${moved ? 'Booking moved to a new time' : 'New booking confirmed'}</h2>
       <p><strong>Reference:</strong> ${escapeHtml(payload.bookingReference)}</p>
       <p><strong>Client:</strong> ${escapeHtml(payload.fullName)} (${escapeHtml(payload.email)})</p>
       <p><strong>Phone:</strong> ${escapeHtml(payload.phone)}</p>
       <p><strong>Service:</strong> ${escapeHtml(payload.serviceName)}</p>
       <p><strong>Artist:</strong> ${escapeHtml(payload.stylistName)}</p>
       <p><strong>Starts:</strong> ${formatDateTime(payload.startsAt)}</p>
+      ${moved ? `<p><strong>Previously:</strong> <s>${formatDateTime(moved)}</s></p>` : ''}
       ${notesMarkup}
       ${paymentMarkup}
       ${makeupMarkup('Makeup intake')}
@@ -354,14 +366,16 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
   const results = await Promise.allSettled([
     sendMail({
       to: payload.email,
-      subject: `${payload.storeName} booking confirmation ${payload.bookingReference}`,
+      subject: moved
+        ? `${payload.storeName} updated booking confirmation ${payload.bookingReference}`
+        : `${payload.storeName} booking confirmation ${payload.bookingReference}`,
       html: customerHtml,
       replyTo: payload.bookingContactEmail || payload.supportEmail,
     }),
     internalRecipients.length > 0
       ? sendMail({
           to: internalRecipients,
-          subject: `New booking confirmed: ${payload.bookingReference}`,
+          subject: moved ? `Booking moved: ${payload.bookingReference}` : `New booking confirmed: ${payload.bookingReference}`,
           html: internalHtml,
           replyTo: payload.email,
         })

@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Download, ExternalLink, Loader2, Maximize2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
+import { AlertTriangle, CalendarClock, CalendarDays, CheckCircle2, Clock, Download, ExternalLink, Loader2, Maximize2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
 
-import { formatCurrency } from '@/lib/format';
+import { RescheduleDialog, type RescheduleResult } from '@/components/admin/reschedule-dialog';
+import { formatCurrency, formatDateTime } from '@/lib/format';
 import { BUSINESS_TIME_ZONE } from '@/lib/timezone';
 import { downloadUrl } from '@/lib/download-url';
 import { cn } from '@/lib/utils';
@@ -83,6 +84,7 @@ export default function AdminBookingsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter | null>(null);
   const [photo, setPhoto] = useState<{ url: string; clientName: string } | null>(null);
+  const [moving, setMoving] = useState<AdminBookingRow | null>(null);
 
   useEffect(() => {
     if (!photo) return;
@@ -179,6 +181,19 @@ export default function AdminBookingsPage() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  async function finishMove(booking: AdminBookingRow, result: RescheduleResult) {
+    setMoving(null);
+    const when = formatDateTime(result.startsAt);
+    setNotice(
+      result.emailError
+        ? { tone: 'error', text: `${booking.clientName} is moved to ${when}, but the email failed: ${result.emailError}. Use Resend confirmation to try again.` }
+        : result.sent
+          ? { tone: 'success', text: `${booking.clientName} is moved to ${when}. Updated ${sentSummary(result.sent).replace(/^C/, 'c')}` }
+          : { tone: 'success', text: `${booking.clientName} is moved to ${when}. No email was sent.` },
+    );
+    await load();
   }
 
   async function removeRow(booking: AdminBookingRow) {
@@ -411,6 +426,17 @@ export default function AdminBookingsPage() {
                           <option value="cancelled">Cancelled</option>
                           <option value="refunded">Refunded</option>
                         </select>
+                        {booking.status === 'confirmed' && (
+                          <button
+                            type="button"
+                            onClick={() => setMoving(booking)}
+                            disabled={busy}
+                            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#C99361]/40 px-4 py-2.5 text-sm text-[#F7E7C1] transition hover:bg-[rgba(139,68,17,0.3)] disabled:opacity-45"
+                          >
+                            <CalendarClock size={15} />
+                            Change date &amp; time
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => void resendEmail(booking)}
@@ -445,6 +471,8 @@ export default function AdminBookingsPage() {
           })}
         </ul>
       )}
+
+      {moving && <RescheduleDialog booking={moving} onClose={() => setMoving(null)} onDone={(result) => void finishMove(moving, result)} />}
 
       {photo && (
         <div
