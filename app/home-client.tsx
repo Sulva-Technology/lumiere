@@ -169,6 +169,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
                 { title: 'Payments', text: 'All payments must be made in cash or Zelle. No exceptions. A non-refundable $35 booking fee is required to secure your appointment. This booking fee is applied toward your total service cost.' },
                 { title: 'Rescheduling', text: 'Need to reschedule? Please text 224-722-9644 at least 24 hours before your scheduled appointment. Your deposit will be transferred to your new appointment if you provide at least 24 hours notice.' },
                 { title: 'Travel Policy', text: 'Travel fees are determined based on the service location. To receive a travel quote, please text 224-722-9644 with the address where you would like your makeup service to be provided.' },
+                { title: 'Same-day bookings', text: 'Same-day appointments are subject to availability and will incur an additional $50 booking fee. This fee is separate from the regular service price and is required for all appointments booked on the same day as the service.' },
               ].map((policy) => (
                 <div key={policy.title} className="space-y-2">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-accent)]">{policy.title}</h3>
