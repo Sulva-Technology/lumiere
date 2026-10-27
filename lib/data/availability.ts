@@ -318,18 +318,33 @@ type SupabaseAdmin = ReturnType<typeof createSupabaseAdminClient>;
 export const BOOKING_WINDOW_DAYS = 183;
 /** Clients can start an appointment on any half hour inside her working hours. */
 const START_STEP_MINUTES = 30;
-/**
- * Break she keeps free after every appointment (cleanup, reset, travel). Clients
- * still see and book the service's own length; this only spaces bookings apart.
- */
-export const BOOKING_BUFFER_MINUTES = 30;
-const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60_000;
+/** Time kept free on either side of every client appointment. */
+export const BOOKING_PRE_BUFFER_MINUTES = 60;
+export const BOOKING_POST_BUFFER_MINUTES = 180;
+const PRE_BUFFER_MS = BOOKING_PRE_BUFFER_MINUTES * 60_000;
+const POST_BUFFER_MS = BOOKING_POST_BUFFER_MINUTES * 60_000;
 /** Used only until she saves her first working week, so the calendar is never empty. */
 const FALLBACK_WINDOW: DayWindow = { start: 9 * 60, end: 17 * 60 };
 /** Open times are not stored rows; their id carries the start time until a client books it. */
 const OPEN_TIME_PREFIX = "open:";
 
 type BusyWindow = { start: number; end: number };
+
+/**
+ * Returns true when an appointment would intrude on another client's protected
+ * booking window. The window begins one hour before its start and finishes three
+ * hours after its start (or at the service end, if that is later).
+ */
+export function appointmentBlocksTime(
+  busyStart: number,
+  busyEnd: number,
+  candidateStart: number,
+  candidateEnd: number,
+) {
+  const protectedStart = busyStart - PRE_BUFFER_MS;
+  const protectedEnd = Math.max(busyEnd, busyStart + POST_BUFFER_MS);
+  return candidateStart < protectedEnd && candidateEnd > protectedStart;
+}
 
 interface StylistSchedule {
   weekly: Map<number, DayWindow[]>;
@@ -357,7 +372,8 @@ async function loadStylistSchedule(
   excludeBookingId?: string,
 ): Promise<StylistSchedule> {
   const nowIso = new Date().toISOString();
-  const [rulesResult, overrides, bookingsResult, reservationsResult] =
+  const protectedWindowLookback = new Date(Date.now() - POST_BUFFER_MS).toISOString();
+  const [rulesResult, overrides, bookingsEndingAfterNowResult, bookingsStartingInProtectedWindowResult, reservationsResult] =
     await Promise.all([
       supabase
         .from("booking_availability_rules")
@@ -372,15 +388,22 @@ async function loadStylistSchedule(
         .in("status", ["confirmed", "completed"])
         .gte("ends_at", nowIso),
       supabase
+        .from("bookings")
+        .select("id, starts_at, ends_at")
+        .eq("stylist_id", stylistId)
+        .in("status", ["confirmed", "completed"])
+        .gte("starts_at", protectedWindowLookback),
+      supabase
         .from("booking_reservations")
         .select("booking_availability(starts_at, ends_at)")
         .eq("stylist_id", stylistId)
         .eq("reservation_status", "pending_payment")
         .gt("expires_at", nowIso),
-    ]);
+  ]);
 
   if (rulesResult.error) throw rulesResult.error;
-  if (bookingsResult.error) throw bookingsResult.error;
+  if (bookingsEndingAfterNowResult.error) throw bookingsEndingAfterNowResult.error;
+  if (bookingsStartingInProtectedWindowResult.error) throw bookingsStartingInProtectedWindowResult.error;
   if (reservationsResult.error) throw reservationsResult.error;
 
   // Each rule is its own working stretch, so a gap between two rules on the same
@@ -402,7 +425,11 @@ async function loadStylistSchedule(
   }
 
   const busy: BusyWindow[] = [];
-  for (const booking of bookingsResult.data ?? []) {
+  const relevantBookings = new Map<string, { id: string; starts_at: string; ends_at: string }>();
+  for (const booking of [...(bookingsEndingAfterNowResult.data ?? []), ...(bookingsStartingInProtectedWindowResult.data ?? [])]) {
+    relevantBookings.set(booking.id, booking);
+  }
+  for (const booking of relevantBookings.values()) {
     // A booking being moved should not block its own new time.
     if (booking.id === excludeBookingId) continue;
     busy.push({
@@ -454,9 +481,9 @@ function openTimesForDay(
     while (cursor.getTime() + durationMinutes * 60_000 <= windowEnd) {
       const start = cursor.getTime();
       const end = start + durationMinutes * 60_000;
-      // Keep a break after both the existing appointment and the new one.
+      // Existing bookings reserve their full protected window.
       const taken = schedule.busy.some(
-        (busy) => start < busy.end + BUFFER_MS && end + BUFFER_MS > busy.start,
+        (busy) => appointmentBlocksTime(busy.start, busy.end, start, end),
       );
       if (cursor > now && !taken && !seen.has(start)) {
         seen.add(start);

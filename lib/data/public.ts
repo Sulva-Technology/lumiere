@@ -8,7 +8,9 @@ import {
 } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/data/audit";
 import {
-  BOOKING_BUFFER_MINUTES,
+  appointmentBlocksTime,
+  BOOKING_POST_BUFFER_MINUTES,
+  BOOKING_PRE_BUFFER_MINUTES,
   claimOpenTime,
   listOpenTimes,
   parseOpenTimeId,
@@ -473,18 +475,40 @@ async function getAvailableSlot(
 
   const slotStart = new Date(slot.starts_at).getTime();
   const slotEnd = new Date(slot.ends_at).getTime();
-  // Bookings keep a break between them (see BOOKING_BUFFER_MINUTES).
-  const bufferMs = BOOKING_BUFFER_MINUTES * 60_000;
-  // 2. Double check for a real overlap with a confirmed booking.
-  const { data: confirmedBookings } = await supabase
-    .from("bookings")
-    .select("id, starts_at, ends_at")
-    .eq("stylist_id", input.stylistId)
-    .in("status", ["confirmed", "completed"])
-    .lt("starts_at", new Date(slotEnd + bufferMs).toISOString())
-    .gt("ends_at", new Date(slotStart - bufferMs).toISOString());
+  // 2. Check both a true appointment overlap and its protected booking window.
+  const [overlappingBookingsResult, protectedWindowBookingsResult] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id, starts_at, ends_at")
+      .eq("stylist_id", input.stylistId)
+      .in("status", ["confirmed", "completed"])
+      .lt("starts_at", new Date(slotEnd).toISOString())
+      .gt("ends_at", new Date(slotStart).toISOString()),
+    supabase
+      .from("bookings")
+      .select("id, starts_at, ends_at")
+      .eq("stylist_id", input.stylistId)
+      .in("status", ["confirmed", "completed"])
+      .gte("starts_at", new Date(slotStart - BOOKING_POST_BUFFER_MINUTES * 60_000).toISOString())
+      .lt("starts_at", new Date(slotEnd + BOOKING_PRE_BUFFER_MINUTES * 60_000).toISOString()),
+  ]);
+  if (overlappingBookingsResult.error) throw overlappingBookingsResult.error;
+  if (protectedWindowBookingsResult.error) throw protectedWindowBookingsResult.error;
 
-  if (confirmedBookings && confirmedBookings.length > 0) {
+  const relevantBookings = new Map<string, { id: string; starts_at: string; ends_at: string }>();
+  for (const booking of [...(overlappingBookingsResult.data ?? []), ...(protectedWindowBookingsResult.data ?? [])]) {
+    relevantBookings.set(booking.id, booking);
+  }
+  const hasBookingClash = [...relevantBookings.values()].some((booking) =>
+    appointmentBlocksTime(
+      new Date(booking.starts_at).getTime(),
+      new Date(booking.ends_at).getTime(),
+      slotStart,
+      slotEnd,
+    ),
+  );
+
+  if (hasBookingClash) {
     throw new Error(
       "This time is no longer available due to a recent booking overlap.",
     );
@@ -506,7 +530,7 @@ async function getAvailableSlot(
         return false;
       const reservedStart = new Date(reservedSlot.starts_at).getTime();
       const reservedEnd = new Date(reservedSlot.ends_at).getTime();
-      return slotStart < reservedEnd + bufferMs && slotEnd + bufferMs > reservedStart;
+      return appointmentBlocksTime(reservedStart, reservedEnd, slotStart, slotEnd);
     },
   );
 

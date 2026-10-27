@@ -29,4 +29,9 @@ Clients could navigate the booking calendar to later months but saw no recurring
 
 - Production has finite manually-created slots for Damilola but no recurring rule to extend them into later months.
 - Availability derives a weekly template from those real slots alongside any existing recurring rules, so a partial legacy rule set cannot prevent later months from being generated.
-- Bookings and payment holds now block only overlapping appointment time, rather than applying hidden multi-hour buffers.
+- Before the current booking-protection update, bookings and payment holds blocked only overlapping appointment time.
+
+## Booking protection update
+
+- Every booking now reserves a protected window from one hour before its start until three hours after its start (or until the service itself ends, if later).
+- The customer-facing availability calendar, payment-time booking validation, and admin rescheduling all enforce the same rule.

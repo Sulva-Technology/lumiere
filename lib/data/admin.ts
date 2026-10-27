@@ -10,7 +10,7 @@ import { finalizePaidBooking } from '@/lib/data/public';
 import { logEvent } from '@/lib/observability';
 import { getStripe } from '@/lib/stripe';
 import { getErrorMessage } from '@/lib/validation';
-import { openTimesForReschedule } from '@/lib/data/availability';
+import { appointmentBlocksTime, BOOKING_POST_BUFFER_MINUTES, BOOKING_PRE_BUFFER_MINUTES, openTimesForReschedule } from '@/lib/data/availability';
 import { formatDateTime } from '@/lib/format';
 import { BUSINESS_TIME_ZONE, businessDateTime } from '@/lib/timezone';
 
@@ -1310,7 +1310,7 @@ async function updateIntakeAppointmentTime(bookingId: string, startsAt: string) 
 
 /**
  * Move a confirmed booking to a new date and time (studio clock), keeping its length,
- * deposit and details. Refuses a time that overlaps another client. Optionally emails
+ * deposit and details. Refuses a time inside another client's protected booking window. Optionally emails
  * the client and team an updated confirmation.
  */
 export async function rescheduleBooking(input: { bookingId: string; day: string; time: string; notifyClient: boolean }) {
@@ -1326,10 +1326,10 @@ export async function rescheduleBooking(input: { bookingId: string; day: string;
   const endsAt = new Date(newStart.getTime() + durationMinutes * 60_000).toISOString();
   const nowIso = new Date().toISOString();
 
-  const [clashResult, holdsResult] = await Promise.all([
+  const [overlappingBookingsResult, protectedWindowBookingsResult, holdsResult] = await Promise.all([
     supabase
       .from('bookings')
-      .select('full_name, starts_at')
+      .select('id, full_name, starts_at, ends_at')
       .eq('stylist_id', booking.stylist_id)
       .in('status', ['confirmed', 'completed'])
       .neq('id', booking.id)
@@ -1337,23 +1337,47 @@ export async function rescheduleBooking(input: { bookingId: string; day: string;
       .gt('ends_at', startsAt)
       .limit(1),
     supabase
+      .from('bookings')
+      .select('id, full_name, starts_at, ends_at')
+      .eq('stylist_id', booking.stylist_id)
+      .in('status', ['confirmed', 'completed'])
+      .neq('id', booking.id)
+      .gte('starts_at', new Date(newStart.getTime() - BOOKING_POST_BUFFER_MINUTES * 60_000).toISOString())
+      .lt('starts_at', new Date(newStart.getTime() + durationMinutes * 60_000 + BOOKING_PRE_BUFFER_MINUTES * 60_000).toISOString()),
+    supabase
       .from('booking_reservations')
-      .select('booking_availability!inner(starts_at, ends_at)')
+      .select('booking_availability(starts_at, ends_at)')
       .eq('stylist_id', booking.stylist_id)
       .eq('reservation_status', 'pending_payment')
-      .gt('expires_at', nowIso)
-      .lt('booking_availability.starts_at', endsAt)
-      .gt('booking_availability.ends_at', startsAt)
-      .limit(1),
+      .gt('expires_at', nowIso),
   ]);
-  if (clashResult.error) throw clashResult.error;
+  if (overlappingBookingsResult.error) throw overlappingBookingsResult.error;
+  if (protectedWindowBookingsResult.error) throw protectedWindowBookingsResult.error;
   if (holdsResult.error) throw holdsResult.error;
 
-  const clash = clashResult.data?.[0];
-  if (clash) {
-    throw new Error(`That time overlaps ${clash.full_name}'s appointment at ${formatDateTime(clash.starts_at)}. Pick another time.`);
+  const relevantBookings = new Map<string, { id: string; full_name: string; starts_at: string; ends_at: string }>();
+  for (const candidate of [...(overlappingBookingsResult.data ?? []), ...(protectedWindowBookingsResult.data ?? [])]) {
+    relevantBookings.set(candidate.id, candidate);
   }
-  if ((holdsResult.data ?? []).length > 0) {
+  const clash = [...relevantBookings.values()].find((candidate) => appointmentBlocksTime(
+    new Date(candidate.starts_at).getTime(),
+    new Date(candidate.ends_at).getTime(),
+    newStart.getTime(),
+    newStart.getTime() + durationMinutes * 60_000,
+  ));
+  if (clash) {
+    throw new Error(`That time falls inside ${clash.full_name}'s protected appointment window at ${formatDateTime(clash.starts_at)}. Pick another time.`);
+  }
+  const heldClash = (holdsResult.data ?? []).some((reservation) => {
+    const held = relationFirst(reservation.booking_availability as { starts_at: string; ends_at: string } | { starts_at: string; ends_at: string }[] | null);
+    return held && appointmentBlocksTime(
+      new Date(held.starts_at).getTime(),
+      new Date(held.ends_at).getTime(),
+      newStart.getTime(),
+      newStart.getTime() + durationMinutes * 60_000,
+    );
+  });
+  if (heldClash) {
     throw new Error('Another client is paying for that time right now. Pick another time.');
   }
 
