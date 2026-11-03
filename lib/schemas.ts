@@ -195,7 +195,7 @@ export const adminAvailabilityScheduleSchema = z
   });
 
 export const adminBookingServiceSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().uuid().nullable().optional(),
   name: z.string().trim().min(2).max(160),
   slug: z
     .string()
