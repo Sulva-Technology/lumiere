@@ -584,10 +584,12 @@ function BookingPageContent() {
               {filteredServices.map((service) => {
                 const Icon = Sparkles;
                 const isExpanded = expandedServiceId === service.id;
+                const hasDescription = service.description && service.description.length > 0;
+                
                 return (
                   <div
                     key={service.id}
-                    className={`rounded-3xl border transition-all ${selectedService === service.id ? "border-[#8B4411] bg-[#8B4411]/5" : "border-black/5"}`}
+                    className={`rounded-3xl border p-6 transition-all ${selectedService === service.id ? "border-[#8B4411] bg-[#8B4411]/5" : "border-black/5 hover:border-black/10"}`}
                   >
                     <button
                       type="button"
@@ -595,7 +597,7 @@ function BookingPageContent() {
                         setSelectedService(service.id);
                         setCurrentStep("availability");
                       }}
-                      className="w-full p-6 text-left hover:opacity-90 transition-opacity"
+                      className="w-full text-left"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -608,7 +610,44 @@ function BookingPageContent() {
                         </div>
                         <Icon className="shrink-0 text-[#8B4411] opacity-40" />
                       </div>
-                      <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4">
+                    </button>
+                    
+                    {hasDescription && (
+                      <div className="mt-4">
+                        <div 
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                            isExpanded ? 'max-h-[600px]' : 'max-h-[80px]'
+                          }`}
+                        >
+                          <p className="text-sm leading-[1.6] whitespace-pre-wrap text-[var(--text-secondary)]">
+                            {service.description}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedServiceId(isExpanded ? null : service.id);
+                          }}
+                          className="mt-2 text-xs font-medium text-[var(--text-accent)] underline underline-offset-2 transition-opacity hover:opacity-80"
+                        >
+                          {isExpanded ? 'Show less' : 'Read more'}
+                        </button>
+                      </div>
+                    )}
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedService(service.id);
+                        setCurrentStep("availability");
+                      }}
+                      className="mt-6 w-full rounded-full border-t border-black/5 pt-6 text-left transition-opacity hover:opacity-90"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-secondary)]">
+                          Select this service
+                        </span>
                         <ServicePrice
                           service={service}
                           className="items-end text-right"
@@ -616,38 +655,6 @@ function BookingPageContent() {
                         />
                       </div>
                     </button>
-                    
-                    {service.description && (
-                      <div className="border-t border-black/5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedServiceId(isExpanded ? null : service.id);
-                          }}
-                          className="flex w-full items-center justify-between gap-4 px-6 py-3 text-left transition-colors hover:bg-black/5"
-                          aria-expanded={isExpanded}
-                        >
-                          <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-accent)]">
-                            {isExpanded ? 'Show Less' : 'Read More'}
-                          </span>
-                          <ChevronDown 
-                            size={16} 
-                            className={`shrink-0 text-[var(--text-accent)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                            aria-hidden="true"
-                          />
-                        </button>
-                        <div 
-                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                            isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
-                          }`}
-                        >
-                          <p className="px-6 pb-6 text-sm leading-[1.6] whitespace-pre-wrap text-[var(--text-secondary)]">
-                            {service.description}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
