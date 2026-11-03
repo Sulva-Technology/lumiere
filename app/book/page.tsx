@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Calendar,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -144,6 +145,7 @@ function BookingPageContent() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [availabilityAttempt, setAvailabilityAttempt] = useState(0);
   const [detailsRestored, setDetailsRestored] = useState(false);
+  const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
   // What "Try again" should redo for the last failure.
   const retryRef = useRef<(() => void) | null>(null);
   const lastUploadRef = useRef<File | null>(null);
@@ -581,37 +583,72 @@ function BookingPageContent() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {filteredServices.map((service) => {
                 const Icon = Sparkles;
+                const isExpanded = expandedServiceId === service.id;
                 return (
-                  <button
+                  <div
                     key={service.id}
-                    onClick={() => {
-                      setSelectedService(service.id);
-                      setCurrentStep("availability");
-                    }}
-                    className={`rounded-3xl border p-6 text-left transition-all hover:scale-[1.02] ${selectedService === service.id ? "border-[#8B4411] bg-[#8B4411]/5" : "border-black/5"}`}
+                    className={`rounded-3xl border transition-all ${selectedService === service.id ? "border-[#8B4411] bg-[#8B4411]/5" : "border-black/5"}`}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]">
-                          Makeup artistry
-                        </p>
-                        <h3 className="mt-3 font-serif text-2xl text-[var(--text-primary)]">
-                          {service.name}
-                        </h3>
-                        <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-[var(--text-secondary)]">
-                          {service.description}
-                        </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedService(service.id);
+                        setCurrentStep("availability");
+                      }}
+                      className="w-full p-6 text-left hover:opacity-90 transition-opacity"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]">
+                            Makeup artistry
+                          </p>
+                          <h3 className="mt-3 font-serif text-2xl text-[var(--text-primary)]">
+                            {service.name}
+                          </h3>
+                        </div>
+                        <Icon className="shrink-0 text-[#8B4411] opacity-40" />
                       </div>
-                      <Icon className="shrink-0 text-[#8B4411] opacity-40" />
-                    </div>
-                    <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4">
-                      <ServicePrice
-                        service={service}
-                        className="items-end text-right"
-                        priceClassName="font-serif text-2xl text-[#8B4411]"
-                      />
-                    </div>
-                  </button>
+                      <div className="mt-8 flex items-center justify-end border-t border-black/5 pt-4">
+                        <ServicePrice
+                          service={service}
+                          className="items-end text-right"
+                          priceClassName="font-serif text-2xl text-[#8B4411]"
+                        />
+                      </div>
+                    </button>
+                    
+                    {service.description && (
+                      <div className="border-t border-black/5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedServiceId(isExpanded ? null : service.id);
+                          }}
+                          className="flex w-full items-center justify-between gap-4 px-6 py-3 text-left transition-colors hover:bg-black/5"
+                          aria-expanded={isExpanded}
+                        >
+                          <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-accent)]">
+                            {isExpanded ? 'Show Less' : 'Read More'}
+                          </span>
+                          <ChevronDown 
+                            size={16} 
+                            className={`shrink-0 text-[var(--text-accent)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                            aria-hidden="true"
+                          />
+                        </button>
+                        <div 
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                            isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                          }`}
+                        >
+                          <p className="px-6 pb-6 text-sm leading-[1.6] whitespace-pre-wrap text-[var(--text-secondary)]">
+                            {service.description}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
