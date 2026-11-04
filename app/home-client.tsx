@@ -5,7 +5,7 @@ import { Glass } from '@/components/ui/glass';
 import { GalleryLightbox } from '@/components/gallery-lightbox';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Expand, ChevronDown } from 'lucide-react';
+import { ArrowRight, Expand } from 'lucide-react';
 import type { GalleryItem, StoreSettings } from '@/lib/types';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 
@@ -24,7 +24,6 @@ export default function Home({ settings, gallery }: HomeClientProps) {
   const resolvedSettings = applyStoreSettingsDefaults(settings);
   const visibility = resolvedSettings.home_section_visibility;
   const [openPhoto, setOpenPhoto] = useState<number | null>(null);
-  const [openPolicyIndex, setOpenPolicyIndex] = useState<number | null>(0);
 
   return (
     <div className="flex flex-col gap-24 pb-24">
@@ -165,11 +164,15 @@ export default function Home({ settings, gallery }: HomeClientProps) {
         <section id="policies" className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-8">
             <h2 className="font-serif text-3xl md:text-4xl text-[var(--text-primary)]">Booking Policies</h2>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {[
                 { 
                   title: 'Payments & Deposits', 
                   text: 'A non-refundable $35 deposit is required to secure your appointment. This deposit will be applied toward your total service cost. Deposits are collected through the online booking system, and the remaining balance is due on the day of your appointment. All payments must be made in cash or Zelle. No exceptions. Appointments are not confirmed until the required deposit has been received.' 
+                },
+                { 
+                  title: 'Travel Services', 
+                  text: 'Mobile makeup services are available throughout Phoenix and surrounding areas for clients who prefer to have their makeup done at their desired location. Travel fees are calculated based on the distance and location of your appointment and are not included in the makeup service price. To receive an accurate travel quote, please text 224-722-9644 with the address where you would like your makeup service to take place. All travel appointments are subject to availability and must be confirmed in advance.' 
                 },
                 { 
                   title: 'Rescheduling', 
@@ -184,54 +187,29 @@ export default function Home({ settings, gallery }: HomeClientProps) {
                   text: 'Please arrive on time for your scheduled appointment. A 10-minute grace period is provided for all appointments. Arriving more than 10 minutes late may result in a shortened appointment or cancellation, depending on availability. This policy helps ensure every client receives the attention and time reserved for their appointment.' 
                 },
                 { 
-                  title: 'Travel Services', 
-                  text: 'Mobile makeup services are available throughout Phoenix and surrounding areas for clients who prefer to have their makeup done at their desired location. Travel fees are calculated based on the distance and location of your appointment and are not included in the makeup service price. To receive an accurate travel quote, please text 224-722-9644 with the address where you would like your makeup service to take place. All travel appointments are subject to availability and must be confirmed in advance.' 
-                },
-                { 
                   title: 'Same-day Bookings', 
                   text: 'Same-day appointments are subject to availability and will incur an additional $50 booking fee. This fee is separate from the regular service price and is required for all appointments booked on the same day as the service.' 
                 },
-              ].map((policy, index) => {
-                const isOpen = openPolicyIndex === index;
-                return (
-                  <Glass 
-                    key={policy.title} 
-                    level="medium" 
-                    className="overflow-hidden"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setOpenPolicyIndex(isOpen ? null : index)}
-                      className="flex w-full items-center justify-between gap-4 p-6 text-left transition-colors hover:bg-black/5"
-                      aria-expanded={isOpen}
-                    >
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-accent)]">
-                        {policy.title}
-                      </h3>
-                      <ChevronDown 
-                        size={20} 
-                        className={`shrink-0 text-[var(--text-accent)] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <div 
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        isOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-                      }`}
-                    >
-                      <p className="px-6 pb-6 text-sm leading-[1.6] text-[var(--text-secondary)]">
-                        {policy.text}
-                      </p>
-                    </div>
-                  </Glass>
-                );
-              })}
-              <Link 
-                href="/terms-of-service" 
-                className="inline-flex min-h-[48px] items-center text-sm font-medium text-[var(--text-accent)] underline underline-offset-4 transition-opacity hover:opacity-80"
-              >
-                View Full Terms &amp; Conditions
-              </Link>
+              ].map((policy) => (
+                <div key={policy.title} className="space-y-2">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-accent)]">{policy.title}</h3>
+                  <p className="text-sm leading-[1.6] text-[var(--text-secondary)]">{policy.text}</p>
+                </div>
+              ))}
+              <div className="flex flex-col gap-4 pt-4">
+                <Link 
+                  href="/terms-of-service" 
+                  className="inline-flex min-h-[48px] items-center text-sm font-medium text-[var(--text-accent)] underline underline-offset-4 transition-opacity hover:opacity-80"
+                >
+                  View Full Terms &amp; Conditions
+                </Link>
+                <Link 
+                  href="/book" 
+                  className="inline-flex items-center justify-center rounded-full bg-[#8B4411] px-10 py-4 font-medium text-white shadow-lg transition-all hover:scale-[1.02] hover:opacity-90"
+                >
+                  Book Now
+                </Link>
+              </div>
             </div>
           </div>
         </section>
