@@ -1,3 +1,4 @@
+import { isServiceBookable } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   addDaysToKey,
@@ -499,12 +500,12 @@ function openTimesForDay(
 async function serviceDuration(supabase: SupabaseAdmin, serviceId: string) {
   const { data, error } = await supabase
     .from("booking_services")
-    .select("duration_minutes")
+    .select("*")
     .eq("id", serviceId)
     .eq("active", true)
     .maybeSingle();
   if (error) throw error;
-  if (!data) throw new Error("Selected service is unavailable.");
+  if (!data || !isServiceBookable(data)) throw new Error("Selected service is unavailable.");
   return data.duration_minutes as number;
 }
 

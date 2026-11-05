@@ -49,6 +49,26 @@
     --glass-subtle-border: rgba(139, 68, 17, 0.14);
   }
 
+  .admin-theme {
+    color-scheme: dark;
+    --text-primary: #f7e7c1;
+    --text-secondary: #cbbca9;
+    --text-accent: #c99361;
+    --heading-primary: #f7e7c1;
+    --surface-primary: #24180e;
+    --surface-elevated: #302114;
+    --border-soft: rgba(201, 147, 97, 0.25);
+    --input-bg: #302114;
+    --glass-heavy-bg: #24180e;
+    --glass-medium-bg: #24180e;
+    --glass-subtle-bg: #21160c;
+    --glass-heavy-border: rgba(201, 147, 97, 0.28);
+    --glass-medium-border: rgba(201, 147, 97, 0.22);
+    --glass-subtle-border: rgba(201, 147, 97, 0.18);
+    --glass-heavy-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    --glass-medium-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
   body {
     @apply font-sans antialiased;
     background: #ffffff;

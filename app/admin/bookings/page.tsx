@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CalendarClock, CalendarDays, CheckCircle2, Clock, Download, ExternalLink, Loader2, Maximize2, Mail, Phone, RefreshCw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react';
 
 import { RescheduleDialog, type RescheduleResult } from '@/components/admin/reschedule-dialog';
+import { ChangeServiceDialog } from '@/components/admin/change-service-dialog';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { BUSINESS_TIME_ZONE } from '@/lib/timezone';
 import { downloadUrl } from '@/lib/download-url';
@@ -85,6 +86,7 @@ export default function AdminBookingsPage() {
   const [filter, setFilter] = useState<Filter | null>(null);
   const [photo, setPhoto] = useState<{ url: string; clientName: string } | null>(null);
   const [moving, setMoving] = useState<AdminBookingRow | null>(null);
+  const [changingService, setChangingService] = useState<AdminBookingRow | null>(null);
 
   useEffect(() => {
     if (!photo) return;
@@ -193,6 +195,14 @@ export default function AdminBookingsPage() {
           ? { tone: 'success', text: `${booking.clientName} is moved to ${when}. Updated ${sentSummary(result.sent).replace(/^C/, 'c')}` }
           : { tone: 'success', text: `${booking.clientName} is moved to ${when}. No email was sent.` },
     );
+    await load();
+  }
+
+  async function finishServiceChange(result: RescheduleResult) {
+    setChangingService(null);
+    setNotice(result.emailError
+      ? { tone: 'error', text: `Service updated, but the email failed: ${result.emailError}. Use Resend confirmation to try again.` }
+      : { tone: 'success', text: `Service updated. Deposit and agreed price kept.${result.sent ? ` ${sentSummary(result.sent)}` : ' No email was sent.'}` });
     await load();
   }
 
@@ -427,6 +437,12 @@ export default function AdminBookingsPage() {
                           <option value="refunded">Refunded</option>
                         </select>
                         {booking.status === 'confirmed' && (
+                          <button type="button" onClick={() => setChangingService(booking)} disabled={busy || new Date(booking.startsAt).getTime() <= now}
+                            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#C99361]/40 px-4 py-2.5 text-sm text-[#F7E7C1] transition hover:bg-[rgba(139,68,17,0.3)] disabled:opacity-45">
+                            <RefreshCw size={15} /> Change service
+                          </button>
+                        )}
+                        {booking.status === 'confirmed' && (
                           <button
                             type="button"
                             onClick={() => setMoving(booking)}
@@ -473,6 +489,7 @@ export default function AdminBookingsPage() {
       )}
 
       {moving && <RescheduleDialog booking={moving} onClose={() => setMoving(null)} onDone={(result) => void finishMove(moving, result)} />}
+      {changingService && <ChangeServiceDialog booking={changingService} onClose={() => setChangingService(null)} onDone={(result) => void finishServiceChange(result)} />}
 
       {photo && (
         <div

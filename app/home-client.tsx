@@ -79,7 +79,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
             </div>
 
             <div className="flex flex-wrap gap-4 pt-2">
-              <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B4411] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90">
+              <Link href="/#policies" className="inline-flex items-center justify-center rounded-full bg-[#8B4411] px-8 py-4 font-medium text-white transition-opacity hover:opacity-90">
                 Book a Session
               </Link>
               <Link href="/contact" className="inline-flex items-center justify-center rounded-full border border-[var(--text-primary)] px-8 py-4 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80">
@@ -150,7 +150,7 @@ export default function Home({ settings, gallery }: HomeClientProps) {
             <Link href="/gallery" className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--text-primary)] px-8 py-3.5 font-medium text-[var(--text-primary)] transition-opacity hover:opacity-80">
               View full gallery{gallery.length > HOME_GALLERY_COUNT ? ` (${gallery.length} looks)` : ''} <ArrowRight size={16} />
             </Link>
-            <Link href="/book" className="inline-flex items-center justify-center rounded-full bg-[#8B4411] px-8 py-3.5 font-medium text-white transition-opacity hover:opacity-90">
+            <Link href="/#policies" className="inline-flex items-center justify-center rounded-full bg-[#8B4411] px-8 py-3.5 font-medium text-white transition-opacity hover:opacity-90">
               Book your look
             </Link>
           </div>

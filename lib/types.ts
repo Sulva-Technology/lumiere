@@ -211,6 +211,7 @@ export interface BookingService {
   serviceType: BookingServiceType;
   active?: boolean;
   special?: ServiceSpecial | null;
+  bookingWindow?: { startsOn: string; endsOn: string } | null;
   bestFor?: string;
   included?: string[];
   prepNotes?: string[];
@@ -318,6 +319,7 @@ export interface AdminOrderRow {
 
 export interface AdminBookingRow {
   id: string;
+  serviceId?: string;
   bookingReference: string | null;
   reservationId: string | null;
   clientName: string;

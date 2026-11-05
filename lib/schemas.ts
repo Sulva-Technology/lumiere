@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const adminBookingServiceChangeSchema = z.object({
+  serviceId: z.string().uuid(),
+  notifyClient: z.boolean().default(false),
+});
+
 const makeupLookTypes = [
   "Soft glam",
   "Full glam",
@@ -215,6 +220,13 @@ export const adminBookingServiceSchema = z.object({
   price: z.coerce.number().min(0),
   serviceType: z.enum(bookingServiceTypes),
   active: z.boolean().optional().default(true),
+  bookingWindow: z.object({
+    startsOn: z.iso.date('Choose a valid booking start date.'),
+    endsOn: z.iso.date('Choose a valid booking end date.'),
+  }).refine((window) => window.endsOn >= window.startsOn, {
+    message: 'Booking end date must be on or after the start date.',
+    path: ['endsOn'],
+  }).nullable().optional(),
   special: z
     .object({
       price: z.coerce.number().min(0),

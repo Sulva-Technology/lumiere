@@ -1,3 +1,4 @@
+import { bookingWindowFromRow, isServiceBookable, serviceStatus } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createHostedCheckoutSession, extractPaymentIntentId } from "@/lib/payments";
 import { getStripe } from "@/lib/stripe";
@@ -17,7 +18,7 @@ import {
 } from "@/lib/data/availability";
 import { logEvent } from "@/lib/observability";
 import { BUSINESS_TIME_ZONE } from "@/lib/timezone";
-import { SPECIAL_COLUMNS, isSpecialCurrent, priceForAppointment, specialFromRow } from "@/lib/specials";
+import { isSpecialCurrent, priceForAppointment, specialFromRow } from "@/lib/specials";
 import type {
   AvailableSlot,
   BookingConfirmation,
@@ -268,27 +269,19 @@ export async function getProductBySlug(
 
 export async function getBookingServices(): Promise<BookingService[]> {
   const supabase = createSupabaseAdminClient();
-  const baseColumns = "id, slug, name, description, duration_minutes, price, service_type";
-  const query = (columns: string) =>
-    supabase
-      .from("booking_services")
-      .select(columns)
-      .eq("active", true)
-      .eq("service_type", "makeup")
-      .order("price");
-
-  let { data, error } = await query(`${baseColumns}, ${SPECIAL_COLUMNS}`);
-  // Keep booking working until migration 019 (service specials) is applied.
-  if (error && isMissingColumnError(error, "special_price")) {
-    ({ data, error } = await query(baseColumns));
-  }
+  const { data, error } = await supabase
+    .from("booking_services")
+    .select("*")
+    .eq("active", true)
+    .eq("service_type", "makeup")
+    .order("price");
 
   if (error) throw error;
   // We import SERVICES dynamically to avoid circular dependencies if any,
   // though here it's fine. We'll use the slug to match.
   const { SERVICES } = require("./services");
 
-  return ((data ?? []) as any[]).map((service) => {
+  return ((data ?? []) as any[]).filter(isServiceBookable).map((service) => {
     const seoData = SERVICES.find((s: any) => s.slug === service.slug);
     const special = specialFromRow(service);
 
@@ -301,6 +294,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
       price: normalizeMoney(service.price),
       serviceType: service.service_type,
       special: isSpecialCurrent(special) ? special : null,
+      bookingWindow: bookingWindowFromRow(service),
       // Pass through SEO specific fields if they exist
       included: seoData?.included ?? [],
       prepNotes: seoData?.prepNotes ?? [],
@@ -436,13 +430,13 @@ async function getAvailableSlot(
   const supabase = createSupabaseAdminClient();
   const { data: service, error: serviceError } = await supabase
     .from("booking_services")
-    .select("duration_minutes")
+    .select("*")
     .eq("id", input.serviceId)
     .eq("active", true)
     .maybeSingle();
 
   if (serviceError) throw serviceError;
-  if (!service) throw new Error("Selected service is unavailable.");
+  if (!service || !isServiceBookable(service)) throw new Error("Selected service is unavailable.");
 
   // 1. Resolve the requested time to a stored slot
   const openTimeStart = parseOpenTimeId(input.availabilityId);
@@ -551,7 +545,7 @@ export async function createBookingCheckout(
     getPublicStoreSettings(),
   ]);
   const service = services.find((item) => item.id === input.serviceId);
-  if (!service) throw new Error("Selected service is unavailable.");
+  if (!service || serviceStatus(service) !== 'Active') throw new Error("Selected service is unavailable.");
   // Travel is quoted directly by the artist and is never added automatically.
   const travelFee = 0;
   const sameDayFee = input.sameDayAppointment ? 50 : 0;

@@ -64,7 +64,7 @@ export function AdminShell({ children, adminEmail, brandName }: { children: Reac
   }
 
   return (
-    <div className="relative z-50 flex min-h-screen bg-[#140d05] text-white transition-colors duration-500">
+    <div className="admin-theme relative z-50 flex min-h-screen bg-[#140d05] text-white transition-colors duration-500">
       {isMobileSidebarOpen && (
         <button
           aria-label="Close sidebar overlay"

@@ -1,10 +1,11 @@
+import { bookingWindowFromRow, isServiceBookable, type ServiceWindow } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { bookingPaymentIntake, bookingPaymentSummary, sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmationEmails, sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
 import { createAuditLog } from '@/lib/data/audit';
 import { finalizePaidOrder } from '@/lib/data/checkout';
 import type { AdminBookingRow, AdminCustomerRow, AdminOrderRow, BookingService, BookingServiceType, Category, DashboardMetrics, HomeSectionVisibility, HomeShopSectionItem, PaymentRecord, ProductDetail, ServiceSpecial, StoreSettings } from '@/lib/types';
-import { SPECIAL_COLUMNS, specialFromRow } from '@/lib/specials';
+import { specialFromRow } from '@/lib/specials';
 import { applyStoreSettingsDefaults } from '@/lib/store-settings';
 import { finalizePaidBooking } from '@/lib/data/public';
 import { logEvent } from '@/lib/observability';
@@ -168,7 +169,7 @@ export async function getAdminBookings(): Promise<AdminBookingRow[]> {
   const [{ data: bookings, error: bookingsError }, { data: reservations, error: reservationsError }] = await Promise.all([
     supabase
       .from('bookings')
-      .select('id, booking_reference, full_name, email, phone, starts_at, status, notes, payment_status, stylists(name), booking_services(name), payments(id, provider, provider_reference, amount, metadata)')
+      .select('id, service_id, booking_reference, full_name, email, phone, starts_at, status, notes, payment_status, stylists(name), booking_services(name), payments(id, provider, provider_reference, amount, metadata)')
       .order('starts_at', { ascending: false }),
     supabase
       .from('booking_reservations')
@@ -182,6 +183,7 @@ export async function getAdminBookings(): Promise<AdminBookingRow[]> {
 
   const mappedBookings: AdminBookingRow[] = (bookings ?? []).map((booking) => ({
     id: booking.id,
+    serviceId: booking.service_id,
     bookingReference: booking.booking_reference,
     reservationId: null,
     clientName: booking.full_name,
@@ -332,7 +334,7 @@ export async function getAdminCategories(): Promise<Category[]> {
 }
 
 const BASE_SERVICE_COLUMNS = 'id, name, slug, description, duration_minutes, price, service_type, active';
-const SERVICE_COLUMNS = `${BASE_SERVICE_COLUMNS}, ${SPECIAL_COLUMNS}`;
+const SERVICE_COLUMNS = '*';
 
 type ServiceRow = {
   id: string;
@@ -343,6 +345,8 @@ type ServiceRow = {
   price: number | string;
   service_type: BookingServiceType;
   active: boolean;
+  available_from?: string | null;
+  available_until?: string | null;
   special_price?: number | string | null;
   special_label?: string | null;
   special_starts_on?: string | null;
@@ -360,6 +364,7 @@ function toAdminBookingService(row: ServiceRow): BookingService {
     serviceType: row.service_type,
     active: row.active,
     special: specialFromRow(row),
+    bookingWindow: bookingWindowFromRow(row),
   };
 }
 
@@ -395,6 +400,7 @@ type BookingServiceInput = {
   serviceType: BookingServiceType;
   active?: boolean;
   special?: SpecialInput | null;
+  bookingWindow?: ServiceWindow | null;
 };
 
 async function saveBookingService(
@@ -409,13 +415,18 @@ async function saveBookingService(
     price: input.price,
     service_type: input.serviceType,
     active: input.active ?? true,
+    ...(input.bookingWindow !== undefined ? {
+      available_from: input.bookingWindow?.startsOn ?? null,
+      available_until: input.bookingWindow?.endsOn ?? null,
+    } : {}),
   };
   let { data, error } = await write({ ...values, ...specialColumns(input.special) }, SERVICE_COLUMNS);
   if (error?.message.includes('special_')) {
     if (input.special) throw new Error('Specials need the 019_service_specials database migration. Apply it in Supabase, then save again.');
     // Before migration 019, save the service without special columns.
-    ({ data, error } = await write(values, BASE_SERVICE_COLUMNS));
+    ({ data, error } = await write(values, SERVICE_COLUMNS));
   }
+  if (error?.message.includes('available_')) throw new Error('Apply the 021_service_booking_windows database migration in Supabase, then save again.');
   if (error) throw error;
   return toAdminBookingService(data as ServiceRow);
 }
@@ -1309,18 +1320,29 @@ async function updateIntakeAppointmentTime(bookingId: string, startsAt: string) 
 }
 
 /**
- * Move a confirmed booking to a new date and time (studio clock), keeping its length,
- * deposit and details. Refuses a time inside another client's protected booking window. Optionally emails
- * the client and team an updated confirmation.
+ * Move a confirmed booking, or change its service at the existing start time.
+ * Service changes use the new duration; both operations preserve the agreed price
+ * and deposit, check protected booking windows, and optionally email confirmation.
  */
-export async function rescheduleBooking(input: { bookingId: string; day: string; time: string; notifyClient: boolean }) {
+export async function rescheduleBooking(input: { bookingId: string; notifyClient: boolean; actorUserId?: string } & ({ day: string; time: string; serviceId?: never } | { serviceId: string; day?: never; time?: never })) {
   const supabase = createSupabaseAdminClient();
-  const { booking, durationMinutes } = await loadReschedulableBooking(input.bookingId);
+  const loaded = await loadReschedulableBooking(input.bookingId);
+  const { booking } = loaded;
+  let durationMinutes = loaded.durationMinutes;
+  const serviceId = input.serviceId ?? booking.service_id;
+  if (input.serviceId) {
+    if (serviceId === booking.service_id) throw new Error('Choose a different service.');
+    const { data: service, error } = await supabase.from('booking_services').select('*').eq('id', serviceId).maybeSingle();
+    if (error) throw error;
+    if (!service || !isServiceBookable(service)) throw new Error('This service is not currently available for booking.');
+    durationMinutes = Number(service.duration_minutes);
+    if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) throw new Error('The selected service needs a valid duration.');
+  }
 
-  const newStart = businessDateTime(input.day, input.time);
+  const newStart = input.serviceId ? new Date(booking.starts_at) : businessDateTime(input.day!, input.time!);
   if (Number.isNaN(newStart.getTime())) throw new Error('Choose a valid date and time.');
   if (newStart.getTime() <= Date.now()) throw new Error('Choose a date and time in the future.');
-  if (newStart.getTime() === new Date(booking.starts_at).getTime()) throw new Error('The booking is already at that time.');
+  if (!input.serviceId && newStart.getTime() === new Date(booking.starts_at).getTime()) throw new Error('The booking is already at that time.');
 
   const startsAt = newStart.toISOString();
   const endsAt = new Date(newStart.getTime() + durationMinutes * 60_000).toISOString();
@@ -1386,7 +1408,7 @@ export async function rescheduleBooking(input: { bookingId: string; day: string;
     .from('booking_availability')
     .select('id, bookings(id)')
     .eq('stylist_id', booking.stylist_id)
-    .eq('service_id', booking.service_id)
+    .eq('service_id', serviceId)
     .eq('starts_at', startsAt)
     .eq('ends_at', endsAt);
   if (slotsError) throw slotsError;
@@ -1394,11 +1416,12 @@ export async function rescheduleBooking(input: { bookingId: string; day: string;
   let slotId = (existingSlots ?? []).find((slot) => !Array.isArray(slot.bookings) || slot.bookings.length === 0)?.id as string | undefined;
   let createdSlot = false;
   if (slotId) {
-    await supabase.from('booking_availability').update({ is_available: false }).eq('id', slotId);
+    const { error: slotError } = await supabase.from('booking_availability').update({ is_available: false }).eq('id', slotId);
+    if (slotError) throw slotError;
   } else {
     const { data: slot, error: slotError } = await supabase
       .from('booking_availability')
-      .insert({ stylist_id: booking.stylist_id, service_id: booking.service_id, starts_at: startsAt, ends_at: endsAt, is_available: false })
+      .insert({ stylist_id: booking.stylist_id, service_id: serviceId, starts_at: startsAt, ends_at: endsAt, is_available: false })
       .select('id')
       .single();
     if (slotError) throw slotError;
@@ -1406,32 +1429,38 @@ export async function rescheduleBooking(input: { bookingId: string; day: string;
     createdSlot = true;
   }
 
-  const { error: updateError } = await supabase
+  const { data: updatedBooking, error: updateError } = await supabase
     .from('bookings')
-    .update({ availability_id: slotId, starts_at: startsAt, ends_at: endsAt })
-    .eq('id', booking.id);
-  if (updateError) {
+    .update({ service_id: serviceId, availability_id: slotId, starts_at: startsAt, ends_at: endsAt })
+    .eq('id', booking.id)
+    .eq('status', 'confirmed')
+    .eq('service_id', booking.service_id)
+    .eq('starts_at', booking.starts_at)
+    .select('id')
+    .maybeSingle();
+  if (updateError || !updatedBooking) {
     if (createdSlot) await supabase.from('booking_availability').delete().eq('id', slotId);
-    throw updateError;
+    throw updateError ?? new Error('This booking changed while you were editing. Refresh and try again.');
   }
 
   if (booking.availability_id) {
     await supabase.from('booking_availability').update({ is_available: true }).eq('id', booking.availability_id);
   }
-  await updateIntakeAppointmentTime(booking.id, startsAt);
+  if (!input.serviceId) await updateIntakeAppointmentTime(booking.id, startsAt);
 
   await createAuditLog({
-    action: 'booking.rescheduled',
+    action: input.serviceId ? 'booking.service_changed' : 'booking.rescheduled',
     entityType: 'booking',
     entityId: booking.id,
-    payload: { from: booking.starts_at, to: startsAt, notifiedClient: input.notifyClient },
+    actorUserId: input.actorUserId,
+    payload: { from: booking.starts_at, to: startsAt, previousServiceId: booking.service_id, serviceId, durationMinutes, pricingUnchanged: true, notifiedClient: input.notifyClient },
   });
-  logEvent('info', 'admin.booking_rescheduled', { bookingId: booking.id, from: booking.starts_at, to: startsAt });
+  logEvent('info', input.serviceId ? 'admin.booking_service_changed' : 'admin.booking_rescheduled', { bookingId: booking.id, from: booking.starts_at, to: startsAt, serviceId });
 
   if (!input.notifyClient) return { startsAt, sent: null, emailError: null };
 
   try {
-    const sent = await sendBookingEmails(booking.id, { rescheduledFrom: booking.starts_at });
+    const sent = await sendBookingEmails(booking.id, { rescheduledFrom: input.serviceId ? null : booking.starts_at });
     return { startsAt, sent, emailError: null };
   } catch (emailError) {
     const message = getErrorMessage(emailError, 'Unable to send the updated confirmation.');
