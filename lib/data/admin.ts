@@ -1,4 +1,4 @@
-import { bookingWindowFromRow, isServiceBookable, type ServiceWindow } from '@/lib/service-availability';
+import { bookingWindowFromRow, type ServiceWindow } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { bookingPaymentIntake, bookingPaymentSummary, sendAdminCustomEmail, sendBookingConfirmationEmails, sendOrderConfirmationEmails, sendOrderStatusUpdateEmail } from '@/lib/notifications';
 import { assignMediaAsset, deleteMediaObject, updateMediaLifecycle } from '@/lib/data/media';
@@ -1334,7 +1334,9 @@ export async function rescheduleBooking(input: { bookingId: string; notifyClient
     if (serviceId === booking.service_id) throw new Error('Choose a different service.');
     const { data: service, error } = await supabase.from('booking_services').select('*').eq('id', serviceId).maybeSingle();
     if (error) throw error;
-    if (!service || !isServiceBookable(service)) throw new Error('This service is not currently available for booking.');
+    // Admin corrections may use hidden or seasonal services without reopening
+    // those services to new public bookings.
+    if (!service) throw new Error('This service no longer exists. Choose another service.');
     durationMinutes = Number(service.duration_minutes);
     if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) throw new Error('The selected service needs a valid duration.');
   }

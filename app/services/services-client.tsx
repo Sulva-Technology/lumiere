@@ -7,6 +7,7 @@ import { ArrowRight, Clock, DollarSign } from 'lucide-react';
 import Image from 'next/image';
 import type { BookingService } from '@/lib/types';
 import { ServicePrice } from '@/components/service-price';
+import { bookingOpensLabel } from '@/lib/service-availability';
 
 interface ServicesClientProps {
   initialServices: BookingService[];
@@ -55,7 +56,7 @@ export default function ServicesClient({ initialServices }: ServicesClientProps)
                     <span>{service.durationMinutes} Minutes</span>
                   </div>
                   <div className="pt-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-[var(--text-accent)]">
-                    Book This Session <ArrowRight size={14} />
+                    {bookingOpensLabel(service) || 'Book This Session'} <ArrowRight size={14} />
                   </div>
                 </div>
               </div>

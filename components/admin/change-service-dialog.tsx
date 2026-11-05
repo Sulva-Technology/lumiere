@@ -27,7 +27,7 @@ export function ChangeServiceDialog({ booking, onClose, onDone }: {
         const response = await fetch('/api/admin/services', { cache: 'no-store', signal: controller.signal });
         const json = await response.json();
         if (!response.ok) throw new Error(json.error ?? 'Unable to load services.');
-        if (!controller.signal.aborted) setServices(json.data.services.filter((service: BookingService) => service.id !== booking.serviceId && serviceStatus(service) === 'Active'));
+        if (!controller.signal.aborted) setServices(json.data.services);
       } catch (failure) {
         if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Unable to load services.');
       } finally {
@@ -36,13 +36,13 @@ export function ChangeServiceDialog({ booking, onClose, onDone }: {
     }
     void load();
     return () => controller.abort();
-  }, [booking.serviceId]);
+  }, []);
 
   const selected = services.find((service) => service.id === serviceId);
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving || !selected) return;
+    if (saving || !selected || selected.id === booking.serviceId) return;
     setSaving(true);
     setError(null);
     try {
@@ -75,10 +75,11 @@ export function ChangeServiceDialog({ booking, onClose, onDone }: {
           <select required value={serviceId} disabled={loading || saving} onChange={(event) => { setServiceId(event.target.value); setError(null); }}
             className="mt-2 w-full rounded-xl border border-[#C99361]/30 bg-[#140d05] p-3 text-[#F7E7C1]">
             <option value="">{loading ? 'Loading services...' : 'Choose a service'}</option>
-            {services.map((service) => <option key={service.id} value={service.id}>{service.name} ({service.durationMinutes} mins)</option>)}
+            {services.map((service) => <option key={service.id} value={service.id} disabled={service.id === booking.serviceId}>{service.name} ({service.durationMinutes} mins) — {service.id === booking.serviceId ? 'Current service' : serviceStatus(service)}</option>)}
           </select>
         </label>
-        {!loading && services.length === 0 && <p className="text-sm">No alternative services are currently available. Enable another service in Services first.</p>}
+        {!loading && !services.some((service) => service.id !== booking.serviceId) && <p className="text-sm">No alternative services have been added yet. Add another service in Services first.</p>}
+        {selected && serviceStatus(selected) !== 'Active' && <p className="text-sm text-[#e8d3bd]">This service is {serviceStatus(selected).toLowerCase()} on the public booking page. You can assign it to this booking as an admin; its public availability stays unchanged.</p>}
         {selected && <p className="text-sm text-[#e8d3bd]">New duration: {selected.durationMinutes} minutes. Ends {formatDateTime(new Date(new Date(booking.startsAt).getTime() + selected.durationMinutes * 60_000).toISOString())}. We check for conflicts before saving.</p>}
         <div className="rounded-2xl border border-[#C99361]/20 bg-white/5 p-4 text-sm leading-6 text-[#e8d3bd]">
           The start time, artist, deposit and agreed price stay unchanged. No extra charge or refund is made.
@@ -91,7 +92,7 @@ export function ChangeServiceDialog({ booking, onClose, onDone }: {
         </label>
         <div className="flex justify-end gap-3">
           <button type="button" disabled={saving} onClick={onClose} className="rounded-full border border-[#C99361]/30 px-4 py-2 disabled:opacity-50">Cancel</button>
-          <button type="submit" disabled={saving || loading || !selected} className="rounded-full bg-[#C99361] px-4 py-2 font-medium text-[#140d05] disabled:opacity-50">{saving ? 'Saving...' : 'Save service'}</button>
+          <button type="submit" disabled={saving || loading || !selected || selected.id === booking.serviceId} className="rounded-full bg-[#C99361] px-4 py-2 font-medium text-[#140d05] disabled:opacity-50">{saving ? 'Saving...' : 'Save service'}</button>
         </div>
       </form>
     </dialog>

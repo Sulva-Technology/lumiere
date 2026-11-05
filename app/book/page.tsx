@@ -20,6 +20,7 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { BUSINESS_TIME_ZONE, businessDateKey } from "@/lib/timezone";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ServicePrice } from "@/components/service-price";
+import { bookingOpensLabel, serviceStatus } from '@/lib/service-availability';
 import { ReloadNotice } from "@/components/reload-notice";
 import { formatSpecialWindow, priceForAppointment } from "@/lib/specials";
 import type {
@@ -582,6 +583,8 @@ function BookingPageContent() {
             ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {filteredServices.map((service) => {
+                const opensLabel = bookingOpensLabel(service);
+                const canBook = serviceStatus(service) === 'Active';
                 const Icon = Sparkles;
                 const isExpanded = expandedServiceId === service.id;
                 const hasDescription = service.description && service.description.length > 0;
@@ -593,6 +596,7 @@ function BookingPageContent() {
                   >
                     <button
                       type="button"
+                      disabled={!canBook}
                       onClick={() => {
                         setSelectedService(service.id);
                         setCurrentStep("availability");
@@ -638,6 +642,7 @@ function BookingPageContent() {
                     
                     <button
                       type="button"
+                      disabled={!canBook}
                       onClick={() => {
                         setSelectedService(service.id);
                         setCurrentStep("availability");
@@ -646,7 +651,7 @@ function BookingPageContent() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-secondary)]">
-                          Select this service
+                          {opensLabel || (canBook ? 'Select this service' : 'Booking closed')}
                         </span>
                         <ServicePrice
                           service={service}

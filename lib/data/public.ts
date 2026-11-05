@@ -1,4 +1,4 @@
-import { bookingWindowFromRow, isServiceBookable, serviceStatus } from '@/lib/service-availability';
+import { bookingWindowFromRow, isServiceBookable, isServiceVisible, serviceStatus } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createHostedCheckoutSession, extractPaymentIntentId } from "@/lib/payments";
 import { getStripe } from "@/lib/stripe";
@@ -281,7 +281,7 @@ export async function getBookingServices(): Promise<BookingService[]> {
   // though here it's fine. We'll use the slug to match.
   const { SERVICES } = require("./services");
 
-  return ((data ?? []) as any[]).filter(isServiceBookable).map((service) => {
+  return ((data ?? []) as any[]).filter((service) => isServiceVisible(service)).map((service) => {
     const seoData = SERVICES.find((s: any) => s.slug === service.slug);
     const special = specialFromRow(service);
 

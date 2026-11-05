@@ -178,7 +178,7 @@ export default function AdminServicesPage() {
               </label>
               {form.windowEnabled && (
                 <>
-                  <p className="text-xs leading-5 text-white/70">Customers can place bookings only during these dates (Arizona time). The service is hidden before the start and becomes inactive after the end date. Existing bookings are kept. Appointment dates are still set by your availability.</p>
+                  <p className="text-xs leading-5 text-white/70">Customers can see the service before bookings open and place bookings during these dates (Arizona time). It is hidden after the end date. Existing bookings are kept. Appointment dates are still set by your availability.</p>
                   <label className="block text-sm text-white/80">
                     Bookings open
                     <input type="date" value={form.availableFrom} onChange={(event) => setForm((current) => ({ ...current, availableFrom: event.target.value }))} className="mt-1 w-full min-w-0 rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-white" required />

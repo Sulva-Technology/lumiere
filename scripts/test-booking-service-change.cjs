@@ -71,7 +71,18 @@ async function scenario(options = {}) {
   assert.equal(update.values.ends_at, '2090-12-10T18:30:00.000Z');
   assert.equal(success.writes.some((write) => write.table === 'payments'), false);
   assert.equal(success.writes.some((write) => write.values && ('payment_status' in write.values || 'price' in write.values)), false);
-  for (const options of [{ conflict: true }, { hold: true }, { same: true }, { missing: true }, { service: { active: false } }, { service: { available_from: '2000-01-01', available_until: '2000-12-31' } }, { service: { duration_minutes: 0 } }, { booking: { status: 'cancelled' } }, { booking: { starts_at: '2000-12-10T17:00:00Z' } }]) {
+  for (const service of [
+    { active: false },
+    { available_from: '2000-01-01', available_until: '2000-12-31' },
+    { available_from: '2090-12-01', available_until: '2090-12-31' },
+    { service_type: 'content' },
+  ]) {
+    const result = await scenario({ service });
+    assert.equal(result.error, undefined);
+    assert.equal(result.writes.find((write) => write.table === 'bookings').values.service_id, 'new');
+    assert.equal(result.writes.some((write) => write.table === 'booking_services'), false);
+  }
+  for (const options of [{ conflict: true }, { hold: true }, { same: true }, { missing: true }, { service: { duration_minutes: 0 } }, { booking: { status: 'cancelled' } }, { booking: { starts_at: '2000-12-10T17:00:00Z' } }]) {
     const result = await scenario(options);
     assert.ok(result.error, JSON.stringify(options));
     assert.equal(result.writes.length, 0, result.error);
