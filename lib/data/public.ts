@@ -1,4 +1,4 @@
-import { bookingWindowFromRow, isServiceBookable, isServiceVisible, serviceStatus } from '@/lib/service-availability';
+import { bookingWindowFromRow, isServiceBookable, isServiceVisible, serviceAcceptsBookings, serviceAllowsAppointment } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createHostedCheckoutSession, extractPaymentIntentId } from "@/lib/payments";
 import { getStripe } from "@/lib/stripe";
@@ -461,6 +461,7 @@ async function getAvailableSlot(
   if (
     !slot ||
     slot.stylist_id !== input.stylistId ||
+    !serviceAllowsAppointment({ active: service.active, bookingWindow: bookingWindowFromRow(service) }, slot.starts_at) ||
     new Date(slot.ends_at).getTime() - new Date(slot.starts_at).getTime() <
       service.duration_minutes * 60_000
   ) {
@@ -545,7 +546,7 @@ export async function createBookingCheckout(
     getPublicStoreSettings(),
   ]);
   const service = services.find((item) => item.id === input.serviceId);
-  if (!service || serviceStatus(service) !== 'Active') throw new Error("Selected service is unavailable.");
+  if (!service || !serviceAcceptsBookings(service)) throw new Error("Selected service is unavailable.");
   // Travel is quoted directly by the artist and is never added automatically.
   const travelFee = 0;
   const sameDayFee = input.sameDayAppointment ? 50 : 0;

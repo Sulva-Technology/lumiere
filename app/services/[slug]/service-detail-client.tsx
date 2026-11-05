@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Check, Clock, DollarSign, Sparkles } from 'lucide-react';
 import type { BookingService } from '@/lib/types';
 import { ServicePrice } from '@/components/service-price';
-import { bookingOpensLabel } from '@/lib/service-availability';
+import { appointmentWindowLabel } from '@/lib/service-availability';
 
 export default function ServiceDetailClient({ service }: { service: BookingService }) {
   const Icon = Sparkles;
@@ -101,7 +101,7 @@ export default function ServiceDetailClient({ service }: { service: BookingServi
                 href={`/book?service=${service.id}`}
                 className="flex w-full items-center justify-center rounded-full bg-[#8B4411] py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
               >
-                {bookingOpensLabel(service) || 'Book Now'}
+                {appointmentWindowLabel(service) || 'Book Now'}
               </Link>
               <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-secondary)]">
                 $35 retainer required to secure date

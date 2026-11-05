@@ -1,5 +1,5 @@
--- Inclusive booking placement dates in America/Phoenix. Availability is checked
--- at request time, so expiry needs no scheduler and existing bookings are kept.
+-- Inclusive appointment dates in America/Phoenix. Customers may reserve before
+-- the start date, but only appointment slots inside this range are offered.
 alter table public.booking_services
   add column if not exists available_from date,
   add column if not exists available_until date;

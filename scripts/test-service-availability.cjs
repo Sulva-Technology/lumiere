@@ -7,7 +7,7 @@ require.extensions['.ts'] = (module, filename) => {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText, filename);
 };
-const { serviceStatus, bookingWindowFromRow, isServiceBookable, isServiceVisible } = require('../lib/service-availability.ts');
+const { serviceStatus, bookingWindowFromRow, isServiceBookable, isServiceVisible, serviceAcceptsBookings, serviceAllowsAppointment, appointmentWindowLabel } = require('../lib/service-availability.ts');
 const { businessDateKey } = require('../lib/timezone.ts');
 const { adminBookingServiceSchema } = require('../lib/schemas.ts');
 const bookingWindow = { startsOn: '2026-12-01', endsOn: '2026-12-31' };
@@ -20,7 +20,13 @@ assert.equal(isServiceVisible(row, '2027-01-01'), false);
 assert.equal(isServiceVisible({ ...row, active: false }, '2026-11-05'), false);
 assert.equal(isServiceVisible(row, businessDateKey('2027-01-01T06:59:59Z')), true);
 assert.equal(isServiceVisible(row, businessDateKey('2027-01-01T07:00:00Z')), false);
-assert.equal(isServiceBookable({ active: true, available_from: '2090-12-01', available_until: '2090-12-31' }), false);
+assert.equal(isServiceBookable(row), true);
+assert.equal(serviceAcceptsBookings(service, '2026-11-05'), true);
+assert.equal(serviceAllowsAppointment(service, '2026-11-30T19:00:00Z'), false);
+assert.equal(serviceAllowsAppointment(service, '2026-12-01T19:00:00Z'), true);
+assert.equal(serviceAllowsAppointment(service, '2026-12-31T19:00:00Z'), true);
+assert.equal(serviceAllowsAppointment(service, '2027-01-01T19:00:00Z'), false);
+assert.match(appointmentWindowLabel(service), /Appointments Dec 1, 2026.*Dec 31, 2026/);
 assert.equal(serviceStatus(service, '2026-11-30'), 'Scheduled');
 assert.equal(serviceStatus(service, '2026-12-01'), 'Active');
 assert.equal(serviceStatus(service, '2026-12-31'), 'Active');

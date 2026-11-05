@@ -1,4 +1,4 @@
-import { isServiceBookable } from '@/lib/service-availability';
+import { bookingWindowFromRow, isServiceBookable, serviceAllowsAppointment } from '@/lib/service-availability';
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   addDaysToKey,
@@ -497,7 +497,7 @@ function openTimesForDay(
   return times.sort((a, b) => a.start.getTime() - b.start.getTime());
 }
 
-async function serviceDuration(supabase: SupabaseAdmin, serviceId: string) {
+async function serviceRules(supabase: SupabaseAdmin, serviceId: string) {
   const { data, error } = await supabase
     .from("booking_services")
     .select("*")
@@ -506,14 +506,17 @@ async function serviceDuration(supabase: SupabaseAdmin, serviceId: string) {
     .maybeSingle();
   if (error) throw error;
   if (!data || !isServiceBookable(data)) throw new Error("Selected service is unavailable.");
-  return data.duration_minutes as number;
+  return {
+    durationMinutes: data.duration_minutes as number,
+    bookingWindow: bookingWindowFromRow(data),
+  };
 }
 
 /** Every time a client can book with her for this service, from now to the end of the booking window. */
 export async function listOpenTimes(stylistId: string, serviceId: string) {
   const supabase = createSupabaseAdminClient();
-  const [duration, schedule] = await Promise.all([
-    serviceDuration(supabase, serviceId),
+  const [service, schedule] = await Promise.all([
+    serviceRules(supabase, serviceId),
     loadStylistSchedule(supabase, stylistId, serviceId),
   ]);
 
@@ -529,7 +532,8 @@ export async function listOpenTimes(stylistId: string, serviceId: string) {
   }> = [];
 
   for (let offset = 0; offset <= BOOKING_WINDOW_DAYS; offset += 1) {
-    for (const time of openTimesForDay(schedule, addDays(today, offset), duration, now)) {
+    for (const time of openTimesForDay(schedule, addDays(today, offset), service.durationMinutes, now)) {
+      if (!serviceAllowsAppointment({ active: true, bookingWindow: service.bookingWindow }, time.start)) continue;
       times.push({
         id: `${OPEN_TIME_PREFIX}${time.start.toISOString()}`,
         stylistId,
@@ -559,24 +563,28 @@ export async function claimOpenTime(input: {
   startsAt: Date;
 }) {
   const supabase = createSupabaseAdminClient();
-  const [duration, schedule] = await Promise.all([
-    serviceDuration(supabase, input.serviceId),
+  const [service, schedule] = await Promise.all([
+    serviceRules(supabase, input.serviceId),
     loadStylistSchedule(supabase, input.stylistId, input.serviceId),
   ]);
 
   const stillOpen = openTimesForDay(
     schedule,
     startOfDay(input.startsAt),
-    duration,
+    service.durationMinutes,
     new Date(),
   ).some((time) => time.start.getTime() === input.startsAt.getTime());
-  if (!stillOpen) {
+  const insideServiceWindow = serviceAllowsAppointment(
+    { active: true, bookingWindow: service.bookingWindow },
+    input.startsAt,
+  );
+  if (!stillOpen || !insideServiceWindow) {
     throw new Error("That appointment time is no longer available.");
   }
 
   const startsAtIso = input.startsAt.toISOString();
   const endsAtIso = new Date(
-    input.startsAt.getTime() + duration * 60_000,
+    input.startsAt.getTime() + service.durationMinutes * 60_000,
   ).toISOString();
 
   // Reuse a stored slot for this exact time when nobody has ever booked it

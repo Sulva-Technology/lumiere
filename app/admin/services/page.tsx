@@ -174,17 +174,17 @@ export default function AdminServicesPage() {
             <fieldset className="space-y-3 rounded-3xl border border-white/10 p-4">
               <label className="inline-flex items-center gap-2 text-sm text-white/80">
                 <input type="checkbox" checked={form.windowEnabled} onChange={(event) => setForm((current) => ({ ...current, windowEnabled: event.target.checked }))} />
-                Limit booking dates
+                Limit appointment dates
               </label>
               {form.windowEnabled && (
                 <>
-                  <p className="text-xs leading-5 text-white/70">Customers can see the service before bookings open and place bookings during these dates (Arizona time). It is hidden after the end date. Existing bookings are kept. Appointment dates are still set by your availability.</p>
+                  <p className="text-xs leading-5 text-white/70">Customers can book this service immediately, but the calendar only shows appointments inside these dates (Arizona time). The service is hidden after the end date. Existing bookings are kept.</p>
                   <label className="block text-sm text-white/80">
-                    Bookings open
+                    First available appointment date
                     <input type="date" value={form.availableFrom} onChange={(event) => setForm((current) => ({ ...current, availableFrom: event.target.value }))} className="mt-1 w-full min-w-0 rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-white" required />
                   </label>
                   <label className="block text-sm text-white/80">
-                    Last day to book (inclusive)
+                    Last available appointment date
                     <input type="date" value={form.availableUntil} min={form.availableFrom || undefined} onChange={(event) => setForm((current) => ({ ...current, availableUntil: event.target.value }))} className="mt-1 w-full min-w-0 rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-white" required />
                   </label>
                 </>
@@ -237,7 +237,7 @@ export default function AdminServicesPage() {
                   <div className="mt-4 flex flex-wrap gap-3 text-sm text-white/55">
                     <span className="rounded-full border border-white/10 px-3 py-1">{service.durationMinutes} mins</span>
                     <span className="rounded-full border border-white/10 px-3 py-1">{formatCurrency(service.price)}</span>
-                    {service.bookingWindow && <span className="rounded-full border border-white/20 px-3 py-1 text-white/80">Booking window: {service.bookingWindow.startsOn} – {service.bookingWindow.endsOn} (Arizona)</span>}
+                    {service.bookingWindow && <span className="rounded-full border border-white/20 px-3 py-1 text-white/80">Appointment dates: {service.bookingWindow.startsOn} – {service.bookingWindow.endsOn} (Arizona)</span>}
                     {service.special && (
                       <span className={`rounded-full border px-3 py-1 ${isSpecialCurrent(service.special) ? 'border-[#8B4411]/60 text-[#F7E7C1]' : 'border-white/10 text-white/40'}`}>
                         {service.special.label || 'Special'}: {formatCurrency(service.special.price)} · {formatSpecialWindow(service.special)}{isSpecialCurrent(service.special) ? '' : ' (ended)'}
