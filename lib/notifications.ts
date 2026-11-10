@@ -52,6 +52,7 @@ type BookingEmailPayload = {
   payment?: BookingPaymentSummary | null;
   /** The previous start time, when the studio moved this appointment. */
   rescheduledFrom?: string | null;
+  serviceChanged?: boolean;
 };
 
 /** Money for the appointment, as saved on the booking's payment at checkout. */
@@ -135,8 +136,7 @@ function formatDateTime(value: string) {
 
 async function sendMail(payload: MailPayload) {
   if (!resend) {
-    console.warn('Resend is not configured. Skipping email delivery.');
-    return;
+    throw new Error('Email delivery is not configured.');
   }
 
   // Resend reports failures (unverified domain, bad recipient) in `error` instead of throwing.
@@ -368,14 +368,16 @@ export async function sendBookingConfirmationEmails(payload: BookingEmailPayload
       to: payload.email,
       subject: moved
         ? `${payload.storeName} updated booking confirmation ${payload.bookingReference}`
-        : `${payload.storeName} booking confirmation ${payload.bookingReference}`,
+        : payload.serviceChanged
+          ? `${payload.storeName} booking service change ${payload.bookingReference}`
+          : `${payload.storeName} booking confirmation ${payload.bookingReference}`,
       html: customerHtml,
       replyTo: payload.bookingContactEmail || payload.supportEmail,
     }),
     internalRecipients.length > 0
       ? sendMail({
           to: internalRecipients,
-          subject: moved ? `Booking moved: ${payload.bookingReference}` : `New booking confirmed: ${payload.bookingReference}`,
+          subject: moved ? `Booking moved: ${payload.bookingReference}` : payload.serviceChanged ? `Booking service changed: ${payload.bookingReference}` : `New booking confirmed: ${payload.bookingReference}`,
           html: internalHtml,
           replyTo: payload.email,
         })

@@ -1194,7 +1194,7 @@ export async function resendBookingConfirmationEmail(bookingId: string) {
   return sendBookingEmails(bookingId, { requirePaid: true });
 }
 
-async function sendBookingEmails(bookingId: string, options: { requirePaid?: boolean; rescheduledFrom?: string | null } = {}) {
+async function sendBookingEmails(bookingId: string, options: { requirePaid?: boolean; rescheduledFrom?: string | null; serviceChanged?: boolean } = {}) {
   const supabase = createSupabaseAdminClient();
   // Only columns every install has; the artist email and intake answers are optional extras below.
   const { data: booking, error } = await supabase
@@ -1238,6 +1238,7 @@ async function sendBookingEmails(bookingId: string, options: { requirePaid?: boo
     makeupIntake: makeupIntake ?? null,
     payment: paymentResult.data ? bookingPaymentSummary(paymentResult.data, paymentResult.data.provider === 'in_person') : null,
     rescheduledFrom: options.rescheduledFrom ?? null,
+    serviceChanged: options.serviceChanged,
   });
 }
 
@@ -1462,7 +1463,7 @@ export async function rescheduleBooking(input: { bookingId: string; notifyClient
   if (!input.notifyClient) return { startsAt, sent: null, emailError: null };
 
   try {
-    const sent = await sendBookingEmails(booking.id, { rescheduledFrom: input.serviceId ? null : booking.starts_at });
+    const sent = await sendBookingEmails(booking.id, { rescheduledFrom: input.serviceId ? null : booking.starts_at, serviceChanged: Boolean(input.serviceId) });
     return { startsAt, sent, emailError: null };
   } catch (emailError) {
     const message = getErrorMessage(emailError, 'Unable to send the updated confirmation.');
